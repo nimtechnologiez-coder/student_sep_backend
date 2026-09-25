@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIM Academy - Admin Dashboard</title>
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Separate CSS Stylesheets -->
+  <link rel="stylesheet" href="studentsapp/static/css/sidebar.css">
+  <link rel="stylesheet" href="studentsapp/static/css/dashboard.css">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- =========================================================================
+       NIM ACADEMY - EXACT MATCH SIDEBAR
+       Matches Screenshot: Dark Navy (#0f172a), White Text, Blue Active Pill
+       ========================================================================= -->
+  <aside class="erp-sidebar" id="erpSidebar">
+    
+    <!-- Brand Logo Header -->
+    <div class="sidebar-header">
+      <a href="#dashboard" class="brand-wrapper" title="NIM Academy">
+        <div class="brand-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">NIM Academy</span>
+          <span class="brand-subline">Learn • Grow • Succeed</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Navigation Menu List -->
+    <div class="sidebar-menu-scroll">
+      <ul class="sidebar-nav-list">
+        
+        <!-- 1. Dashboard (Active Solid Blue Pill) -->
+        <li class="nav-item active">
+          <a href="#dashboard" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="7" height="9" x="3" y="3" rx="1"/>
+                <rect width="7" height="5" x="14" y="3" rx="1"/>
+                <rect width="7" height="9" x="14" y="12" rx="1"/>
+                <rect width="7" height="5" x="3" y="16" rx="1"/>
+              </svg>
+            </span>
+            <span class="nav-label">Dashboard</span>
+          </a>
+        </li>
+
+        <!-- 2. Students -->
+        <li class="nav-item">
+          <a href="students.html" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </span>
+            <span class="nav-label">Students</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+        
+      
+
+        <!-- 4. Batches -->
+        <li class="nav-item">
+          <a href="#batches" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </span>
+            <span class="nav-label">Batches</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <!-- 5. Classes -->
+        <li class="nav-item">
+          <a href="#classes" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="14" x="2" y="3" rx="2"/>
+                <line x1="8" x2="16" y1="21" y2="21"/>
+                <line x1="12" x2="12" y1="17" y2="21"/>
+              </svg>
+            </span>
+            <span class="nav-label">Classes</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <!-- 6. Academic -->
+        <li class="nav-item">
+          <a href="#academic" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                <path d="M6 6h10"/>
+                <path d="M6 10h10"/>
+              </svg>
+            </span>
+            <span class="nav-label">Academic</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <!-- 7. Assessments -->
+        <li class="nav-item">
+          <a href="#assessments" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" x2="8" y1="13" y2="13"/>
+                <line x1="16" x2="8" y1="17" y2="17"/>
+              </svg>
+            </span>
+            <span class="nav-label">Assessments</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <!-- 8. Fees & Payments -->
+        <li class="nav-item">
+          <a href="#fees" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="14" x="2" y="5" rx="2"/>
+                <line x1="2" x2="22" y1="10" y2="10"/>
+              </svg>
+            </span>
+            <span class="nav-label">Fees & Payments</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <!-- 9. Placement -->
+        <li class="nav-item">
+          <a href="#placement" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 15 2 2 4-4"/>
+                <rect width="18" height="14" x="3" y="7" rx="2"/>
+                <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </span>
+            <span class="nav-label">Placement</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <!-- 10. Reports -->
+        <li class="nav-item">
+          <a href="#reports" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" x2="18" y1="20" y2="10"/>
+                <line x1="12" x2="12" y1="20" y2="4"/>
+                <line x1="6" x2="6" y1="20" y2="14"/>
+              </svg>
+            </span>
+            <span class="nav-label">Reports</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <!-- 11. Users & Roles -->
+        <li class="nav-item">
+          <a href="#users" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </span>
+            <span class="nav-label">Users & Roles</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <!-- 12. Notifications (With Red Badge 5) -->
+        <li class="nav-item">
+          <a href="#notifications" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+              </svg>
+            </span>
+            <span class="nav-label">Notifications</span>
+            <span class="nav-badge-red">5</span>
+          </a>
+        </li>
+
+        <!-- 13. Settings -->
+        <li class="nav-item">
+          <a href="#settings" class="nav-link">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </span>
+            <span class="nav-label">Settings</span>
+            <span class="nav-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </a>
+        </li>
+
+      </ul>
+    </div>
+
+    <!-- Bottom NIM Academy Card -->
+    <div class="sidebar-footer">
+      <div class="footer-academy-card">
+        <div class="footer-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div class="footer-meta">
+          <span class="footer-brand">NIM Academy</span>
+          <span class="footer-desc">Empowering Future Talent</span>
+          <span class="footer-version">v1.0.0</span>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- =========================================================================
+       MAIN CONTENT WORKSPACE
+       ========================================================================= -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" placeholder="Search students, batches, reports...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Mon, 15 Sep 2025</span>
+        </div>
+
+        <button class="header-notif-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">5</span>
+        </button>
+
+        <div class="header-user-profile" title="Admin Account">
+          <div class="user-avatar-circle">A</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Admin</span>
+            <span class="user-role-sub">Administrator</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content Area -->
+    <div class="dashboard-content-area">
+      
+      <!-- Welcome Header & Inspiration Quote Card -->
+      <div class="welcome-section-row">
+        <div class="welcome-title-group">
+          <h1>Welcome back, Admin!</h1>
+          <p>Here's what's happening at NIM Academy today.</p>
+        </div>
+
+        <div class="inspiration-quote-card">
+          <div class="quote-icon-cap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+          <div class="quote-text-group">
+            <div class="quote-main">"Education is the key to a better tomorrow."</div>
+            <div class="quote-sub">Let's make an impact today!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4x2 KPI Cards Grid (8 Cards) -->
+      <div class="kpi-cards-grid">
+        
+        <!-- 1. Total Students -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-blue-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Total Students</span>
+            <span class="kpi-card-number">428</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ 12%</span> vs last month</span>
+          </div>
+        </div>
+
+        <!-- 2. Active Batches -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-green-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Active Batches</span>
+            <span class="kpi-card-number">18</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ 6%</span> vs last month</span>
+          </div>
+        </div>
+
+        <!-- 4. Fee Collection (YTD) -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-purple-light">₹</div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Fee Collection (YTD)</span>
+            <span class="kpi-card-number">₹ 28.5 L</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ 22%</span> vs last year</span>
+          </div>
+        </div>
+
+        <!-- 5. Placement Offers -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-red-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Placement Offers</span>
+            <span class="kpi-card-number">64</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ 14%</span> vs last year</span>
+          </div>
+        </div>
+
+        <!-- 6. Classes Scheduled -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-green-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Classes Scheduled</span>
+            <span class="kpi-card-number">42</span>
+            <span class="kpi-card-trend">Today</span>
+          </div>
+        </div>
+
+        <!-- 7. Trainer Count -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-cyan-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Trainer Count</span>
+            <span class="kpi-card-number">12</span>
+            <span class="kpi-card-trend">Active Trainers</span>
+          </div>
+        </div>
+
+        <!-- 8. Average Attendance -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-blue-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Average Attendance</span>
+            <span class="kpi-card-number">87%</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ 5%</span> vs last month</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Middle Row: Student Status, Batch-wise Students, Fee Collection -->
+      <div class="three-cards-row">
+        
+        <!-- Column 1: Student Status -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Student Status</span>
+            <a href="#students" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="donut-chart-flex">
+            <div class="donut-svg-container">
+              <svg viewBox="0 0 42 42">
+                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f1f5f9" stroke-width="4.8"/>
+                <circle class="chart-interactive donut-segment" data-tooltip="Active: 360 Students (84%)" cx="21" cy="21" r="15.915" fill="transparent" stroke="#2563eb" stroke-width="4.8" stroke-dasharray="84 16" stroke-dashoffset="25"/>
+                <circle class="chart-interactive donut-segment" data-tooltip="Onboarding: 28 Students (7%)" cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4.8" stroke-dasharray="7 93" stroke-dashoffset="41"/>
+                <circle class="chart-interactive donut-segment" data-tooltip="Completed: 24 Students (6%)" cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="4.8" stroke-dasharray="6 94" stroke-dashoffset="34"/>
+                <circle class="chart-interactive donut-segment" data-tooltip="Dropped: 16 Students (3%)" cx="21" cy="21" r="15.915" fill="transparent" stroke="#ef4444" stroke-width="4.8" stroke-dasharray="3 97" stroke-dashoffset="28"/>
+              </svg>
+              <div class="donut-center-info">
+                <div class="donut-center-num">428</div>
+                <div class="donut-center-sub">Students</div>
+              </div>
+            </div>
+
+            <div class="donut-legend-col">
+              <div class="donut-legend-row">
+                <div class="legend-left">
+                  <span class="legend-circle circle-blue"></span>
+                  <span>Active</span>
+                </div>
+                <div><span class="legend-count">360</span><span class="legend-pct">(84%)</span></div>
+              </div>
+
+              <div class="donut-legend-row">
+                <div class="legend-left">
+                  <span class="legend-circle circle-green"></span>
+                  <span>Onboarding</span>
+                </div>
+                <div><span class="legend-count">28</span><span class="legend-pct">(7%)</span></div>
+              </div>
+
+              <div class="donut-legend-row">
+                <div class="legend-left">
+                  <span class="legend-circle circle-yellow"></span>
+                  <span>Completed</span>
+                </div>
+                <div><span class="legend-count">24</span><span class="legend-pct">(6%)</span></div>
+              </div>
+
+              <div class="donut-legend-row">
+                <div class="legend-left">
+                  <span class="legend-circle circle-red"></span>
+                  <span>Dropped</span>
+                </div>
+                <div><span class="legend-count">16</span><span class="legend-pct">(3%)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Batch-wise Students -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Batch-wise Students</span>
+            <a href="#batches" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="batch-chart-wrapper">
+            <svg viewBox="0 0 380 170" preserveAspectRatio="none">
+              <text x="18" y="24" font-size="10" fill="#94a3b8" text-anchor="end">80</text>
+              <line x1="28" y1="20" x2="370" y2="20" stroke="#f1f5f9" stroke-width="1"/>
+
+              <text x="18" y="54" font-size="10" fill="#94a3b8" text-anchor="end">60</text>
+              <line x1="28" y1="50" x2="370" y2="50" stroke="#f1f5f9" stroke-width="1"/>
+
+              <text x="18" y="84" font-size="10" fill="#94a3b8" text-anchor="end">40</text>
+              <line x1="28" y1="80" x2="370" y2="80" stroke="#f1f5f9" stroke-width="1"/>
+
+              <text x="18" y="114" font-size="10" fill="#94a3b8" text-anchor="end">20</text>
+              <line x1="28" y1="110" x2="370" y2="110" stroke="#f1f5f9" stroke-width="1"/>
+
+              <text x="18" y="144" font-size="10" fill="#94a3b8" text-anchor="end">0</text>
+              <line x1="28" y1="140" x2="370" y2="140" stroke="#cbd5e1" stroke-width="1"/>
+
+              <!-- Bar 1: Python Full Stack (60) -->
+              <text x="68" y="44" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle">60</text>
+              <rect class="chart-interactive batch-bar" data-tooltip="Python Full Stack: 60 Students" x="54" y="50" width="28" height="90" rx="3" fill="#2563eb"/>
+              <text x="68" y="153" font-size="8.5" fill="#475569" text-anchor="middle">Python</text>
+              <text x="68" y="163" font-size="8.5" fill="#475569" text-anchor="middle">Full Stack</text>
+
+              <!-- Bar 2: Data Science (48) -->
+              <text x="134" y="62" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle">48</text>
+              <rect class="chart-interactive batch-bar" data-tooltip="Data Science: 48 Students" x="120" y="68" width="28" height="72" rx="3" fill="#2563eb"/>
+              <text x="134" y="153" font-size="8.5" fill="#475569" text-anchor="middle">Data Science</text>
+
+              <!-- Bar 3: Testing (42) -->
+              <text x="200" y="71" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle">42</text>
+              <rect class="chart-interactive batch-bar" data-tooltip="Testing: 42 Students" x="186" y="77" width="28" height="63" rx="3" fill="#2563eb"/>
+              <text x="200" y="153" font-size="8.5" fill="#475569" text-anchor="middle">Testing</text>
+
+              <!-- Bar 4: Java Development (36) -->
+              <text x="266" y="80" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle">36</text>
+              <rect class="chart-interactive batch-bar" data-tooltip="Java Development: 36 Students" x="252" y="86" width="28" height="54" rx="3" fill="#2563eb"/>
+              <text x="266" y="153" font-size="8.5" fill="#475569" text-anchor="middle">Java</text>
+              <text x="266" y="163" font-size="8.5" fill="#475569" text-anchor="middle">Development</text>
+
+              <!-- Bar 5: UI/UX Design (28) -->
+              <text x="332" y="92" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle">28</text>
+              <rect class="chart-interactive batch-bar" data-tooltip="UI/UX Design: 28 Students" x="318" y="98" width="28" height="42" rx="3" fill="#2563eb"/>
+              <text x="332" y="153" font-size="8.5" fill="#475569" text-anchor="middle">UI/UX</text>
+              <text x="332" y="163" font-size="8.5" fill="#475569" text-anchor="middle">Design</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Column 3: Fee Collection -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row" style="margin-bottom: 6px;">
+            <span class="panel-title">Fee Collection</span>
+            <button class="dropdown-pill-btn">
+              <span>This Year</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+
+          <div class="fee-chart-top">
+            <div class="fee-metric-large">
+              <span class="fee-rupee-val">₹ 28.5 L</span>
+              <span class="fee-trend-badge">↑ 22% vs last year</span>
+            </div>
+          </div>
+
+          <div class="fee-line-chart-svg">
+            <svg viewBox="0 0 360 120" preserveAspectRatio="none">
+              <text x="12" y="12" font-size="8" fill="#94a3b8" text-anchor="middle">₹ (Lakh)</text>
+              
+              <text x="20" y="24" font-size="8.5" fill="#94a3b8" text-anchor="end">40</text>
+              <line x1="28" y1="20" x2="350" y2="20" stroke="#f1f5f9" stroke-width="1"/>
+
+              <text x="20" y="49" font-size="8.5" fill="#94a3b8" text-anchor="end">30</text>
+              <line x1="28" y1="45" x2="350" y2="45" stroke="#f1f5f9" stroke-width="1"/>
+
+              <text x="20" y="74" font-size="8.5" fill="#94a3b8" text-anchor="end">20</text>
+              <line x1="28" y1="70" x2="350" y2="70" stroke="#f1f5f9" stroke-width="1"/>
+
+              <text x="20" y="99" font-size="8.5" fill="#94a3b8" text-anchor="end">10</text>
+              <line x1="28" y1="95" x2="350" y2="95" stroke="#f1f5f9" stroke-width="1"/>
+
+              <text x="20" y="116" font-size="8.5" fill="#94a3b8" text-anchor="end">0</text>
+              <line x1="28" y1="112" x2="350" y2="112" stroke="#cbd5e1" stroke-width="1"/>
+
+              <!-- Line Chart Plot -->
+              <path d="M 40,102 L 75,95 L 110,89 L 145,83 L 180,75 L 215,67 L 250,59 L 285,52 L 330,38" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+
+              <circle class="chart-interactive fee-point" data-tooltip="Jan: ₹ 7.2 L" cx="40" cy="102" r="3.5" fill="#2563eb"/>
+              <circle class="chart-interactive fee-point" data-tooltip="Feb: ₹ 9.0 L" cx="75" cy="95" r="3.5" fill="#2563eb"/>
+              <circle class="chart-interactive fee-point" data-tooltip="Mar: ₹ 11.5 L" cx="110" cy="89" r="3.5" fill="#2563eb"/>
+              <circle class="chart-interactive fee-point" data-tooltip="Apr: ₹ 14.0 L" cx="145" cy="83" r="3.5" fill="#2563eb"/>
+              <circle class="chart-interactive fee-point" data-tooltip="May: ₹ 17.0 L" cx="180" cy="75" r="3.5" fill="#2563eb"/>
+              <circle class="chart-interactive fee-point" data-tooltip="Jun: ₹ 19.5 L" cx="215" cy="67" r="3.5" fill="#2563eb"/>
+              <circle class="chart-interactive fee-point" data-tooltip="Jul: ₹ 22.0 L" cx="250" cy="59" r="3.5" fill="#2563eb"/>
+              <circle class="chart-interactive fee-point" data-tooltip="Aug: ₹ 25.0 L" cx="285" cy="52" r="3.5" fill="#2563eb"/>
+              <circle class="chart-interactive fee-point" data-tooltip="Sep: ₹ 28.5 L (Current)" cx="330" cy="38" r="4" fill="#2563eb"/>
+
+              <!-- Months Labels -->
+              <text x="40" y="120" font-size="8.5" fill="#64748b" text-anchor="middle">Jan</text>
+              <text x="75" y="120" font-size="8.5" fill="#64748b" text-anchor="middle">Feb</text>
+              <text x="110" y="120" font-size="8.5" fill="#64748b" text-anchor="middle">Mar</text>
+              <text x="145" y="120" font-size="8.5" fill="#64748b" text-anchor="middle">Apr</text>
+              <text x="180" y="120" font-size="8.5" fill="#64748b" text-anchor="middle">May</text>
+              <text x="215" y="120" font-size="8.5" fill="#64748b" text-anchor="middle">Jun</text>
+              <text x="250" y="120" font-size="8.5" fill="#64748b" text-anchor="middle">Jul</text>
+              <text x="285" y="120" font-size="8.5" fill="#64748b" text-anchor="middle">Aug</text>
+              <text x="330" y="120" font-size="8.5" fill="#64748b" text-anchor="middle">Sep</text>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Row: Recent Admissions, Today's Classes, Recent Activities -->
+      <div class="three-cards-row">
+        
+        <!-- Recent Admissions -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Recent Admissions</span>
+            <a href="#admissions" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="admissions-list">
+            <div class="admission-item-row">
+              <div class="admission-left">
+                <div class="initials-avatar-circle">AS</div>
+                <div class="admission-info">
+                  <span class="admission-name">Arjun S</span>
+                  <span class="admission-course">Full Stack Development</span>
+                </div>
+              </div>
+              <div class="admission-right">
+                <span class="admission-date">15 Sep 2025</span>
+                <span class="status-badge-confirmed">Confirmed</span>
+              </div>
+            </div>
+
+            <div class="admission-item-row">
+              <div class="admission-left">
+                <div class="initials-avatar-circle">PK</div>
+                <div class="admission-info">
+                  <span class="admission-name">Priya K</span>
+                  <span class="admission-course">Data Science</span>
+                </div>
+              </div>
+              <div class="admission-right">
+                <span class="admission-date">14 Sep 2025</span>
+                <span class="status-badge-confirmed">Confirmed</span>
+              </div>
+            </div>
+
+            <div class="admission-item-row">
+              <div class="admission-left">
+                <div class="initials-avatar-circle">RM</div>
+                <div class="admission-info">
+                  <span class="admission-name">Rahul M</span>
+                  <span class="admission-course">Testing</span>
+                </div>
+              </div>
+              <div class="admission-right">
+                <span class="admission-date">14 Sep 2025</span>
+                <span class="status-badge-confirmed">Confirmed</span>
+              </div>
+            </div>
+
+            <div class="admission-item-row">
+              <div class="admission-left">
+                <div class="initials-avatar-circle">SN</div>
+                <div class="admission-info">
+                  <span class="admission-name">Sneha N</span>
+                  <span class="admission-course">UI/UX Design</span>
+                </div>
+              </div>
+              <div class="admission-right">
+                <span class="admission-date">13 Sep 2025</span>
+                <span class="status-badge-confirmed">Confirmed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Classes -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Today's Classes</span>
+            <a href="#classes" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="classes-list">
+            <div class="class-item-row">
+              <div class="class-left">
+                <span class="class-time-text">09:30 AM</span>
+                <div class="class-info">
+                  <span class="class-subject-title">Python Basics</span>
+                  <span class="class-batch-sub">Batch FS-01</span>
+                </div>
+              </div>
+              <span class="class-mode-badge badge-online">Online</span>
+            </div>
+
+            <div class="class-item-row">
+              <div class="class-left">
+                <span class="class-time-text">11:00 AM</span>
+                <div class="class-info">
+                  <span class="class-subject-title">SQL for Data Analysis</span>
+                  <span class="class-batch-sub">Batch DS-02</span>
+                </div>
+              </div>
+              <span class="class-mode-badge badge-online">Online</span>
+            </div>
+
+            <div class="class-item-row">
+              <div class="class-left">
+                <span class="class-time-text">02:00 PM</span>
+                <div class="class-info">
+                  <span class="class-subject-title">Manual Testing</span>
+                  <span class="class-batch-sub">Batch TST-01</span>
+                </div>
+              </div>
+              <span class="class-mode-badge badge-offline">Offline</span>
+            </div>
+
+            <div class="class-item-row">
+              <div class="class-left">
+                <span class="class-time-text">04:00 PM</span>
+                <div class="class-info">
+                  <span class="class-subject-title">UI/UX Principles</span>
+                  <span class="class-batch-sub">Batch UX-01</span>
+                </div>
+              </div>
+              <span class="class-mode-badge badge-online">Online</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Recent Activities</span>
+            <a href="#reports" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="activities-list">
+            <div class="activity-item-row">
+              <div class="activity-left">
+                <div class="activity-icon-circle activity-blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <span class="activity-text-desc">New admission added - <strong>Arjun S</strong></span>
+              </div>
+              <span class="activity-time-ago">10 minutes ago</span>
+            </div>
+
+            <div class="activity-item-row">
+              <div class="activity-left">
+                <div class="activity-icon-circle activity-teal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                </div>
+                <span class="activity-text-desc">Fee payment received - <strong>Priya K</strong></span>
+              </div>
+              <span class="activity-time-ago">45 minutes ago</span>
+            </div>
+
+            <div class="activity-item-row">
+              <div class="activity-left">
+                <div class="activity-icon-circle activity-green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                </div>
+                <span class="activity-text-desc">Batch <strong>FS-02</strong> created</span>
+              </div>
+              <span class="activity-time-ago">2 hours ago</span>
+            </div>
+
+            <div class="activity-item-row">
+              <div class="activity-left">
+                <div class="activity-icon-circle activity-purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <span class="activity-text-desc">Assessment published - <strong>Testing</strong></span>
+              </div>
+              <span class="activity-time-ago">3 hours ago</span>
+            </div>
+
+            <div class="activity-item-row">
+              <div class="activity-left">
+                <div class="activity-icon-circle activity-blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+                </div>
+                <span class="activity-text-desc">New user added - <strong>Trainer</strong></span>
+              </div>
+              <span class="activity-time-ago">5 hours ago</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<!-- Chart Tooltip Container -->
+<div class="chart-tooltip" id="chartTooltip"></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tooltip = document.getElementById('chartTooltip');
+    if (!tooltip) return;
+
+    const interactiveElements = document.querySelectorAll('.chart-interactive');
+
+    interactiveElements.forEach(el => {
+      el.addEventListener('mouseenter', (e) => {
+        const text = el.getAttribute('data-tooltip');
+        if (!text) return;
+        tooltip.textContent = text;
+        tooltip.classList.add('active');
+        positionTooltip(e);
+      });
+
+      el.addEventListener('mousemove', (e) => {
+        positionTooltip(e);
+      });
+
+      el.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('active');
+      });
+    });
+
+    function positionTooltip(e) {
+      tooltip.style.left = e.clientX + 'px';
+      tooltip.style.top = (e.clientY - 12) + 'px';
+    }
+  });
+</script>
+
+</body>
+</html>

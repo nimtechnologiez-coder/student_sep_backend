@@ -1,0 +1,416 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports & Analytics - NIM Academy Admin Portal</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component with active_page='reports' -->
+  {% include 'sidebar.html' with active_page='reports' %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" placeholder="Search reports, batch performance, student analytics...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Mon, 24 Sep 2026</span>
+        </div>
+
+        <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">5</span>
+        </a>
+
+        <div class="header-user-profile" title="Admin Account">
+          <div class="user-avatar-circle" style="background-color: #0f172a; color: #ffffff; font-weight: 700;">SN</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Sneha N</span>
+            <span class="user-role-sub">Admin</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Reports Admin Workspace -->
+    <div class="admin-workspace">
+
+      <!-- Page Title & Actions -->
+      <div class="page-title-row">
+        <div class="title-text-group">
+          <h1 class="main-page-title">Reports & Analytics</h1>
+          <p class="main-page-subtitle">Generate attendance audits, academic mastery distributions, batch clearance, and fee collection dossiers.</p>
+        </div>
+
+        <div class="page-actions-group">
+          <button class="btn-secondary-action" onclick="alert('Scheduling weekly executive digest to admin team...');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Schedule Digest</span>
+          </button>
+          <button class="btn-primary-add" onclick="document.getElementById('generateReportModal').classList.add('active');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Generate Custom Report</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPI Summary Cards -->
+      <div class="kpi-cards-grid">
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.total }}</span>
+            <span class="kpi-stat-label">Average Attendance</span>
+            <span class="kpi-trend-row"><span class="trend-green">↑ +2.1%</span> vs last month</span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.generated }}</span>
+            <span class="kpi-stat-label">Capstone Pass Rate</span>
+            <span class="kpi-trend-row"><span class="trend-blue">Cohort Avg: 84.6%</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 15 2 2 4-4"/><rect width="18" height="14" x="3" y="7" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.avg_score }}</span>
+            <span class="kpi-stat-label">Placement Clearance</span>
+            <span class="kpi-trend-row"><span class="trend-green">379 Students Ready</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.attendance }}</span>
+            <span class="kpi-stat-label">Fee Realization</span>
+            <span class="kpi-trend-row"><span class="trend-blue">₹1.18 Cr Collected</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Report Category Tabs -->
+      <div class="filter-controls-card">
+        <div class="filter-controls-row">
+          <div class="filter-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" class="filter-search-input" id="reportSearchInput" placeholder="Filter batch summary, trainer, program or metric...">
+          </div>
+
+          <div class="filter-dropdowns-group">
+            <select class="filter-select" id="timeframeSelect">
+              <option value="current">Current Term (Fall 2026)</option>
+              <option value="last_quarter">Last Quarter (Q2 2026)</option>
+              <option value="ytd">Year to Date (2026)</option>
+              <option value="all">All-Time Historical</option>
+            </select>
+
+            <select class="filter-select" id="programFilterSelect">
+              <option value="">All Programs</option>
+              <option value="Generative AI">Generative AI & LLMs</option>
+              <option value="Cloud DevOps">Cloud DevOps & SRE</option>
+              <option value="Full Stack">Full Stack Web Engineering</option>
+              <option value="Data Engineering">Data Engineering</option>
+            </select>
+
+            <select class="filter-select" id="statusReportSelect">
+              <option value="">Standing: All</option>
+              <option value="Graduation Ready">Graduation Ready</option>
+              <option value="In Good Standing">In Good Standing</option>
+              <option value="Needs Attention">Needs Attention</option>
+            </select>
+
+            <button class="btn-filter-reset" onclick="resetReportFilters()">Reset</button>
+          </div>
+        </div>
+
+        <!-- 5 Category Pill Tabs Required by User: Attendance, Academic, Student Progress, Batch, Fee -->
+        <div class="filter-tabs-row">
+          <button class="pill-tab-btn active" onclick="switchReportCategory(this, 'all')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <span>Executive Overview</span>
+          </button>
+          <button class="pill-tab-btn" onclick="switchReportCategory(this, 'attendance')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <span>Attendance Reports</span>
+          </button>
+          <button class="pill-tab-btn" onclick="switchReportCategory(this, 'academic')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
+            <span>Academic Performance</span>
+          </button>
+          <button class="pill-tab-btn" onclick="switchReportCategory(this, 'progress')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            <span>Student Progress & Mastery</span>
+          </button>
+          <button class="pill-tab-btn" onclick="switchReportCategory(this, 'batch')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span>Batch Clearance</span>
+          </button>
+          <button class="pill-tab-btn" onclick="switchReportCategory(this, 'fee')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            <span>Fee Dues & Aging</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Reports Ledger Table Card -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <div class="table-header-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><line x1="18" x1="20" x2="18" y2="10"/><line x1="12" x1="20" x2="12" y2="4"/><line x1="6" x1="20" x2="6" y2="14"/></svg>
+            <span id="reportTableHeading">Cohort Performance & Comprehensive Analytics Matrix</span>
+            <span class="table-records-count">6 Active Cohorts</span>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="alert('Exporting consolidated report as CSV spreadsheet...');">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              <span>Export CSV</span>
+            </button>
+            <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="alert('Rendering printable PDF report...');">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+              <span>Print PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-scroll-container">
+          <table class="admin-data-table" id="reportsTable">
+            <thead>
+              <tr>
+                <th style="width: 250px;">Activity Type</th>
+                <th>Description</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for activity in activities %}
+              <tr>
+                <td>
+                  <div class="entity-cell">
+                    <div class="entity-avatar" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">ACT</div>
+                    <div class="entity-info">
+                      <span class="entity-name">{{ activity.activity_type }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: var(--admin-text-main);">{{ activity.description }}</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: var(--admin-text-main);">{{ activity.timestamp }}</span>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" style="text-align: center; padding: 20px;">No activities found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Pagination -->
+        <div class="pagination-row">
+          <div>Showing <strong>1 - 5</strong> of <strong>6</strong> cohorts</div>
+          <div class="pagination-controls">
+            <button class="btn-page-nav" disabled>Previous</button>
+            <button class="btn-page-nav active">1</button>
+            <button class="btn-page-nav">Next</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Generate Custom Report Modal -->
+<div class="modal-overlay" id="generateReportModal">
+  <div class="modal-box">
+    <div class="modal-header-bar">
+      <div class="modal-title-text">Generate Custom Report</div>
+      <button class="btn-close-modal" onclick="document.getElementById('generateReportModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form onsubmit="event.preventDefault(); alert('Generating report... File will download automatically in 3 seconds.'); document.getElementById('generateReportModal').classList.remove('active');">
+      <div class="modal-body-content">
+        <div class="form-group-field">
+          <label class="form-label-title">Report Category *</label>
+          <select class="form-select-box" required>
+            <option value="attendance">Student & Batch Attendance Log</option>
+            <option value="academic">Academic Gradebook & Assessment Performance</option>
+            <option value="progress">Student Progress & Technical Mastery Dossier</option>
+            <option value="batch">Batch Clearance & Placement Readiness</option>
+            <option value="fee">Fee Dues, Payment History & Aging Schedule</option>
+          </select>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Scope / Target</label>
+            <select class="form-select-box">
+              <option value="all">All Batches (Institutional Summary)</option>
+              <option value="AI-09">Batch AI-09 (GenAI)</option>
+              <option value="CLOUD-04">Batch CLOUD-04</option>
+              <option value="AI-10">Batch AI-10</option>
+              <option value="FS-12">Batch FS-12</option>
+              <option value="DATA-06">Batch DATA-06</option>
+            </select>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Date Period</label>
+            <select class="form-select-box">
+              <option value="current">Current Term (Fall 2026)</option>
+              <option value="last_quarter">Last 90 Days</option>
+              <option value="ytd">Year 2026 to Date</option>
+              <option value="custom">Custom Date Range</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Export Format *</label>
+            <select class="form-select-box">
+              <option value="pdf">Formal PDF Audit Document (with Header & Stamp)</option>
+              <option value="csv">Raw CSV / Excel Data Table</option>
+              <option value="json">Machine JSON Feed</option>
+            </select>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Include Visual Charts</label>
+            <select class="form-select-box">
+              <option value="yes">Yes (Include Trend Charts & Meters)</option>
+              <option value="no">No (Data Tables Only)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-label-title">Report Title / Cover Header</label>
+          <input type="text" class="form-input-text" placeholder="e.g. NIM Academy Academic Audit - Q3 2026">
+        </div>
+      </div>
+
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-secondary-action" onclick="document.getElementById('generateReportModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-primary-add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Compile & Download</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Switch category tabs and adjust report heading
+  function switchReportCategory(btn, category) {
+    document.querySelectorAll('.pill-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const heading = document.getElementById('reportTableHeading');
+    const titles = {
+      'all': 'Cohort Performance & Comprehensive Analytics Matrix',
+      'attendance': 'Attendance Records & Biometric Lecture Logs',
+      'academic': 'Academic Curriculum Mastery & Grade Distributions',
+      'progress': 'Student Progress, Lab Submissions & Placement Readiness',
+      'batch': 'Batch Clearance & Graduation Certification Status',
+      'fee': 'Fee Realization, Installment Collection & Aging Schedule'
+    };
+    heading.textContent = titles[category] || titles['all'];
+  }
+
+  // Live filter function for Reports table
+  function filterReportsTable() {
+    const query = document.getElementById('reportSearchInput').value.toLowerCase().trim();
+    const program = document.getElementById('programFilterSelect').value.toLowerCase();
+    const status = document.getElementById('statusReportSelect').value.toLowerCase();
+
+    const rows = document.querySelectorAll('#reportsTable tbody tr');
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      const rowProg = (row.getAttribute('data-program') || '').toLowerCase();
+      const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
+
+      const matchText = !query || text.includes(query);
+      const matchProg = !program || rowProg.includes(program);
+      const matchStatus = !status || rowStatus === status;
+
+      if (matchText && matchProg && matchStatus) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('reportSearchInput').addEventListener('input', filterReportsTable);
+  document.getElementById('programFilterSelect').addEventListener('change', filterReportsTable);
+  document.getElementById('statusReportSelect').addEventListener('change', filterReportsTable);
+
+  function resetReportFilters() {
+    document.getElementById('reportSearchInput').value = '';
+    document.getElementById('programFilterSelect').value = '';
+    document.getElementById('statusReportSelect').value = '';
+    document.querySelectorAll('.pill-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.pill-tab-btn:first-child').classList.add('active');
+    document.getElementById('reportTableHeading').textContent = 'Cohort Performance & Comprehensive Analytics Matrix';
+    filterReportsTable();
+  }
+
+  // Close modal when clicking on overlay background
+  document.getElementById('generateReportModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('active');
+    }
+  });
+</script>
+
+</body>
+</html>
+

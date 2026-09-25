@@ -1,0 +1,1202 @@
+{% extends 'mentor/base.html' %}
+
+{% block title %}Assessments - NIM Academy{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* =========================================================================
+     ASSESSMENTS PAGE (EXACT 1:1 REPLICA OF REFERENCE media_1790244709583.png)
+     Two-Column Layout: Left (KPIs, Filters & Table) & Right (Summary, Actions & Submissions)
+     ========================================================================= */
+
+  /* Master 2-Column Split */
+  .assessments-page-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 1200px) {
+    .assessments-page-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Left Pane */
+  .assessments-left-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* Header Row: Title & Create Assessment Button */
+  .assessments-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 2px;
+  }
+
+  .assessments-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0a1b39;
+    letter-spacing: -0.3px;
+    margin: 0;
+  }
+
+  .assessments-subtitle {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .btn-create-assessment-top {
+    background: #0062eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    padding: 9px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(0, 98, 235, 0.25);
+    transition: all 0.15s ease;
+  }
+
+  .btn-create-assessment-top:hover {
+    background: #0052cc;
+  }
+
+  /* 4 KPI Metric Cards Grid */
+  .assessments-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  @media (max-width: 900px) {
+    .assessments-kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .asm-kpi-card {
+    background: #ffffff;
+    border: 1px solid var(--nim-border);
+    border-radius: var(--nim-radius-card);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  .asm-kpi-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .asm-kpi-icon-blue { background: #e0f2fe; color: #0062eb; }
+  .asm-kpi-icon-green { background: #dcfce7; color: #16a34a; }
+  .asm-kpi-icon-amber { background: #fef3c7; color: #d97706; }
+  .asm-kpi-icon-rose { background: #fee2e2; color: #ef4444; }
+
+  .asm-kpi-icon-box svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .asm-kpi-label {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .asm-kpi-val {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #0a1b39;
+    line-height: 1.1;
+  }
+
+  .asm-kpi-sub {
+    font-size: 0.6875rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 3px;
+  }
+
+  /* Filters Bar */
+  .assessments-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .asm-filter-select {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #334155;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .asm-filter-select:focus {
+    border-color: #0062eb;
+  }
+
+  .asm-search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 0.8125rem;
+    color: #334155;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .asm-search-box svg {
+    color: #94a3b8;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+  }
+
+  .asm-search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.8125rem;
+    color: #334155;
+    font-family: inherit;
+    width: 100%;
+  }
+
+  .btn-clear-filters {
+    color: #0062eb;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px 6px;
+  }
+
+  .btn-clear-filters:hover {
+    text-decoration: underline;
+  }
+
+  /* Assessments Table Card */
+  .assessments-table-card {
+    background: #ffffff;
+    border: 1px solid var(--nim-border);
+    border-radius: var(--nim-radius-card);
+    padding: 20px 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  .assessments-table-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .assessments-table-header svg {
+    color: #0062eb;
+    width: 18px;
+    height: 18px;
+  }
+
+  .assessments-table-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0a1b39;
+    margin: 0;
+  }
+
+  /* Table */
+  .asm-table-container {
+    overflow-x: auto;
+  }
+
+  .asm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+  }
+
+  .asm-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff;
+    white-space: nowrap;
+  }
+
+  .asm-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+
+  .asm-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .asm-table tr:hover {
+    background-color: #fafcff;
+  }
+
+  /* Assessment Name Column */
+  .asm-name-cell {
+    min-width: 190px;
+  }
+
+  .asm-name-title {
+    font-size: 0.84375rem;
+    font-weight: 800;
+    color: #0a1b39;
+    line-height: 1.25;
+  }
+
+  .asm-name-subtitle {
+    font-size: 0.71875rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* Pills */
+  .asm-module-pill {
+    background: #eff6ff;
+    color: #0062eb;
+    border: 1px solid #dbeafe;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  .asm-type-pill {
+    border-radius: 6px;
+    padding: 3px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-block;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .asm-type-pill.quiz {
+    background: #e0f2fe;
+    color: #0284c7;
+  }
+
+  .asm-type-pill.assignment {
+    background: #f3e8ff;
+    color: #7c3aed;
+  }
+
+  .asm-type-pill.test {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+
+  .asm-type-pill.project {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  /* Date & Time Column */
+  .asm-date-cell {
+    font-size: 0.75rem;
+    color: #334155;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.35;
+  }
+
+  .asm-date-cell .time {
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  /* Submissions Column */
+  .asm-submissions-val {
+    font-weight: 800;
+    color: #0a1b39;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  /* Status Pill */
+  .asm-status-pill {
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-block;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .asm-status-pill.pending {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .asm-status-pill.completed {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  /* Action Buttons & Menu */
+  .asm-action-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .btn-asm-outline {
+    background: #ffffff;
+    border: 1.5px solid #0062eb;
+    color: #0062eb;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 5px 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+
+  .btn-asm-outline:hover {
+    background: #f0f7ff;
+  }
+
+  .btn-asm-dots {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 1.15rem;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: color 0.15s;
+  }
+
+  .btn-asm-dots:hover {
+    color: #0a1b39;
+    background: #f1f5f9;
+  }
+
+  /* Right Pane */
+  .assessments-right-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .asm-sidebar-card {
+    background: #ffffff;
+    border: 1px solid var(--nim-border);
+    border-radius: var(--nim-radius-card);
+    padding: 20px 22px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  .asm-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .asm-sidebar-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0a1b39;
+    margin: 0;
+  }
+
+  /* Donut Summary */
+  .asm-summary-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 4px;
+  }
+
+  .asm-donut-container {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+  }
+
+  .asm-donut-svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+  }
+
+  .asm-donut-circle-bg {
+    fill: none;
+    stroke: #f1f5f9;
+    stroke-width: 4.2;
+  }
+
+  .asm-donut-arc {
+    fill: none;
+    stroke-width: 4.2;
+    stroke-linecap: round;
+  }
+
+  .asm-donut-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .asm-donut-center-total {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0a1b39;
+    line-height: 1.1;
+  }
+
+  .asm-donut-center-lbl {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 1px;
+  }
+
+  /* Legend */
+  .asm-summary-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1;
+  }
+
+  .asm-legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78125rem;
+  }
+
+  .asm-legend-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #334155;
+    font-weight: 600;
+  }
+
+  .asm-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .asm-legend-val {
+    font-weight: 800;
+    color: #0a1b39;
+  }
+
+  /* Quick Actions */
+  .asm-quick-action-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    text-decoration: none;
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    transition: all 0.15s ease;
+  }
+
+  .asm-quick-action-link:last-child {
+    margin-bottom: 0;
+  }
+
+  .asm-quick-action-link:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #0062eb;
+  }
+
+  .asm-quick-action-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .asm-quick-action-left svg {
+    color: #0062eb;
+    width: 16px;
+    height: 16px;
+  }
+
+  .asm-quick-action-chevron {
+    color: #94a3b8;
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Recent Submissions List */
+  .asm-submissions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .asm-submission-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .asm-sub-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .asm-sub-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.8125rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .asm-sub-name {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #0a1b39;
+    line-height: 1.2;
+  }
+
+  .asm-sub-meta {
+    font-size: 0.71875rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 1px;
+  }
+
+  .asm-sub-badge {
+    background: #fef3c7;
+    color: #d97706;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* Floating Toast */
+  .asm-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #0a1b39;
+    color: #ffffff;
+    padding: 14px 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    z-index: 9999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .asm-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .asm-toast-icon {
+    color: #34d399;
+    width: 20px;
+    height: 20px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="assessments-page-layout">
+
+  <!-- =========================================================================
+       LEFT COLUMN: Title, 4 KPI Cards, Filters, and Assessments Table
+       ========================================================================= -->
+  <div class="assessments-left-pane">
+
+    <!-- 1. Header Title & Create Assessment Button -->
+    <div class="assessments-header-row">
+      <div>
+        <h1 class="assessments-title">Assessments</h1>
+        <p class="assessments-subtitle">Create, manage and evaluate student assessments</p>
+      </div>
+
+      <button class="btn-create-assessment-top" onclick="openCreateAssessmentModal();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Create Assessment</span>
+      </button>
+    </div>
+
+    <!-- 2. 4 KPI Metric Cards -->
+    <div class="assessments-kpi-grid">
+      <!-- Card 1: Total Assessments -->
+      <div class="asm-kpi-card">
+        <div class="asm-kpi-icon-box asm-kpi-icon-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div>
+          <div class="asm-kpi-label">Total Assessments</div>
+          <div class="asm-kpi-val">{{ total_assessments }}</div>
+          <div class="asm-kpi-sub">Created by you</div>
+        </div>
+      </div>
+
+      <!-- Card 2: Completed -->
+      <div class="asm-kpi-card">
+        <div class="asm-kpi-icon-box asm-kpi-icon-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="asm-kpi-label">Completed</div>
+          <div class="asm-kpi-val">{{ completed_count }}</div>
+          <div class="asm-kpi-sub">Evaluations Done</div>
+        </div>
+      </div>
+
+      <!-- Card 3: Pending Evaluation -->
+      <div class="asm-kpi-card">
+        <div class="asm-kpi-icon-box asm-kpi-icon-amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <div class="asm-kpi-label">Pending Evaluation</div>
+          <div class="asm-kpi-val">{{ pending_count }}</div>
+          <div class="asm-kpi-sub">Submissions to Review</div>
+        </div>
+      </div>
+
+      <!-- Card 4: Total Submissions -->
+      <div class="asm-kpi-card">
+        <div class="asm-kpi-icon-box asm-kpi-icon-rose">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="asm-kpi-label">Total Submissions</div>
+          <div class="asm-kpi-val">{{ total_submissions }}</div>
+          <div class="asm-kpi-sub">From Your Students</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Filter Controls Bar -->
+    <div class="assessments-filter-bar">
+      <select class="asm-filter-select" id="filterBatch" onchange="applyFilters();">
+        <option value="All Batches">All Batches</option>
+        <option value="AI-01">Batch: AI-01</option>
+        <option value="AI-02">Batch: AI-02</option>
+      </select>
+
+      <select class="asm-filter-select" id="filterModule" onchange="applyFilters();">
+        <option value="All Modules">All Modules</option>
+        <option value="Module 1">Module 1</option>
+        <option value="Module 2">Module 2</option>
+        <option value="Module 3">Module 3</option>
+      </select>
+
+      <select class="asm-filter-select" id="filterStatus" onchange="applyFilters();">
+        <option value="All Status">All Status</option>
+        <option value="Pending Evaluation">Pending Evaluation</option>
+        <option value="Completed">Completed</option>
+      </select>
+
+      <div class="asm-search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Search assessment by name..." onkeyup="filterByName(this.value);">
+      </div>
+
+      <button class="btn-clear-filters" onclick="clearAllFilters();">Clear Filters</button>
+    </div>
+
+    <!-- 4. Assessments Table Card -->
+    <div class="assessments-table-card">
+      <div class="assessments-table-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <h2 class="assessments-table-title">Assessments ({{ assessments|length }})</h2>
+      </div>
+
+      <div class="asm-table-container">
+        <table class="asm-table" id="assessmentsTable">
+          <thead>
+            <tr>
+              <th style="width: 35px;">#</th>
+              <th>Assessment Name</th>
+              <th>Module</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Submissions</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in assessments %}
+            <tr data-module="{{ a.module }}" data-status="{{ a.status }}" data-name="{{ a.name }}">
+              <td style="color: #64748b; font-weight: 600;">{{ a.num }}</td>
+              <td>
+                <div class="asm-name-cell">
+                  <div class="asm-name-title">{{ a.name }}</div>
+                  <div class="asm-name-subtitle">{{ a.subtitle }}</div>
+                </div>
+              </td>
+              <td>
+                <span class="asm-module-pill">{{ a.module }}</span>
+              </td>
+              <td>
+                <span class="asm-type-pill {{ a.type_class }}">{{ a.type }}</span>
+              </td>
+              <td>
+                <div class="asm-date-cell">
+                  <div>{{ a.date }}</div>
+                  <div class="time">{{ a.time }}</div>
+                </div>
+              </td>
+              <td>
+                <span class="asm-submissions-val">{{ a.submissions }}</span>
+              </td>
+              <td>
+                <span class="asm-status-pill {{ a.status_class }}">{{ a.status }}</span>
+              </td>
+              <td>
+                <div class="asm-action-cell">
+                  {% if a.action == 'Review' %}
+                  <button class="btn-asm-outline" onclick="openEvaluateModal('{{ a.name|escapejs }}', '{{ a.module|escapejs }}', '{{ a.submissions|escapejs }}');">
+                    Review
+                  </button>
+                  {% else %}
+                  <button class="btn-asm-outline" onclick="openViewModal('{{ a.name|escapejs }}', '{{ a.module|escapejs }}', '{{ a.submissions|escapejs }}', '{{ a.date|escapejs }}');">
+                    View
+                  </button>
+                  {% endif %}
+                  <button class="btn-asm-dots" onclick="showToast('Options for {{ a.name|escapejs }}: Download CSV, Archive, or Send Reminder.');" title="More Options">⋮</button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =========================================================================
+       RIGHT COLUMN: Assessment Summary Donut, Quick Actions, Recent Submissions
+       ========================================================================= -->
+  <aside class="assessments-right-pane">
+
+    <!-- Card 1: Assessment Summary Donut -->
+    <div class="asm-sidebar-card">
+      <div class="asm-sidebar-header">
+        <h3 class="asm-sidebar-title">Assessment Summary</h3>
+      </div>
+
+      <div class="asm-summary-content">
+        <!-- Donut Chart -->
+        <div class="asm-donut-container">
+          <svg class="asm-donut-svg" viewBox="0 0 36 36">
+            <circle class="asm-donut-circle-bg" cx="18" cy="18" r="15.91549430918954"/>
+            <!-- Amber: Pending (50%) -->
+            <circle class="asm-donut-arc" cx="18" cy="18" r="15.91549430918954" stroke="#fbbf24" stroke-dasharray="50 50" stroke-dashoffset="0"/>
+            <!-- Green: Completed (50%) -->
+            <circle class="asm-donut-arc" cx="18" cy="18" r="15.91549430918954" stroke="#34d399" stroke-dasharray="50 50" stroke-dashoffset="50"/>
+          </svg>
+
+          <!-- Center Text -->
+          <div class="asm-donut-center-text">
+            <div class="asm-donut-center-total">{{ total_assessments }}</div>
+            <div class="asm-donut-center-lbl">Total</div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="asm-summary-legend">
+          <div class="asm-legend-item">
+            <div class="asm-legend-left">
+              <span class="asm-legend-dot" style="background-color: #34d399;"></span>
+              <span>Completed</span>
+            </div>
+            <span class="asm-legend-val">{{ completed_count }}</span>
+          </div>
+
+          <div class="asm-legend-item">
+            <div class="asm-legend-left">
+              <span class="asm-legend-dot" style="background-color: #fbbf24;"></span>
+              <span>Pending</span>
+            </div>
+            <span class="asm-legend-val">{{ pending_count }}</span>
+          </div>
+
+          <div class="asm-legend-item">
+            <div class="asm-legend-left">
+              <span class="asm-legend-dot" style="background-color: #0062eb;"></span>
+              <span>Upcoming</span>
+            </div>
+            <span class="asm-legend-val">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Quick Actions -->
+    <div class="asm-sidebar-card">
+      <div class="asm-sidebar-header">
+        <h3 class="asm-sidebar-title">Quick Actions</h3>
+      </div>
+
+      <div style="display: flex; flex-direction: column;">
+        <a href="javascript:void(0);" onclick="openCreateAssessmentModal();" class="asm-quick-action-link">
+          <div class="asm-quick-action-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Create Assessment</span>
+          </div>
+          <svg class="asm-quick-action-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+
+        <a href="javascript:void(0);" onclick="showToast('Loading all 26 submitted mentee solutions...');" class="asm-quick-action-link">
+          <div class="asm-quick-action-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <span>View Submissions</span>
+          </div>
+          <svg class="asm-quick-action-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+
+        <a href="javascript:void(0);" onclick="filterByPending();" class="asm-quick-action-link">
+          <div class="asm-quick-action-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Pending Evaluations</span>
+          </div>
+          <svg class="asm-quick-action-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+
+        <a href="{% url 'mentor_reports' %}" class="asm-quick-action-link">
+          <div class="asm-quick-action-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Assessment Reports</span>
+          </div>
+          <svg class="asm-quick-action-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Card 3: Recent Submissions -->
+    <div class="asm-sidebar-card">
+      <div class="asm-sidebar-header">
+        <h3 class="asm-sidebar-title">Recent Submissions</h3>
+        <a href="javascript:void(0);" onclick="showToast('Viewing all recent student submissions');" style="color: #0062eb; font-weight: 700; font-size: 0.78125rem; text-decoration: none;">View All</a>
+      </div>
+
+      <div class="asm-submissions-list">
+        {% for sub in recent_submissions %}
+        <div class="asm-submission-item">
+          <div class="asm-sub-left">
+            <div class="asm-sub-avatar" style="background-color: {{ sub.avatar_bg }};">
+              {{ sub.initial }}
+            </div>
+            <div>
+              <div class="asm-sub-name">{{ sub.student_name }}</div>
+              <div class="asm-sub-meta">{{ sub.assessment_name }} • {{ sub.time_ago }}</div>
+            </div>
+          </div>
+          <span class="asm-sub-badge">{{ sub.status }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+<!-- Modal: Create Assessment -->
+<div class="mentor-modal-backdrop" id="createAssessmentModal">
+  <div class="mentor-modal-box">
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--nim-border-subtle); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0a1b39;">Create New Assessment</h3>
+      <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="closeModal('createAssessmentModal');">&times;</button>
+    </div>
+    <form onsubmit="event.preventDefault(); saveNewAssessment();" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+      <div>
+        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Assessment Title <span style="color: #ef4444;">*</span></label>
+        <input type="text" id="newAsmTitle" class="form-field-input" placeholder="e.g. LangChain RAG Milestone Quiz" style="width: 100%; box-sizing: border-box;" required>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Module <span style="color: #ef4444;">*</span></label>
+          <select class="form-field-select" style="width: 100%; box-sizing: border-box;">
+            <option>Module 1: Python Fundamentals</option>
+            <option>Module 2: Machine Learning</option>
+            <option selected>Module 3: Generative AI</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Assessment Type <span style="color: #ef4444;">*</span></label>
+          <select class="form-field-select" style="width: 100%; box-sizing: border-box;">
+            <option>Quiz</option>
+            <option>Assignment</option>
+            <option>Test</option>
+            <option>Project</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Due Date & Time <span style="color: #ef4444;">*</span></label>
+          <input type="text" class="form-field-input" value="30 Sep 2026, 11:59 PM" style="width: 100%; box-sizing: border-box;" required>
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Max Score <span style="color: #ef4444;">*</span></label>
+          <input type="number" class="form-field-input" value="100" style="width: 100%; box-sizing: border-box;" required>
+        </div>
+      </div>
+      <div>
+        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Instructions / Scope</label>
+        <textarea rows="2" class="form-field-textarea" placeholder="Enter evaluation guidelines and rubric criteria..." style="width: 100%; box-sizing: border-box;"></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+        <button type="button" class="btn-nim-secondary" onclick="closeModal('createAssessmentModal');">Cancel</button>
+        <button type="submit" class="btn-nim-primary">Publish Assessment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Review / Evaluation -->
+<div class="mentor-modal-backdrop" id="evaluateModal">
+  <div class="mentor-modal-box">
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--nim-border-subtle); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0a1b39;" id="evalModalTitle">Review Submissions</h3>
+      <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="closeModal('evaluateModal');">&times;</button>
+    </div>
+    <div style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px;">
+        <div>
+          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Submissions Status</span>
+          <div style="font-size: 1.1rem; font-weight: 800; color: #0a1b39;" id="evalModalSubmissions">28 / 30 Submitted</div>
+        </div>
+        <span class="asm-status-pill pending">Pending Evaluation</span>
+      </div>
+
+      <!-- Quick Mentee Evaluation row -->
+      <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: #38bdf8; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">S</div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.8125rem; color: #0a1b39;">Sai Kumar</div>
+              <div style="font-size: 0.7rem; color: #64748b;">Submitted 2 hours ago • Code Repo &amp; Notebook</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <input type="number" value="92" style="width: 50px; padding: 4px 6px; font-size: 0.78125rem; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center;">
+            <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">/ 100</span>
+          </div>
+        </div>
+        <input type="text" placeholder="Mentor Feedback: e.g. Clean modular implementation with good docstrings." style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 0.75rem; outline: none; width: 100%; box-sizing: border-box;" value="Strong modular code structure. Well-handled edge cases.">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+        <button type="button" class="btn-nim-secondary" onclick="closeModal('evaluateModal');">Close</button>
+        <button type="button" class="btn-nim-primary" onclick="submitEvaluation();">Submit Grade &amp; Feedback</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: View Assessment Details -->
+<div class="mentor-modal-backdrop" id="viewAssessmentModal">
+  <div class="mentor-modal-box">
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--nim-border-subtle); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0a1b39;" id="viewModalTitle">Assessment Details</h3>
+      <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="closeModal('viewAssessmentModal');">&times;</button>
+    </div>
+    <div style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="asm-status-pill completed">Completed</span>
+        <span style="font-size: 0.8125rem; color: #64748b; font-weight: 600;" id="viewModalModule">Module 1</span>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 0.78125rem; color: #475569;"><strong>Submissions:</strong> <span id="viewModalSubmissions">30 / 30 Completed (100%)</span></div>
+        <div style="font-size: 0.78125rem; color: #475569;"><strong>Evaluation Date:</strong> <span id="viewModalDate">18 Sep 2026</span></div>
+        <div style="font-size: 0.78125rem; color: #475569;"><strong>Cohort Average:</strong> 89.4% (All 30 evaluated)</div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+        <button type="button" class="btn-nim-secondary" onclick="closeModal('viewAssessmentModal');">Close</button>
+        <button type="button" class="btn-nim-primary" onclick="showToast('Exporting assessment grade sheet CSV...');">Export CSV</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Toast Notification -->
+<div class="asm-toast" id="asmToast">
+  <svg class="asm-toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="asmToastMsg">Notification message</span>
+</div>
+
+<script>
+function filterByName(val) {
+  const query = val.toLowerCase().trim();
+  const rows = document.querySelectorAll('#assessmentsTable tbody tr');
+  rows.forEach(r => {
+    const name = (r.getAttribute('data-name') || '').toLowerCase();
+    if (name.includes(query)) {
+      r.style.display = '';
+    } else {
+      r.style.display = 'none';
+    }
+  });
+}
+
+function applyFilters() {
+  const moduleVal = document.getElementById('filterModule').value;
+  const statusVal = document.getElementById('filterStatus').value;
+  const rows = document.querySelectorAll('#assessmentsTable tbody tr');
+
+  rows.forEach(r => {
+    const rMod = r.getAttribute('data-module') || '';
+    const rStat = r.getAttribute('data-status') || '';
+
+    const matchMod = (moduleVal === 'All Modules') || (rMod.includes(moduleVal));
+    const matchStat = (statusVal === 'All Status') || (rStat === statusVal);
+
+    if (matchMod && matchStat) {
+      r.style.display = '';
+    } else {
+      r.style.display = 'none';
+    }
+  });
+  showToast(`Filters updated: ${moduleVal} • ${statusVal}`);
+}
+
+function filterByPending() {
+  document.getElementById('filterStatus').value = 'Pending Evaluation';
+  applyFilters();
+}
+
+function clearAllFilters() {
+  document.getElementById('filterBatch').value = 'All Batches';
+  document.getElementById('filterModule').value = 'All Modules';
+  document.getElementById('filterStatus').value = 'All Status';
+  document.getElementById('searchInput').value = '';
+  document.querySelectorAll('#assessmentsTable tbody tr').forEach(r => r.style.display = '');
+  showToast('Filters cleared.');
+}
+
+function openCreateAssessmentModal() {
+  document.getElementById('createAssessmentModal').classList.add('active');
+}
+
+function openEvaluateModal(title, module, submissions) {
+  document.getElementById('evalModalTitle').textContent = 'Review: ' + title;
+  document.getElementById('evalModalSubmissions').textContent = submissions + ' Submitted';
+  document.getElementById('evaluateModal').classList.add('active');
+}
+
+function openViewModal(title, module, submissions, date) {
+  document.getElementById('viewModalTitle').textContent = title;
+  document.getElementById('viewModalModule').textContent = module;
+  document.getElementById('viewModalSubmissions').textContent = submissions + ' Completed (100%)';
+  document.getElementById('viewModalDate').textContent = date;
+  document.getElementById('viewAssessmentModal').classList.add('active');
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.remove('active');
+}
+
+function saveNewAssessment() {
+  const title = document.getElementById('newAsmTitle').value;
+  closeModal('createAssessmentModal');
+  showToast(`Assessment "${title}" created and dispatched to students!`);
+}
+
+function submitEvaluation() {
+  closeModal('evaluateModal');
+  showToast('Evaluation grade and mentor feedback saved successfully!');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('asmToast');
+  document.getElementById('asmToastMsg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3200);
+}
+</script>
+
+{% endblock %}

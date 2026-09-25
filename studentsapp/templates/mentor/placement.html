@@ -1,0 +1,326 @@
+{% extends 'mentor/base.html' %}
+
+{% block title %}Placement & Career Readiness - NIM Academy{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mentor-welcome-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span class="badge-pill badge-blue">AI Cohort 2026 Career Cell</span>
+        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Faculty Mentor: Dr. Rajiv Sen</span>
+      </div>
+      <h1 class="mentor-page-heading">Placement &amp; Career Readiness</h1>
+      <p class="mentor-page-subline">
+        Oversee student career profiles, ATS resume scoring, mock interview evaluations, technical skills endorsements, and campus placement drives.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-nim-secondary" onclick="document.getElementById('mockDriveModal').classList.add('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Schedule Mock Drive</span>
+      </button>
+      <button class="btn-nim-primary" onclick="window.print();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export Placement Ledger</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="mentor-kpi-grid">
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-emerald">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">{{ ready_count }}</div>
+      <div class="mentor-stat-label">Placement Ready (&ge; 85% ATS)</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">{{ interviewing_count }}</div>
+      <div class="mentor-stat-label">In Active Company Drives</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">{{ offers_count }}</div>
+      <div class="mentor-stat-label">Placement Offers Secured</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-amber">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">{{ polish_count }}</div>
+      <div class="mentor-stat-label">Attention / Polish Needed</div>
+    </div>
+  </div>
+</div>
+
+<!-- Active Campus Drives Section -->
+<div class="mentor-card" style="margin-bottom: 24px;">
+  <div class="mentor-card-header">
+    <h3 class="mentor-card-title">Active Campus Hiring Drives &amp; Eligibility</h3>
+    <span class="badge-pill badge-green">3 Active Hiring Partners</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; padding: 20px;">
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+        <span class="badge-pill badge-green">Eligible • Apply Open</span>
+        <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Deadline: 30 Sep 2026</span>
+      </div>
+      <h4 style="margin: 0 0 4px; font-size: 1rem; font-weight: 800; color: #0a1b39;">Associate AI Engineer</h4>
+      <div style="font-size: 0.8125rem; font-weight: 700; color: #0062eb; margin-bottom: 8px;">CognitiveScale AI • Bengaluru / Hybrid</div>
+      <div style="font-size: 0.78125rem; color: #475569; margin-bottom: 12px;">
+        <div><strong>Package:</strong> ₹14 – 18 LPA</div>
+        <div><strong>Eligibility:</strong> Month 4 Completed &amp; 80%+ Attendance</div>
+      </div>
+      <button class="btn-table-sm primary" style="width: 100%; text-align: center;" onclick="alert('Viewing 24 eligible students for CognitiveScale AI');">
+        View 24 Eligible Students
+      </button>
+    </div>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+        <span class="badge-pill badge-blue">Upcoming • Opens Oct 15</span>
+        <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Deadline: 20 Oct 2026</span>
+      </div>
+      <h4 style="margin: 0 0 4px; font-size: 1rem; font-weight: 800; color: #0a1b39;">MLOps / Data Scientist</h4>
+      <div style="font-size: 0.8125rem; font-weight: 700; color: #0062eb; margin-bottom: 8px;">Fractal Analytics • Hyderabad / Remote</div>
+      <div style="font-size: 0.78125rem; color: #475569; margin-bottom: 12px;">
+        <div><strong>Package:</strong> ₹12 – 16 LPA</div>
+        <div><strong>Eligibility:</strong> Evaluation 1 &amp; 2 Passed (&ge; 75%)</div>
+      </div>
+      <button class="btn-table-sm" style="width: 100%; text-align: center;" onclick="alert('Shortlist scheduled for 15 Oct');">
+        Prepare Candidate Shortlist
+      </button>
+    </div>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+        <span class="badge-pill badge-slate">Upcoming in Month 6</span>
+        <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Deadline: 10 Nov 2026</span>
+      </div>
+      <h4 style="margin: 0 0 4px; font-size: 1rem; font-weight: 800; color: #0a1b39;">GenAI Applications Engineer</h4>
+      <div style="font-size: 0.8125rem; font-weight: 700; color: #0062eb; margin-bottom: 8px;">Inference Labs • Gurugram / Onsite</div>
+      <div style="font-size: 0.78125rem; color: #475569; margin-bottom: 12px;">
+        <div><strong>Package:</strong> ₹16 – 22 LPA</div>
+        <div><strong>Eligibility:</strong> Capstone Defense Approved</div>
+      </div>
+      <button class="btn-table-sm" style="width: 100%; text-align: center;" onclick="alert('Capstone project prerequisites active');">
+        Review Capstone Pre-reqs
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Student Placement Ledger Table Card -->
+<div class="mentor-card">
+  <div class="mentor-card-header">
+    <h3 class="mentor-card-title">Assigned Students Career Readiness Roster</h3>
+    <span class="badge-pill badge-blue">{{ students|length }} Students Tracked</span>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table class="mentor-table">
+      <thead>
+        <tr>
+          <th>Student &amp; Target Role</th>
+          <th>Resume ATS</th>
+          <th>Mock Interview</th>
+          <th>Verified Skills</th>
+          <th>Interview Readiness</th>
+          <th>Placement Status</th>
+          <th style="text-align: right;">Mentor Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: {{ s.color }}15; color: {{ s.color }}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8125rem; border: 1px solid {{ s.color }}30;">
+                {{ s.initials }}
+              </div>
+              <div>
+                <a href="{% url 'mentor_student_detail' s.id %}" style="font-weight: 800; color: #0a1b39; text-decoration: none;">
+                  {{ s.name }}
+                </a>
+                <div style="font-size: 0.75rem; color: #0062eb; font-weight: 700;">{{ s.target_role }}</div>
+                <div style="font-size: 0.7rem; color: #64748b;">Target: {{ s.target_comp }} • {{ s.location }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="font-weight: 800; font-size: 0.875rem; color: #0a1b39;">{{ s.resume_ats_score }}%</div>
+              <div style="width: 50px; height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+                <div style="width: {{ s.resume_ats_score }}%; height: 100%; background: #0062eb;"></div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="font-weight: 800; font-size: 0.875rem; color: #059669;">
+              ★ {{ s.mock_interview_score }} <span style="font-size: 0.72rem; color: #64748b; font-weight: 500;">/ 10</span>
+            </div>
+          </td>
+          <td style="max-width: 220px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+              {% for sk in s.skills %}
+                <span class="badge-pill badge-slate" style="font-size: 0.6875rem; padding: 2px 6px;">{{ sk }}</span>
+              {% endfor %}
+            </div>
+          </td>
+          <td style="min-width: 140px;">
+            <div style="font-size: 0.72rem; color: #475569; display: flex; flex-direction: column; gap: 3px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>Technical:</span>
+                <strong>{{ s.readiness.technical }}%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>System Design:</span>
+                <strong>{{ s.readiness.system_design }}%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Coding Viva:</span>
+                <strong>{{ s.readiness.coding }}%</strong>
+              </div>
+            </div>
+          </td>
+          <td>
+            {% if s.career_status == 'Placement Ready' %}
+              <span class="badge-pill badge-green">● Placement Ready</span>
+            {% elif s.career_status == 'In Interview Drive' %}
+              <span class="badge-pill badge-blue">● In Interview Drive</span>
+            {% elif s.career_status == 'On Track' %}
+              <span class="badge-pill badge-slate">● On Track</span>
+            {% else %}
+              <span class="badge-pill badge-amber">● Attention Needed</span>
+            {% endif %}
+          </td>
+          <td style="text-align: right;">
+            <div style="display: flex; gap: 6px; justify-content: flex-end;">
+              <button class="btn-table-sm" onclick="openEndorseModal('{{ s.name|escapejs }}', '{{ s.id }}');">
+                Endorse
+              </button>
+              <a href="{% url 'mentor_student_detail' s.id %}" class="btn-table-sm primary">
+                Dossier
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Endorse Technical Skills -->
+<div class="mentor-modal-backdrop" id="endorseModal">
+  <div class="mentor-modal-box">
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--nim-border); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.0625rem; font-weight: 800; color: #0a1b39;">Faculty Technical Endorsement</h3>
+      <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="document.getElementById('endorseModal').classList.remove('active');">&times;</button>
+    </div>
+    <form onsubmit="event.preventDefault(); alert('Endorsement successfully recorded and added to student placement dossier!'); document.getElementById('endorseModal').classList.remove('active');" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+      <div>
+        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Candidate</label>
+        <input type="text" id="endorseStudentName" readonly style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; font-weight: 700;">
+      </div>
+      <div>
+        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Select Skills to Endorse</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8125rem; color: #334155; margin-top: 6px;">
+          <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" checked> PyTorch &amp; Deep Learning</label>
+          <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" checked> Transformers &amp; Attention</label>
+          <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" checked> Vector Databases &amp; RAG</label>
+          <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" checked> LoRA Fine-Tuning</label>
+          <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox"> Agentic Workflows (LangGraph)</label>
+          <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox"> Production FastAPI Serving</label>
+        </div>
+      </div>
+      <div>
+        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Mentor Recommendation Note</label>
+        <textarea rows="3" class="form-field-textarea" placeholder="e.g. Demonstrated exceptional production code structure and scaled inference comprehension during capstone review..." style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button type="button" class="btn-nim-secondary" onclick="document.getElementById('endorseModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-nim-primary">Submit Endorsement</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Schedule Mock Drive -->
+<div class="mentor-modal-backdrop" id="mockDriveModal">
+  <div class="mentor-modal-box">
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--nim-border); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.0625rem; font-weight: 800; color: #0a1b39;">Schedule Mock Technical Interview</h3>
+      <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="document.getElementById('mockDriveModal').classList.remove('active');">&times;</button>
+    </div>
+    <form onsubmit="event.preventDefault(); alert('Mock interview round scheduled and calendar invitations dispatched!'); document.getElementById('mockDriveModal').classList.remove('active');" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Target Role</label>
+          <select class="form-field-select" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <option>AI / Machine Learning Engineer</option>
+            <option>MLOps &amp; Inference Engineer</option>
+            <option>GenAI Applications Engineer</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Evaluation Track</label>
+          <select class="form-field-select" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <option>Technical Deep Dive (PyTorch &amp; Transformers)</option>
+            <option>System Design (RAG &amp; Vector Databases)</option>
+            <option>Coding Live Whiteboard</option>
+            <option>HR &amp; Behavioral</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Date</label>
+          <input type="date" value="2026-09-28" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+        </div>
+        <div>
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Time Slot</label>
+          <input type="time" value="14:00" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+        </div>
+      </div>
+      <div>
+        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Meeting Room / Link</label>
+        <input type="url" value="https://meet.google.com/nim-career-mock-01" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button type="button" class="btn-nim-secondary" onclick="document.getElementById('mockDriveModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-nim-primary">Confirm &amp; Notify</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openEndorseModal(studentName, studentId) {
+  document.getElementById('endorseStudentName').value = studentName + ' (' + studentId + ')';
+  document.getElementById('endorseModal').classList.add('active');
+}
+</script>
+{% endblock %}
+

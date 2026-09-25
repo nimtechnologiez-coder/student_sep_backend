@@ -1,0 +1,171 @@
+{% extends 'mentor/base.html' %}
+
+{% block title %}Notifications & Alerts - NIM Academy{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mentor-welcome-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span class="badge-pill badge-blue">Faculty Alerts Feed</span>
+        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Faculty Mentor: Dr. Rajiv Sen</span>
+      </div>
+      <h1 class="mentor-page-heading">Notifications &amp; Activity Dispatch</h1>
+      <p class="mentor-page-subline">
+        Real-time alerts for upcoming classes, student submissions, attendance drops, and assessment releases.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-nim-secondary" onclick="markAllNotificationsRead();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Mark All as Read</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Category Filter Tabs -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px;" id="notifFilterTabs">
+  <button class="btn-table-sm primary notif-tab" onclick="filterCategory('all', this);">
+    All ({{ notifications|length }})
+  </button>
+  <button class="btn-table-sm notif-tab" onclick="filterCategory('classes', this);">
+    Classes
+  </button>
+  <button class="btn-table-sm notif-tab" onclick="filterCategory('assignments', this);">
+    Tasks &amp; Labs
+  </button>
+  <button class="btn-table-sm notif-tab" onclick="filterCategory('evaluations', this);">
+    Evaluations
+  </button>
+  <button class="btn-table-sm notif-tab" onclick="filterCategory('care', this);">
+    Care Alerts
+  </button>
+  <button class="btn-table-sm notif-tab" onclick="filterCategory('placement', this);">
+    Placement
+  </button>
+  <button class="btn-table-sm notif-tab" onclick="filterCategory('announcements', this);">
+    Academy
+  </button>
+  <button class="btn-table-sm notif-tab" onclick="filterCategory('unread', this);" style="margin-left: auto;">
+    Unread Only
+  </button>
+</div>
+
+<!-- Notification Items Feed -->
+<div style="display: flex; flex-direction: column; gap: 12px;" id="notifListContainer">
+  {% for n in notifications %}
+  <div class="mentor-card notif-card" data-category="{{ n.category }}" data-read="{% if n.is_read %}read{% else %}unread{% endif %}" style="padding: 18px 20px; transition: all 0.2s; border-left: 4px solid {% if n.priority == 'urgent' %}#e11d48{% elif n.priority == 'high' %}#f59e0b{% else %}#0062eb{% endif %}; {% if not n.is_read %}background: #f0f7ff;{% endif %}">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+      <div style="display: flex; gap: 14px; align-items: flex-start;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; shrink-0;
+          {% if n.priority == 'urgent' %}background: #ffe4e6; color: #e11d48;
+          {% elif n.priority == 'high' %}background: #fef3c7; color: #d97706;
+          {% else %}background: #eff6ff; color: #0062eb;{% endif %}">
+          {% if n.category == 'classes' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          {% elif n.category == 'assignments' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          {% elif n.category == 'care' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {% elif n.category == 'evaluations' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          {% elif n.category == 'placement' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          {% endif %}
+        </div>
+
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+            {% if n.priority == 'urgent' %}
+              <span class="badge-pill badge-rose" style="font-size: 0.6875rem;">● Urgent</span>
+            {% elif n.priority == 'high' %}
+              <span class="badge-pill badge-amber" style="font-size: 0.6875rem;">● High Priority</span>
+            {% endif %}
+            <span class="badge-pill badge-slate" style="font-size: 0.6875rem; text-transform: uppercase;">{{ n.category }}</span>
+            <span style="font-size: 0.72rem; color: #64748b;">{{ n.timestamp }}</span>
+            {% if not n.is_read %}
+              <span class="badge-pill badge-blue" style="font-size: 0.625rem;">New</span>
+            {% endif %}
+          </div>
+          <h4 style="margin: 0 0 4px; font-size: 0.9375rem; font-weight: 800; color: #0a1b39;">{{ n.title }}</h4>
+          <p style="margin: 0; font-size: 0.8125rem; color: #475569; line-height: 1.45;">{{ n.message }}</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
+        <a href="{{ n.action_url }}" class="btn-table-sm primary" style="text-decoration: none; white-space: nowrap;">
+          {{ n.action_label }}
+        </a>
+        <button class="btn-table-sm" onclick="toggleRead(this);" title="Toggle read state" style="white-space: nowrap;">
+          {% if n.is_read %}Mark Unread{% else %}Mark Read{% endif %}
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function filterCategory(category, buttonEl) {
+  // Update tab active state
+  document.querySelectorAll('.notif-tab').forEach(btn => {
+    btn.classList.remove('primary');
+  });
+  buttonEl.classList.add('primary');
+
+  // Filter notification cards
+  const cards = document.querySelectorAll('.notif-card');
+  cards.forEach(card => {
+    const cardCat = card.getAttribute('data-category');
+    const cardRead = card.getAttribute('data-read');
+
+    if (category === 'all') {
+      card.style.display = 'block';
+    } else if (category === 'unread') {
+      card.style.display = cardRead === 'unread' ? 'block' : 'none';
+    } else {
+      card.style.display = cardCat === category ? 'block' : 'none';
+    }
+  });
+}
+
+function toggleRead(buttonEl) {
+  const card = buttonEl.closest('.notif-card');
+  const currentStatus = card.getAttribute('data-read');
+  if (currentStatus === 'unread') {
+    card.setAttribute('data-read', 'read');
+    card.style.background = '#ffffff';
+    buttonEl.textContent = 'Mark Unread';
+    const newBadge = card.querySelector('.badge-blue');
+    if (newBadge && newBadge.textContent === 'New') {
+      newBadge.remove();
+    }
+  } else {
+    card.setAttribute('data-read', 'unread');
+    card.style.background = '#f0f7ff';
+    buttonEl.textContent = 'Mark Read';
+  }
+}
+
+function markAllNotificationsRead() {
+  const cards = document.querySelectorAll('.notif-card');
+  cards.forEach(card => {
+    card.setAttribute('data-read', 'read');
+    card.style.background = '#ffffff';
+    const toggleBtn = card.querySelectorAll('button')[0];
+    if (toggleBtn) toggleBtn.textContent = 'Mark Unread';
+    const newBadge = card.querySelector('.badge-blue');
+    if (newBadge && newBadge.textContent === 'New') {
+      newBadge.remove();
+    }
+  });
+  alert('All notifications marked as read.');
+}
+</script>
+{% endblock %}
+

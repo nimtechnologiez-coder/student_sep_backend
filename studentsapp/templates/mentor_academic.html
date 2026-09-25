@@ -1,0 +1,657 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assigned Academic Curriculum - NIM Academy Faculty Portal</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+  <style>
+    .kpi-cards-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1100px) {
+      .kpi-cards-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 640px) {
+      .kpi-cards-grid-4 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Module Navigation Tabs */
+    .module-tab-bar {
+      display: flex;
+      gap: 12px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0;
+      margin-bottom: 20px;
+    }
+    .module-tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 18px;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .module-tab-btn.active {
+      color: #2563eb;
+      border-bottom-color: #2563eb;
+    }
+    .module-tab-btn:hover:not(.active) {
+      color: #0f172a;
+    }
+
+    /* Module Showcase Card */
+    .module-overview-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .module-stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+    @media (max-width: 768px) {
+      .module-stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .module-stat-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .module-stat-label {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .module-stat-val {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Topic Accordion Item */
+    .topic-list-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .topic-row-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      transition: all 0.15s ease;
+    }
+    .topic-row-item:hover {
+      border-color: #bfdbfe;
+      background: #fafcff;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
+    }
+    .topic-index-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #2563eb;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component with role='mentor' and active_page='mentor_academic' -->
+  {% include 'sidebar.html' with active_page='mentor_academic' role='mentor' is_mentor=True %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" placeholder="Search modules, topic objectives, lab assignments, or GPU sandboxes...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Mon, 24 Sep 2026</span>
+        </div>
+
+        <a href="{% url 'mentor_notifications' %}" class="header-notif-btn" title="Mentor Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">4</span>
+        </a>
+
+        <!-- Mentor Profile in Header -->
+        <div class="header-user-profile" title="Faculty Mentor Profile">
+          <div class="user-avatar-circle" style="background-color: #1d4ed8; color: #ffffff; font-weight: 700;">RS</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Dr. Rajiv Sen</span>
+            <span class="user-role-sub">Faculty Mentor • GenAI</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mentor Workspace -->
+    <div class="admin-workspace">
+
+      <!-- Page Title Row -->
+      <div class="page-title-row">
+        <div class="title-text-group">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="status-badge badge-role-mentor">
+              <span class="badge-dot" style="background: #1d4ed8;"></span> Faculty Workspace
+            </span>
+            <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Cohorts: Batch AI-09 &amp; Batch AI-10</span>
+          </div>
+          <h1 class="main-page-title">Assigned Academic Curriculum</h1>
+          <p class="main-page-subtitle">Curriculum syllabi, topic lesson plans, code sandboxes, lab assignments, and pedagogical content assigned to Dr. Rajiv Sen.</p>
+        </div>
+
+        <div class="page-actions-group">
+          <button class="btn-secondary-action" onclick="alert('Downloading master curriculum specification PDF...');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Curriculum PDF</span>
+          </button>
+          <button class="btn-primary-add" onclick="document.getElementById('uploadResourceModal').classList.add('active');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Upload Learning Content</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards (4 Cards) -->
+      <div class="kpi-cards-grid-4">
+        
+        <!-- 1. Assigned Modules -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">2</span>
+            <span class="kpi-stat-label">Assigned Modules</span>
+            <span class="kpi-trend-row"><span class="trend-blue">AIML-301</span> &amp; AIML-101</span>
+          </div>
+        </div>
+
+        <!-- 2. Hands-on Lab Assignments -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">24</span>
+            <span class="kpi-stat-label">Lab Assignments</span>
+            <span class="kpi-trend-row"><span class="trend-purple">18 Graded</span> • 6 Active</span>
+          </div>
+        </div>
+
+        <!-- 3. Topic Lecture Kits -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">48</span>
+            <span class="kpi-stat-label">Lecture Topic Kits</span>
+            <span class="kpi-trend-row"><span class="trend-green">Slides + Code</span> Ready</span>
+          </div>
+        </div>
+
+        <!-- 4. Compute Sandbox Status -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">A100</span>
+            <span class="kpi-stat-label">GPU Pod Cluster</span>
+            <span class="kpi-trend-row"><span class="trend-amber">Active</span> • 30 Instances Online</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Module Switcher Tabs -->
+      <div class="module-tab-bar">
+        <button class="module-tab-btn active" id="tabAimL301" onclick="switchModuleTab('aiml301')">
+          <span>Module AIML-301: Advanced GenAI &amp; Autonomous Agents</span>
+          <span class="status-badge badge-active" style="font-size: 0.7rem; padding: 2px 6px;">Current</span>
+        </button>
+        <button class="module-tab-btn" id="tabAimL101" onclick="switchModuleTab('aiml101')">
+          <span>Module AIML-101: Deep Learning &amp; PyTorch Foundations</span>
+          <span class="status-badge" style="background: #f1f5f9; color: #475569; font-size: 0.7rem; padding: 2px 6px;">Prerequisite</span>
+        </button>
+      </div>
+
+      <!-- Module AIML-301 View -->
+      <div id="moduleView301">
+        <div class="module-overview-card" style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span class="status-badge badge-active">Active Teaching</span>
+                <span class="status-badge badge-role-admin">Batch AI-09 &amp; AI-10</span>
+              </div>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">
+                AIML-301: Advanced GenAI, Enterprise RAG &amp; Multi-Agent Swarms
+              </h2>
+              <p style="font-size: 0.875rem; color: #475569; margin: 0; max-width: 900px; line-height: 1.5;">
+                Advanced curriculum covering Transformer architectural mechanics, hybrid semantic search, Llama-3 7B/8B LoRA fine-tuning, autonomous LangGraph workflows, and scalable inference serving with vLLM.
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn-secondary-action" onclick="alert('Launching A100 GPU JupyterHub Container...');">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/></svg>
+                <span>Launch A100 Sandbox</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="module-stats-strip">
+            <div class="module-stat-cell">
+              <span class="module-stat-label">Total Topics</span>
+              <span class="module-stat-val">8 Comprehensive Topics</span>
+            </div>
+            <div class="module-stat-cell">
+              <span class="module-stat-label">Hands-on Labs</span>
+              <span class="module-stat-val">6 Coding Lab Projects</span>
+            </div>
+            <div class="module-stat-cell">
+              <span class="module-stat-label">Capstones</span>
+              <span class="module-stat-val">2 Industry Capstones</span>
+            </div>
+            <div class="module-stat-cell">
+              <span class="module-stat-label">Credit Hours</span>
+              <span class="module-stat-val">45 Practical Hours</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Topics & Learning Objectives Accordion/List -->
+        <div class="admin-table-card" style="margin-bottom: 20px;">
+          <div class="table-card-header">
+            <div class="table-title-group">
+              <h3 class="table-main-heading">Topics &amp; Learning Objectives Breakdown</h3>
+              <span class="table-count-badge">8 Topics in AIML-301</span>
+            </div>
+          </div>
+
+          <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 10px;">
+            <!-- Topic 1 -->
+            <div class="topic-row-item">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="topic-index-badge">T1</div>
+                <div>
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.9375rem;">Transformer Mathematics &amp; Attention Mechanisms</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">Multi-Head Attention, Scaled Dot-Product, Positional Encodings (RoPE), FlashAttention-2</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="status-badge badge-paid">Delivered</span>
+                <button class="btn-table-action" onclick="alert('Viewing Topic 1 Slides &amp; Code');">Lecture Kit</button>
+              </div>
+            </div>
+
+            <!-- Topic 2 -->
+            <div class="topic-row-item">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="topic-index-badge">T2</div>
+                <div>
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.9375rem;">Vector Embeddings &amp; Dense/Sparse Indexing</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">HNSW graphs, Cosine vs Dot Product metrics, BM25 indexing, Qdrant/Milvus deployment</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="status-badge badge-paid">Delivered</span>
+                <button class="btn-table-action" onclick="alert('Viewing Topic 2 Slides &amp; Code');">Lecture Kit</button>
+              </div>
+            </div>
+
+            <!-- Topic 3 -->
+            <div class="topic-row-item">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="topic-index-badge">T3</div>
+                <div>
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.9375rem;">Enterprise RAG Architectures &amp; Hybrid Retrieval</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">Semantic chunking, metadata filtering, Cohere cross-encoder rerankers, Ragas benchmarking</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="status-badge badge-paid">Delivered</span>
+                <button class="btn-table-action" onclick="alert('Viewing Topic 3 Slides &amp; Code');">Lecture Kit</button>
+              </div>
+            </div>
+
+            <!-- Topic 4 (Current) -->
+            <div class="topic-row-item" style="border-color: #93c5fd; background: #f0f7ff;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="topic-index-badge" style="background: #2563eb; color: #ffffff;">T4</div>
+                <div>
+                  <div style="font-weight: 700; color: #1e40af; font-size: 0.9375rem;">Parameter-Efficient Fine-Tuning (PEFT, LoRA &amp; QLoRA)</div>
+                  <div style="font-size: 0.75rem; color: #2563eb;">Rank matrices \(A \times B\), Alpha scaling, 4-bit NF4 quantization, HuggingFace SFTTrainer</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="status-badge badge-active">Live Active Topic</span>
+                <button class="btn-table-action primary" onclick="alert('Launching Live Lecture Kit &amp; A100 Notebook');">Open Lab 4</button>
+              </div>
+            </div>
+
+            <!-- Topic 5 -->
+            <div class="topic-row-item">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="topic-index-badge">T5</div>
+                <div>
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.9375rem;">Model Merging, Quantization (GGUF, AWQ) &amp; Edge Serving</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">Weight unsloth conversion, llama.cpp deployment, AWQ activation-aware quantization</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="status-badge badge-scheduled">Next Lecture</span>
+                <button class="btn-table-action" onclick="alert('Viewing Topic 5 Draft Materials');">Prepare</button>
+              </div>
+            </div>
+
+            <!-- Topic 6 -->
+            <div class="topic-row-item">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="topic-index-badge">T6</div>
+                <div>
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.9375rem;">Autonomous Agents &amp; LangGraph StateMachines</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">Cyclic computation graphs, human-in-the-loop approvals, tool-calling agents, memory retention</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="status-badge badge-pending">Upcoming</span>
+                <button class="btn-table-action" onclick="alert('Viewing Topic 6 Outline');">Outline</button>
+              </div>
+            </div>
+
+            <!-- Topic 7 -->
+            <div class="topic-row-item">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="topic-index-badge">T7</div>
+                <div>
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.9375rem;">Multi-Agent Collaborative Swarms &amp; Debate Protocols</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">Hierarchical agent supervisor patterns, self-critique loops, tool contention resolution</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="status-badge badge-pending">Upcoming</span>
+                <button class="btn-table-action" onclick="alert('Viewing Topic 7 Outline');">Outline</button>
+              </div>
+            </div>
+
+            <!-- Topic 8 -->
+            <div class="topic-row-item">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="topic-index-badge">T8</div>
+                <div>
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.9375rem;">Production Inference Optimization (vLLM, Triton &amp; Continuous Batching)</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">PagedAttention memory management, streaming token response, Dockerized microservice rollout</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="status-badge badge-pending">Upcoming</span>
+                <button class="btn-table-action" onclick="alert('Viewing Topic 8 Outline');">Outline</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Practical Lab Assignments Table -->
+        <div class="admin-table-card">
+          <div class="table-card-header">
+            <div class="table-title-group">
+              <h3 class="table-main-heading">Hands-on Lab Assignments &amp; Repositories</h3>
+              <span class="table-count-badge">AIML-301 Lab Projects</span>
+            </div>
+            <span style="font-size: 0.8125rem; color: #64748b;">Evaluated by Dr. Rajiv Sen</span>
+          </div>
+
+          <div class="admin-table-wrapper">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th>Lab Assignment</th>
+                  <th>Assigned Cohorts</th>
+                  <th>Due Date</th>
+                  <th>Submission Rate</th>
+                  <th>Avg. Score</th>
+                  <th>Code Sandbox Repo</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div style="font-weight: 700; color: #0f172a;">Lab 1: Transformer Self-Attention from Scratch</div>
+                    <div style="font-size: 0.72rem; color: #64748b;">PyTorch Tensor Matrix Math Implementation</div>
+                  </td>
+                  <td><span class="badge-role-admin">AI-09 &amp; AI-10</span></td>
+                  <td>15 Aug 2026</td>
+                  <td><span class="status-badge badge-paid">55 / 55 (100%)</span></td>
+                  <td><span style="font-weight: 700; color: #15803d;">92 / 100</span></td>
+                  <td><code>github.com/nim/lab1-attention</code></td>
+                  <td style="text-align: right;">
+                    <a href="{% url 'mentor_assessments' %}" class="btn-table-action">Gradebook</a>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div style="font-weight: 700; color: #0f172a;">Lab 2: Dense &amp; Sparse Hybrid Retriever Pipeline</div>
+                    <div style="font-size: 0.72rem; color: #64748b;">Qdrant + BM25 with Reciprocal Rank Fusion</div>
+                  </td>
+                  <td><span class="badge-role-admin">AI-09 &amp; AI-10</span></td>
+                  <td>28 Aug 2026</td>
+                  <td><span class="status-badge badge-paid">55 / 55 (100%)</span></td>
+                  <td><span style="font-weight: 700; color: #15803d;">89 / 100</span></td>
+                  <td><code>github.com/nim/lab2-hybrid-retriever</code></td>
+                  <td style="text-align: right;">
+                    <a href="{% url 'mentor_assessments' %}" class="btn-table-action">Gradebook</a>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div style="font-weight: 700; color: #0f172a;">Lab 3: Financial Regulatory Document RAG</div>
+                    <div style="font-size: 0.72rem; color: #64748b;">Table extraction, PDF parsing &amp; Cohere Reranking</div>
+                  </td>
+                  <td><span class="badge-role-admin">AI-09 &amp; AI-10</span></td>
+                  <td>12 Sep 2026</td>
+                  <td><span class="status-badge badge-paid">53 / 55 (96.4%)</span></td>
+                  <td><span style="font-weight: 700; color: #15803d;">87 / 100</span></td>
+                  <td><code>github.com/nim/lab3-financial-rag</code></td>
+                  <td style="text-align: right;">
+                    <a href="{% url 'mentor_assessments' %}" class="btn-table-action">Gradebook</a>
+                  </td>
+                </tr>
+
+                <tr style="background: #f0f7ff;">
+                  <td>
+                    <div style="font-weight: 700; color: #1e40af;">Lab 4: 7B Model LoRA Fine-Tuning on Custom Corpus</div>
+                    <div style="font-size: 0.72rem; color: #2563eb;">HuggingFace SFTTrainer, Loss logging, WandB telemetry</div>
+                  </td>
+                  <td><span class="badge-role-admin">AI-09 &amp; AI-10</span></td>
+                  <td>28 Sep 2026</td>
+                  <td><span class="status-badge badge-active" style="background: #dbeafe; color: #1e40af;">42 / 55 (76.3%) Active</span></td>
+                  <td><span style="font-weight: 700; color: #0f172a;">Pending Final</span></td>
+                  <td><code>github.com/nim/lab4-lora-tuning</code></td>
+                  <td style="text-align: right;">
+                    <a href="{% url 'mentor_assessments' %}" class="btn-table-action primary">Review 42 Submissions</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module AIML-101 View (Initially Hidden) -->
+      <div id="moduleView101" style="display: none;">
+        <div class="module-overview-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <span class="status-badge" style="background: #f1f5f9; color: #475569; margin-bottom: 6px;">Prerequisite Foundation Module</span>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">
+                AIML-101: Deep Learning &amp; PyTorch Foundations
+              </h2>
+              <p style="font-size: 0.875rem; color: #475569; margin: 0; line-height: 1.5;">
+                Mathematical foundations of gradient descent, backpropagation, convolutional networks, recurrent architectures, and modern PyTorch tensor computation pipelines.
+              </p>
+            </div>
+            <span class="status-badge badge-paid">100% Cohort Completed</span>
+          </div>
+
+          <div class="module-stats-strip">
+            <div class="module-stat-cell">
+              <span class="module-stat-label">Topics</span>
+              <span class="module-stat-val">6 Core Topics</span>
+            </div>
+            <div class="module-stat-cell">
+              <span class="module-stat-label">Labs</span>
+              <span class="module-stat-val">4 Foundation Labs</span>
+            </div>
+            <div class="module-stat-cell">
+              <span class="module-stat-label">Capstone</span>
+              <span class="module-stat-val">1 Vision-Language Mini-Capstone</span>
+            </div>
+            <div class="module-stat-cell">
+              <span class="module-stat-label">Status</span>
+              <span class="module-stat-val" style="color: #15803d;">All Students Cleared</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal: Upload Learning Content -->
+<div class="admin-modal-backdrop" id="uploadResourceModal">
+  <div class="admin-modal-box">
+    <div class="modal-header-row">
+      <div class="modal-title-group">
+        <h3 class="modal-main-title">Upload Supplementary Learning Content</h3>
+        <p class="modal-sub-title">Publish lecture slide decks, starter notebooks, or research papers for assigned cohorts.</p>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('uploadResourceModal').classList.remove('active');">&times;</button>
+    </div>
+    <div class="modal-body-content">
+      <form onsubmit="event.preventDefault(); alert('Resource successfully attached to module syllabus!'); document.getElementById('uploadResourceModal').classList.remove('active');">
+        <div class="modal-form-grid">
+          <div class="form-field-group">
+            <label class="form-field-label">Target Module</label>
+            <select class="form-field-select" required>
+              <option>AIML-301: Advanced GenAI &amp; Autonomous Agents</option>
+              <option>AIML-101: Deep Learning &amp; PyTorch Foundations</option>
+            </select>
+          </div>
+          <div class="form-field-group">
+            <label class="form-field-label">Resource Type</label>
+            <select class="form-field-select">
+              <option>Jupyter Notebook (.ipynb)</option>
+              <option>Lecture Presentation (.pdf / .pptx)</option>
+              <option>Arxiv Research Paper Reference</option>
+              <option>Docker / Sandbox Setup Script</option>
+            </select>
+          </div>
+          <div class="form-field-group full-width">
+            <label class="form-field-label">Resource Title</label>
+            <input type="text" class="form-field-input" placeholder="e.g. FlashAttention-2 vs Standard Attention Benchmark Notebook" required>
+          </div>
+          <div class="form-field-group full-width">
+            <label class="form-field-label">GitHub URL or Storage Link</label>
+            <input type="url" class="form-field-input" placeholder="https://github.com/nim-academy/aiml301-resources/tree/main/..." required>
+          </div>
+          <div class="form-field-group full-width">
+            <label class="form-field-label">Short Description / Instructions for Students</label>
+            <textarea class="form-field-textarea" rows="3" placeholder="This supplementary notebook demonstrates CUDA memory profiling during attention matrix calculation..."></textarea>
+          </div>
+        </div>
+        <div class="modal-actions-footer">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('uploadResourceModal').classList.remove('active');">Cancel</button>
+          <button type="submit" class="btn-submit">Publish to Student Portals</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchModuleTab(module) {
+    if (module === 'aiml301') {
+      document.getElementById('moduleView301').style.display = 'block';
+      document.getElementById('moduleView101').style.display = 'none';
+      document.getElementById('tabAimL301').classList.add('active');
+      document.getElementById('tabAimL101').classList.remove('active');
+    } else {
+      document.getElementById('moduleView301').style.display = 'none';
+      document.getElementById('moduleView101').style.display = 'block';
+      document.getElementById('tabAimL301').classList.remove('active');
+      document.getElementById('tabAimL101').classList.add('active');
+    }
+  }
+</script>
+
+</body>
+</html>
+

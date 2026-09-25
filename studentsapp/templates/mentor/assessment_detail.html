@@ -1,0 +1,216 @@
+{% extends 'mentor/base.html' %}
+
+{% block title %}{{ assessment.id }}: {{ assessment.name }} - NIM Academy{% endblock %}
+
+{% block content %}
+<!-- Back Breadcrumb & Header -->
+<div style="margin-bottom: 16px;">
+  <a href="{% url 'mentor_assessments' %}" class="btn-table-sm" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; margin-bottom: 12px; text-decoration: none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><polyline points="15 18 9 12 15 6"/></svg>
+    <span>Back to Assessments Roster</span>
+  </a>
+</div>
+
+<!-- Assessment Summary Header Card -->
+<div class="mentor-welcome-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+    <div style="max-width: 800px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span class="badge-pill badge-blue">{{ assessment.id }}</span>
+        <span class="badge-pill badge-slate">{{ assessment.type }}</span>
+        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">{{ assessment.module }}</span>
+      </div>
+      <h1 class="mentor-page-heading">{{ assessment.name }}</h1>
+      <p class="mentor-page-subline" style="margin-top: 6px;">
+        <strong>Syllabus Scope:</strong> {{ assessment.scope }}
+      </p>
+      <div style="display: flex; gap: 16px; margin-top: 10px; font-size: 0.8125rem; color: #475569; flex-wrap: wrap;">
+        <span><strong>Duration:</strong> {{ assessment.duration }}</span>
+        <span><strong>Passing Benchmark:</strong> {{ assessment.rules }}</span>
+        <span><strong>Total Questions:</strong> {{ assessment.total_questions }} Questions</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-nim-secondary" onclick="window.print();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export Grade Sheet</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="mentor-kpi-grid">
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">28 / 30</div>
+      <div class="mentor-stat-label">Students Attempted</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">{{ assessment.avg_score }}%</div>
+      <div class="mentor-stat-label">Cohort Average Score</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-emerald">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">{{ assessment.pass_count }}</div>
+      <div class="mentor-stat-label">Cleared Benchmark (&ge; 70%)</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-rose">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">{{ assessment.fail_count }}</div>
+      <div class="mentor-stat-label">Need Retake (&lt; 70%)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Results Table Card -->
+<div class="mentor-card">
+  <div class="mentor-card-header">
+    <div>
+      <h3 class="mentor-card-title">Student Submissions &amp; Evaluation Ledger</h3>
+      <p style="font-size: 0.78125rem; color: #64748b; margin: 2px 0 0;">
+        Detailed score breakdown, submission timestamps, and mentor remarks.
+      </p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <span class="badge-pill badge-green">26 Cleared</span>
+      <span class="badge-pill badge-rose">1 Retake Pending</span>
+    </div>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table class="mentor-table">
+      <thead>
+        <tr>
+          <th>Student Name &amp; ID</th>
+          <th>Submitted At</th>
+          <th>Score / 100</th>
+          <th>Percentage</th>
+          <th>Evaluation Status</th>
+          <th>Mentor Remarks &amp; Feedback</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in student_results %}
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: #eff6ff; color: #0062eb; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.75rem; border: 1px solid #bfdbfe;">
+                {{ s.student_name|slice:":2"|upper }}
+              </div>
+              <div>
+                <a href="{% url 'mentor_student_detail' s.student_id %}" style="font-weight: 800; color: #0a1b39; text-decoration: none;">
+                  {{ s.student_name }}
+                </a>
+                <div style="font-size: 0.72rem; color: #64748b;">{{ s.student_id }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span style="font-size: 0.78125rem; color: #475569;">{{ s.submitted_at }}</span>
+          </td>
+          <td>
+            <span style="font-weight: 800; color: #0062eb; font-size: 0.875rem;">{{ s.score }} / 100</span>
+          </td>
+          <td>
+            <span style="font-weight: 800; color: #0a1b39; font-size: 0.875rem;">{{ s.pct }}%</span>
+          </td>
+          <td>
+            {% if s.pct >= 90 %}
+              <span class="badge-pill badge-green">● {{ s.status }}</span>
+            {% elif s.pct >= 70 %}
+              <span class="badge-pill badge-blue">● {{ s.status }}</span>
+            {% else %}
+              <span class="badge-pill badge-rose">● {{ s.status }}</span>
+            {% endif %}
+          </td>
+          <td style="max-width: 280px;">
+            <div style="font-size: 0.78125rem; color: #334155; line-height: 1.4;">{{ s.feedback }}</div>
+          </td>
+          <td style="text-align: right;">
+            <button class="btn-table-sm" onclick="openRegradeModal('{{ s.student_id }}', '{{ s.student_name }}', '{{ s.score }}', '{{ s.feedback|escapejs }}');">
+              Review / Regrade
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Review / Regrade Assessment -->
+<div class="mentor-modal-backdrop" id="regradeModal">
+  <div class="mentor-modal-box">
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--nim-border); display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h3 style="margin: 0; font-size: 1.0625rem; font-weight: 800; color: #0a1b39;">Review &amp; Regrade Assessment</h3>
+        <p style="margin: 2px 0 0; font-size: 0.75rem; color: #64748b;" id="modalStudentSubline"></p>
+      </div>
+      <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="document.getElementById('regradeModal').classList.remove('active');">&times;</button>
+    </div>
+    <form onsubmit="event.preventDefault(); alert('Evaluation updated and gradebook synchronized!'); document.getElementById('regradeModal').classList.remove('active');" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+      <div>
+        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Student ID &amp; Name</label>
+        <input type="text" id="modalStudentName" readonly style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; font-weight: 700;">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Score (Max 100)</label>
+          <input type="number" id="modalStudentScore" min="0" max="100" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+        </div>
+        <div>
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Grade Status</label>
+          <select id="modalGradeStatus" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <option>Passed (A+)</option>
+            <option>Passed (A)</option>
+            <option>Passed (B+)</option>
+            <option>Passed (C)</option>
+            <option>Needs Retake</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Mentor Feedback &amp; Actionable Guidance</label>
+        <textarea id="modalStudentFeedback" rows="3" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button type="button" class="btn-nim-secondary" onclick="document.getElementById('regradeModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-nim-primary">Save Evaluation</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openRegradeModal(studentId, studentName, score, feedback) {
+  document.getElementById('modalStudentSubline').textContent = studentId + ' • ' + studentName;
+  document.getElementById('modalStudentName').value = studentName + ' (' + studentId + ')';
+  document.getElementById('modalStudentScore').value = score;
+  document.getElementById('modalStudentFeedback').value = feedback;
+  document.getElementById('regradeModal').classList.add('active');
+}
+</script>
+{% endblock %}
+

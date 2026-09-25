@@ -1,0 +1,852 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}NIM Academy - Mentor Dashboard{% endblock %}</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* =========================================================================
+       NIM ACADEMY MENTOR PORTAL - MASTER STYLESHEET (EXACT MATCH TO REFERENCE)
+       Pure White Sidebar, Clean Light Theme, Royal Blue Accents, Exact Layout
+       ========================================================================= */
+    :root {
+      --nim-bg: #f8fafc;
+      --nim-card-bg: #ffffff;
+      --nim-border: #eef2f6;
+      --nim-border-subtle: #f1f5f9;
+      --nim-primary: #0062eb;
+      --nim-primary-hover: #0052cc;
+      --nim-text-title: #0a1b39;
+      --nim-text-body: #334155;
+      --nim-text-muted: #64748b;
+      --nim-text-light: #94a3b8;
+      --nim-green: #16a34a;
+      --nim-amber: #d97706;
+      --nim-rose: #ef4444;
+      --nim-radius-card: 16px;
+      --nim-radius-btn: 8px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--nim-bg);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--nim-text-body);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* =========================================================================
+       TOP HEADER (Full-Width, White, Subtle Bottom Border)
+       ========================================================================= */
+    .nim-top-header {
+      height: 70px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--nim-border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      width: 100%;
+    }
+
+    .nim-brand-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      min-width: 220px;
+    }
+
+    .nim-brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nim-logo-mark {
+      width: 32px;
+      height: 32px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nim-brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nim-brand-name {
+      font-size: 1.125rem;
+      font-weight: 900;
+      color: #070d1d;
+      letter-spacing: -0.4px;
+      line-height: 1.1;
+    }
+
+    .nim-brand-sub {
+      font-size: 0.58rem;
+      font-weight: 800;
+      color: #0284c7;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Center Search Bar */
+    .nim-search-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background-color: #f1f5f9;
+      border-radius: 12px;
+      padding: 9px 16px;
+      width: 440px;
+      max-width: 100%;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .nim-search-bar:focus-within {
+      background-color: #ffffff;
+      border-color: #bfdbfe;
+      box-shadow: 0 0 0 3px rgba(0, 98, 235, 0.08);
+    }
+
+    .nim-search-input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 0.84rem;
+      color: #0f172a;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .nim-search-input::placeholder {
+      color: #94a3b8;
+    }
+
+    /* Header Right Actions */
+    .nim-header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nim-bell-btn {
+      position: relative;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0062eb;
+      text-decoration: none;
+      border-radius: 50%;
+      transition: background 0.15s;
+    }
+
+    .nim-bell-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .nim-bell-badge {
+      position: absolute;
+      top: 1px;
+      right: 1px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #ffffff;
+    }
+
+    .nim-profile-dropdown {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 10px;
+      transition: background 0.15s;
+    }
+
+    .nim-profile-dropdown:hover {
+      background: #f8fafc;
+    }
+
+    .nim-profile-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid #e2e8f0;
+      background: #e2e8f0;
+    }
+
+    .nim-profile-details {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .nim-profile-role {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .nim-profile-name {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #0a1b39;
+      line-height: 1.2;
+    }
+
+    .nim-chevron-down {
+      width: 14px;
+      height: 14px;
+      color: #64748b;
+      stroke-width: 2.5;
+    }
+
+    /* =========================================================================
+       MAIN BODY LAYOUT (Sidebar + Content Canvas)
+       ========================================================================= */
+    .nim-app-container {
+      display: flex;
+      flex: 1;
+      width: 100%;
+      min-height: calc(100vh - 70px);
+    }
+
+    /* Sidebar Navigation (Pure White - Fixed) */
+    .nim-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 240px;
+      height: 100vh;
+      background: #ffffff;
+      border-right: 1px solid var(--nim-border-subtle);
+      padding: 86px 14px 20px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 90;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+
+    .nim-sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .nim-sidebar::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 4px;
+    }
+
+    .nim-nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nim-nav-item a {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #334155;
+      transition: all 0.15s ease;
+    }
+
+    .nim-nav-item a svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+      color: #475569;
+      flex-shrink: 0;
+      transition: color 0.15s ease;
+    }
+
+    .nim-nav-item a:hover {
+      background-color: #f8fafc;
+      color: var(--nim-primary);
+    }
+
+    .nim-nav-item a:hover svg {
+      color: var(--nim-primary);
+    }
+
+    /* Active Nav Item: Solid Royal Blue Pill */
+    .nim-nav-item.active a {
+      background-color: var(--nim-primary);
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0, 98, 235, 0.25);
+    }
+
+    .nim-nav-item.active a svg {
+      color: #ffffff;
+    }
+
+    .nim-nav-item-badge {
+      margin-left: auto;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Main Content Area */
+    .nim-main-content {
+      flex: 1;
+      margin-left: 240px;
+      width: calc(100% - 240px);
+      padding: 28px 36px 48px;
+      overflow-y: auto;
+      background-color: var(--nim-bg);
+      box-sizing: border-box;
+    }
+
+    /* =========================================================================
+       REUSABLE UTILITIES & CARDS
+       ========================================================================= */
+    .nim-card {
+      background: #ffffff;
+      border: 1px solid var(--nim-border);
+      border-radius: var(--nim-radius-card);
+      padding: 22px 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .nim-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .nim-card-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--nim-text-title);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+    }
+
+    .nim-link-view-all {
+      color: var(--nim-primary);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: gap 0.15s ease;
+    }
+
+    .nim-link-view-all:hover {
+      text-decoration: underline;
+      gap: 6px;
+    }
+
+    /* Core Button Styles */
+    .btn-nim-primary {
+      background: var(--nim-primary);
+      color: #ffffff;
+      border: 1.5px solid var(--nim-primary);
+      border-radius: var(--nim-radius-btn);
+      padding: 8px 16px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(0, 98, 235, 0.2);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-nim-primary:hover {
+      background: var(--nim-primary-hover);
+      border-color: var(--nim-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-nim-secondary {
+      background: #ffffff;
+      color: #334155;
+      border: 1.5px solid #cbd5e1;
+      border-radius: var(--nim-radius-btn);
+      padding: 8px 16px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-nim-secondary:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+
+    .btn-table-sm {
+      background: #ffffff;
+      color: var(--nim-primary);
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-table-sm:hover {
+      background: #eff6ff;
+      border-color: var(--nim-primary);
+    }
+
+    .btn-table-sm.primary {
+      background: var(--nim-primary);
+      color: #ffffff;
+      border-color: var(--nim-primary);
+    }
+
+    .btn-table-sm.primary:hover {
+      background: var(--nim-primary-hover);
+    }
+
+    /* Cards & Tables */
+    .mentor-card, .nim-card {
+      background: #ffffff;
+      border: 1px solid var(--nim-border);
+      border-radius: var(--nim-radius-card);
+      padding: 22px 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      margin-bottom: 20px;
+    }
+
+    .mentor-card-header, .nim-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .mentor-card-title, .nim-card-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--nim-text-title);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+    }
+
+    .mentor-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .mentor-table th {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--nim-border-subtle);
+      white-space: nowrap;
+    }
+
+    .mentor-table td {
+      padding: 14px 10px;
+      border-bottom: 1px solid var(--nim-border-subtle);
+      vertical-align: middle;
+      font-size: 0.8125rem;
+      color: #334155;
+    }
+
+    .mentor-table tr:hover td {
+      background-color: #fafcff;
+    }
+
+    .mentor-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Badges */
+    .badge-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .badge-blue {
+      background: #eff6ff;
+      color: #0062eb;
+      border: 1px solid #dbeafe;
+    }
+
+    .badge-green {
+      background: #dcfce7;
+      color: #16a34a;
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-amber {
+      background: #fef3c7;
+      color: #d97706;
+      border: 1px solid #fde68a;
+    }
+
+    .badge-rose {
+      background: #fee2e2;
+      color: #ef4444;
+      border: 1px solid #fecaca;
+    }
+
+    .badge-slate {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    .badge-purple {
+      background: #f3e8ff;
+      color: #7c3aed;
+      border: 1px solid #e9d5ff;
+    }
+
+    /* Header Welcome Card */
+    .mentor-welcome-card {
+      background: #ffffff;
+      border: 1px solid var(--nim-border);
+      border-radius: var(--nim-radius-card);
+      padding: 22px 26px;
+      margin-bottom: 22px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .mentor-page-heading {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #0a1b39;
+      margin: 0 0 4px;
+      letter-spacing: -0.3px;
+    }
+
+    .mentor-page-subline {
+      font-size: 0.84375rem;
+      color: #64748b;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    /* KPI Grid */
+    .mentor-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .mentor-stat-card {
+      background: #ffffff;
+      border: 1px solid var(--nim-border);
+      border-radius: var(--nim-radius-card);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .mentor-icon-box {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .mentor-icon-blue { background: #e0f2fe; color: #0062eb; }
+    .mentor-icon-green { background: #dcfce7; color: #16a34a; }
+    .mentor-icon-amber { background: #fef3c7; color: #d97706; }
+    .mentor-icon-rose { background: #fee2e2; color: #ef4444; }
+    .mentor-icon-emerald { background: #d1fae5; color: #059669; }
+
+    .mentor-stat-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #0a1b39;
+      line-height: 1.2;
+    }
+
+    .mentor-stat-label {
+      font-size: 0.78125rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* Form Inputs */
+    .form-field-input, .form-field-select, .form-field-textarea {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-field-input:focus, .form-field-select:focus, .form-field-textarea:focus {
+      border-color: var(--nim-primary);
+      box-shadow: 0 0 0 3px rgba(0, 98, 235, 0.1);
+    }
+
+    /* Modals */
+    .mentor-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 27, 57, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .mentor-modal-backdrop.active {
+      display: flex;
+    }
+
+    .mentor-modal-box {
+      background: #ffffff;
+      border-radius: var(--nim-radius-card);
+      border: 1px solid var(--nim-border);
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      animation: modalScaleIn 0.2s ease-out;
+    }
+
+    @keyframes modalScaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- =========================================================================
+       TOP HEADER BAR
+       ========================================================================= -->
+  <header class="nim-top-header">
+    
+    <!-- Brand on Top Left -->
+    <a href="{% url 'mentor_dashboard' %}" class="nim-brand-container">
+      <div class="nim-brand-logo">
+        <svg class="nim-logo-mark" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Stylized Dark Navy & Gradient Cyan N -->
+          <path d="M7 6H13.5L22.5 24V6H29V30H22.5L13.5 12V30H7V6Z" fill="#070d1d"/>
+          <path d="M12.5 10L23.5 30H27.5L16.5 10H12.5Z" fill="url(#brandGrad)"/>
+          <defs>
+            <linearGradient id="brandGrad" x1="12.5" y1="10" x2="27.5" y2="30" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#00d2ff"/>
+              <stop offset="1" stop-color="#0062eb"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="nim-brand-text">
+          <span class="nim-brand-name">NIM ACADEMY</span>
+          <span class="nim-brand-sub">AI | GEN AI | CAREER</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Center Search Input -->
+    <div class="nim-search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 17px; height: 17px; color: #94a3b8; flex-shrink: 0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" class="nim-search-input" id="mentorGlobalSearch" placeholder="Search students, classes, tasks...">
+    </div>
+
+    <!-- Right Controls: Notification Bell + Mentor Profile Dropdown -->
+    <div class="nim-header-right">
+      <a href="{% url 'mentor_notifications' %}" class="nim-bell-btn" title="3 Unread Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 22px; height: 22px;"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="nim-bell-badge">3</span>
+      </a>
+
+      <div class="nim-profile-dropdown" onclick="alert('Mentor: Arun Kumar (ID: MTR-2026-01)\nRole: Senior Mentor • AI & Machine Learning');">
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="Arun Kumar" class="nim-profile-avatar" onerror="this.src='{% static 'images/avatar.jpg' %}';">
+        <div class="nim-profile-details">
+          <span class="nim-profile-role">Mentor</span>
+          <span class="nim-profile-name">Arun Kumar</span>
+        </div>
+        <svg class="nim-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- =========================================================================
+       APP CONTAINER (White Sidebar + Content Canvas)
+       ========================================================================= -->
+  <div class="nim-app-container">
+
+    <!-- Left White Sidebar (Exact 8 Items from Reference) -->
+    <aside class="nim-sidebar">
+      <ul class="nim-nav-list">
+        
+        <!-- 1. Dashboard -->
+        <li class="nim-nav-item {% if active_page == 'mentor_dashboard' %}active{% endif %}">
+          <a href="{% url 'mentor_dashboard' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+
+        <!-- 2. Students -->
+        <li class="nim-nav-item {% if active_page == 'mentor_students' or active_page == 'mentor_student_detail' %}active{% endif %}">
+          <a href="{% url 'mentor_students' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Students</span>
+          </a>
+        </li>
+
+        <!-- 3. Classes -->
+        <li class="nim-nav-item {% if active_page == 'mentor_classes' %}active{% endif %}">
+          <a href="{% url 'mentor_classes' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Classes</span>
+          </a>
+        </li>
+
+        <!-- 4. Attendance -->
+        <li class="nim-nav-item {% if active_page == 'mentor_attendance' %}active{% endif %}">
+          <a href="{% url 'mentor_attendance' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>Attendance</span>
+          </a>
+        </li>
+
+        <!-- 5. Tasks -->
+        <li class="nim-nav-item {% if active_page == 'mentor_tasks' or active_page == 'mentor_task_detail' %}active{% endif %}">
+          <a href="{% url 'mentor_tasks' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Tasks</span>
+          </a>
+        </li>
+
+        <!-- 6. Assessments -->
+        <li class="nim-nav-item {% if active_page == 'mentor_assessments' or active_page == 'mentor_assessment_detail' %}active{% endif %}">
+          <a href="{% url 'mentor_assessments' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Assessments</span>
+          </a>
+        </li>
+
+        <!-- 7. Reports -->
+        <li class="nim-nav-item {% if active_page == 'mentor_reports' %}active{% endif %}">
+          <a href="{% url 'mentor_reports' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            <span>Reports</span>
+          </a>
+        </li>
+
+        <!-- 8. Notifications -->
+        <li class="nim-nav-item {% if active_page == 'mentor_notifications' %}active{% endif %}">
+          <a href="{% url 'mentor_notifications' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            <span>Notifications</span>
+            <span class="nim-nav-item-badge">3</span>
+          </a>
+        </li>
+
+      </ul>
+    </aside>
+
+    <!-- Main Content Stage -->
+    <main class="nim-main-content">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,210 @@
+{% extends 'mentor/base.html' %}
+
+{% block title %}Monthly Performance & Academic Reports - NIM Academy{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mentor-welcome-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span class="badge-pill badge-blue">{{ cohort_name }}</span>
+        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Faculty Mentor: Dr. Rajiv Sen</span>
+      </div>
+      <h1 class="mentor-page-heading">Monthly Performance &amp; Academic Reports</h1>
+      <p class="mentor-page-subline">
+        Telemetry on cohort attendance progression, curriculum subject mastery, assignment submissions, and individual student dossiers.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <!-- Month Selector -->
+      <select class="form-field-select" style="padding: 9px 14px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: 700; color: #0f172a; background: #ffffff;">
+        <option selected>September 2026 (Current)</option>
+        <option>August 2026</option>
+        <option>July 2026</option>
+        <option>June 2026</option>
+      </select>
+
+      <button class="btn-nim-primary" onclick="window.print();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download Cohort PDF</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="mentor-kpi-grid">
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">92%</div>
+      <div class="mentor-stat-label">Cohort Attendance (Sep)</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">96%</div>
+      <div class="mentor-stat-label">Task Submission Rate</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-emerald">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">93%</div>
+      <div class="mentor-stat-label">Assessment Pass Rate</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-amber">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">89%</div>
+      <div class="mentor-stat-label">Placement Readiness Index</div>
+    </div>
+  </div>
+</div>
+
+<!-- Analytics Progression Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px;">
+  <!-- Attendance Progression (Apr to Sep) -->
+  <div class="mentor-card">
+    <div class="mentor-card-header">
+      <h3 class="mentor-card-title">Attendance Progression (Apr – Sep 2026)</h3>
+      <span class="badge-pill badge-green">+14% Growth</span>
+    </div>
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; height: 180px; padding-top: 20px; border-bottom: 1px solid #e2e8f0; gap: 8px;">
+        {% for t in attendance_trend %}
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end;">
+          <div style="font-size: 0.75rem; font-weight: 800; color: #0062eb; margin-bottom: 6px;">{{ t.pct }}%</div>
+          <div style="width: 100%; max-width: 38px; height: {{ t.pct }}%; background: linear-gradient(180deg, #0062eb 0%, #38bdf8 100%); border-radius: 6px 6px 0 0; min-height: 20px;"></div>
+          <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-top: 8px;">{{ t.month }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 0.78125rem; color: #475569;">
+        <span>Initial Baseline: <strong>78% (Apr)</strong></span>
+        <span>Current Cohort: <strong style="color: #059669;">92% (Sep)</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subject Mastery Breakdown -->
+  <div class="mentor-card">
+    <div class="mentor-card-header">
+      <h3 class="mentor-card-title">Curriculum Subject Mastery</h3>
+      <span class="badge-pill badge-blue">6 Domains</span>
+    </div>
+    <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      {% for s in subject_mastery %}
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 4px;">
+          <span style="font-weight: 700; color: #0a1b39;">{{ s.name }}</span>
+          <span style="font-weight: 800; color: {{ s.color }};">{{ s.score }}%</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+          <div style="width: {{ s.score }}%; height: 100%; background: {{ s.color }}; border-radius: 999px;"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Student Telemetry Ledger -->
+<div class="mentor-card">
+  <div class="mentor-card-header">
+    <h3 class="mentor-card-title">Student Performance Telemetry &amp; Dossiers</h3>
+    <span class="badge-pill badge-blue">{{ students|length }} Active Students</span>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table class="mentor-table">
+      <thead>
+        <tr>
+          <th>Student Name &amp; ID</th>
+          <th>Monthly Attendance</th>
+          <th>Tasks Progress</th>
+          <th>Latest Assessment</th>
+          <th>Career ATS &amp; Rating</th>
+          <th>Standing</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 34px; height: 34px; border-radius: 8px; background: {{ s.color }}15; color: {{ s.color }}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78125rem; border: 1px solid {{ s.color }}30;">
+                {{ s.initials }}
+              </div>
+              <div>
+                <a href="{% url 'mentor_student_detail' s.id %}" style="font-weight: 800; color: #0a1b39; text-decoration: none;">
+                  {{ s.name }}
+                </a>
+                <div style="font-size: 0.72rem; color: #64748b;">{{ s.id }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-weight: 800; font-size: 0.875rem; color: {% if s.attendance_pct >= 85 %}#059669{% elif s.attendance_pct >= 75 %}#0062eb{% else %}#e11d48{% endif %};">
+                {{ s.attendance_pct }}%
+              </span>
+              <span style="font-size: 0.72rem; color: #64748b;">({{ s.attendance_present }} / 25)</span>
+            </div>
+          </td>
+          <td>
+            <span style="font-weight: 700; color: #0f172a; font-size: 0.8125rem;">{{ s.task_status }}</span>
+            <div style="font-size: 0.72rem; color: #0062eb; font-weight: 600;">Avg: {{ s.task_score_avg }}%</div>
+          </td>
+          <td>
+            <span class="badge-pill {% if 'Passed' in s.assessment_result %}badge-green{% else %}badge-rose{% endif %}">
+              {{ s.assessment_result }}
+            </span>
+          </td>
+          <td>
+            <div style="font-size: 0.8125rem; font-weight: 700; color: #0a1b39;">ATS: {{ s.resume_ats_score }}%</div>
+            <div style="font-size: 0.72rem; color: #059669; font-weight: 700;">★ {{ s.mock_interview_score }} / 10</div>
+          </td>
+          <td>
+            {% if s.attendance_pct >= 90 %}
+              <span class="badge-pill badge-green">● High Honors</span>
+            {% elif s.attendance_pct >= 75 %}
+              <span class="badge-pill badge-blue">● Good Standing</span>
+            {% else %}
+              <span class="badge-pill badge-rose">● Care Flagged</span>
+            {% endif %}
+          </td>
+          <td style="text-align: right;">
+            <div style="display: flex; gap: 6px; justify-content: flex-end;">
+              <a href="{% url 'mentor_student_detail' s.id %}" class="btn-table-sm primary">
+                Full Dossier
+              </a>
+              <button class="btn-table-sm" onclick="alert('Generating official PDF Dossier for {{ s.name|escapejs }} (ID: {{ s.id }})');">
+                Download PDF
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

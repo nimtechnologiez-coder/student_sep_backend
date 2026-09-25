@@ -1,0 +1,452 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fees & Payments - NIM Academy Admin Portal</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component with active_page='fees' -->
+  {% include 'sidebar.html' with active_page='fees' %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" placeholder="Search student name, registration ID, receipt #...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Mon, 24 Sep 2026</span>
+        </div>
+
+        <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">5</span>
+        </a>
+
+        <div class="header-user-profile" title="Admin Account">
+          <div class="user-avatar-circle" style="background-color: #0f172a; color: #ffffff; font-weight: 700;">SN</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Sneha N</span>
+            <span class="user-role-sub">Admin</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Fees & Payments Workspace -->
+    <div class="admin-workspace">
+
+      <!-- Page Title & Actions -->
+      <div class="page-title-row">
+        <div class="title-text-group">
+          <h1 class="main-page-title">Fees & Payments</h1>
+          <p class="main-page-subtitle">Track tuition receivables, installment schedules, online UPI/bank receipts, and pending balances.</p>
+        </div>
+
+        <div class="page-actions-group">
+          <button class="btn-secondary-action" onclick="alert('Exporting Master Financial Ledger (CSV)...');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Export Financial Ledger</span>
+          </button>
+          <button class="btn-primary-add" onclick="document.getElementById('recordPaymentModal').classList.add('active');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Record Payment</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPI Summary Cards -->
+      <div class="kpi-cards-grid">
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.total }}</span>
+            <span class="kpi-stat-label">Total Assessed Fees</span>
+            <span class="kpi-trend-row"><span class="trend-blue">18 Active Batches</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.pending }}</span>
+            <span class="kpi-stat-label">Total Paid & Collected</span>
+            <span class="kpi-trend-row"><span class="trend-green">↑ 82.9%</span> Realized</span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.overdue }}</span>
+            <span class="kpi-stat-label">Current Due (Next 30 Days)</span>
+            <span class="kpi-trend-row"><span class="trend-amber">84 Installments</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.avg }}</span>
+            <span class="kpi-stat-label">Balance Overdue</span>
+            <span class="kpi-trend-row"><span class="trend-red" style="color: #ef4444; font-weight: 700;">14 Pending Alerts</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search Bar Card -->
+      <div class="filter-controls-card">
+        <div class="filter-controls-row">
+          <div class="filter-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" class="filter-search-input" id="feeSearchInput" placeholder="Search by student name, ID, batch, or receipt number...">
+          </div>
+
+          <div class="filter-dropdowns-group">
+            <select class="filter-select" id="batchFeeSelect">
+              <option value="">All Batches</option>
+              <option value="AI-09">Batch AI-09 (GenAI)</option>
+              <option value="AI-10">Batch AI-10 (Weekend)</option>
+              <option value="CLOUD-04">Batch CLOUD-04</option>
+              <option value="FS-12">Batch FS-12</option>
+              <option value="DATA-06">Batch DATA-06</option>
+            </select>
+
+            <select class="filter-select" id="planFeeSelect">
+              <option value="">All Plans</option>
+              <option value="Placement Included">Placement Included (₹90k)</option>
+              <option value="Without Placement">Without Placement (₹60k)</option>
+            </select>
+
+            <select class="filter-select" id="statusFeeSelect">
+              <option value="">Status: All</option>
+              <option value="Paid in Full">Paid in Full</option>
+              <option value="Partially Paid">Partially Paid</option>
+              <option value="Due Soon">Due Soon</option>
+              <option value="Overdue">Overdue</option>
+            </select>
+
+            <button class="btn-filter-reset" onclick="resetFeeFilters()">Reset</button>
+          </div>
+        </div>
+
+        <!-- Category Pill Tabs -->
+        <div class="filter-tabs-row">
+          <button class="pill-tab-btn active" onclick="filterByTab(this, 'all')">
+            <span>All Accounts</span>
+            <span class="pill-tab-count">428</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'Paid in Full')">
+            <span>Paid in Full</span>
+            <span class="pill-tab-count">290</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'Due Soon')">
+            <span>Due Soon</span>
+            <span class="pill-tab-count">84</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'Overdue')">
+            <span>Overdue Invoices</span>
+            <span class="pill-tab-count">14</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Fees Ledger Table Card -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <div class="table-header-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            <span>Student Fee Accounts & Payment Ledger</span>
+            <span class="table-records-count">428 Students</span>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="alert('Sending bulk payment reminder to 14 overdue students...');">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              <span>Send Overdue Reminders</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-scroll-container">
+          <table class="admin-data-table" id="feesTable">
+            <thead>
+              <tr>
+                <th style="width: 260px;">Student & Registration ID</th>
+                <th>Batch & Enrolled Plan</th>
+                <th>Total Fee</th>
+                <th>Paid Amount</th>
+                <th>Current Due & Date</th>
+                <th>Balance Remaining</th>
+                <th>Payment Status</th>
+                <th>Recent Receipt</th>
+                <th style="text-align: right; width: 130px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for payment in payments %}
+              <tr data-status="{{ payment.status }}">
+                <td>
+                  <div class="entity-cell">
+                    <div class="entity-avatar" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">{{ payment.student.name|slice:":1"|upper }}</div>
+                    <div class="entity-info">
+                      <span class="entity-name">{{ payment.student.name }}</span>
+                      <span class="entity-sub">{{ payment.student.student_id }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="font-mono-code">Batch AI-09</span>
+                  <div style="font-size: 0.71875rem; color: var(--admin-text-muted); margin-top: 2px;">Placement Included</div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: var(--admin-text-main);">₹{{ payment.amount }}</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #059669;">₹{{ payment.amount }}</span>
+                  <div style="font-size: 0.71875rem; color: var(--admin-text-muted);">Paid Amount</div>
+                </td>
+                <td>
+                  <div style="font-weight: 700; color: #d97706;">₹0</div>
+                  <div style="font-size: 0.71875rem; color: #d97706; font-weight: 600;"></div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: var(--admin-text-main);">₹0</span>
+                </td>
+                <td>
+                  <span class="status-badge badge-{{ payment.status|lower|default:'pending' }}">
+                    <span class="badge-dot"></span> {{ payment.status }}
+                  </span>
+                </td>
+                <td>
+                  <span class="font-mono-code">REC-XXXX</span>
+                  <div style="font-size: 0.71875rem; color: var(--admin-text-muted);">{{ payment.payment_date|date:"d M Y" }}</div>
+                </td>
+                <td>
+                  <div class="table-actions-cell" style="justify-content: flex-end;">
+                    <button class="btn-action-icon btn-action-view" title="View Receipt">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x1="13" x2="8" y2="13"/><line x1="16" x1="17" x2="8" y2="17"/></svg>
+                    </button>
+                    <button class="btn-action-pill" onclick="openPaymentForStudent('{{ payment.student.name|escapejs }}', '{{ payment.student.student_id|escapejs }}', 'Batch AI-09', {{ payment.amount }})">Collect</button>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 20px;">No fee payments found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Pagination -->
+        <div class="pagination-row">
+          <div>Showing <strong>1 - 6</strong> of <strong>428</strong> student accounts</div>
+          <div class="pagination-controls">
+            <button class="btn-page-nav" disabled>Previous</button>
+            <button class="btn-page-nav active">1</button>
+            <button class="btn-page-nav">2</button>
+            <button class="btn-page-nav">3</button>
+            <button class="btn-page-nav">Next</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Record Payment Modal -->
+<div class="modal-overlay" id="recordPaymentModal">
+  <div class="modal-box">
+    <div class="modal-header-bar">
+      <div class="modal-title-text">Record Tuition Payment</div>
+      <button class="btn-close-modal" onclick="document.getElementById('recordPaymentModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form onsubmit="event.preventDefault(); alert('Payment recorded successfully! Official Receipt REC-' + Math.floor(10000 + Math.random() * 90000) + ' generated.'); document.getElementById('recordPaymentModal').classList.remove('active');">
+      <div class="modal-body-content">
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Student Registration ID *</label>
+            <input type="text" class="form-input-text" id="modalStudentId" placeholder="e.g. NIM-2026-0842" required>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Student Name *</label>
+            <input type="text" class="form-input-text" id="modalStudentName" placeholder="e.g. Devansh Patel" required>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Batch & Program</label>
+            <input type="text" class="form-input-text" id="modalStudentBatch" placeholder="e.g. Batch AI-09">
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Installment Milestone *</label>
+            <select class="form-select-box" required>
+              <option value="3rd">3rd Installment • GenAI & Autonomous Agents</option>
+              <option value="1st">1st Installment • Admission & Orientation</option>
+              <option value="2nd">2nd Installment • Core Engineering</option>
+              <option value="4th">4th Installment • Final Placement Clearance</option>
+              <option value="full">Full Outstanding Clearance</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Amount Paid (₹) *</label>
+            <input type="number" class="form-input-text" id="modalPaymentAmount" placeholder="20000" required>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Payment Mode *</label>
+            <select class="form-select-box" required>
+              <option value="upi">UPI / QR (PhonePe / GPay / Paytm)</option>
+              <option value="neft">NEFT / RTGS Bank Transfer</option>
+              <option value="card">Credit / Debit Card</option>
+              <option value="netbanking">Direct Net Banking</option>
+              <option value="cheque">Demand Draft / Bank Cheque</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Transaction / UTR Reference ID *</label>
+            <input type="text" class="form-input-text" placeholder="e.g. UTR-98218739128" required>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Payment Date *</label>
+            <input type="date" class="form-input-text" value="2026-09-24" required>
+          </div>
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-label-title">Accountant Notes / Receipt Remarks</label>
+          <textarea class="form-textarea" placeholder="Optional notes for audit, bank reconciliation, or ledger record..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-secondary-action" onclick="document.getElementById('recordPaymentModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-primary-add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Record & Issue Receipt</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Open payment modal pre-filled for a specific student
+  function openPaymentForStudent(name, regId, batch, amount) {
+    document.getElementById('modalStudentName').value = name;
+    document.getElementById('modalStudentId').value = regId;
+    document.getElementById('modalStudentBatch').value = batch;
+    document.getElementById('modalPaymentAmount').value = amount;
+    document.getElementById('recordPaymentModal').classList.add('active');
+  }
+
+  // Live filter function for Fees table
+  function filterFeesTable() {
+    const query = document.getElementById('feeSearchInput').value.toLowerCase().trim();
+    const batch = document.getElementById('batchFeeSelect').value.toLowerCase();
+    const plan = document.getElementById('planFeeSelect').value.toLowerCase();
+    const status = document.getElementById('statusFeeSelect').value.toLowerCase();
+
+    const rows = document.querySelectorAll('#feesTable tbody tr');
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      const rowBatch = (row.getAttribute('data-batch') || '').toLowerCase();
+      const rowPlan = (row.getAttribute('data-plan') || '').toLowerCase();
+      const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
+
+      const matchText = !query || text.includes(query);
+      const matchBatch = !batch || rowBatch.includes(batch);
+      const matchPlan = !plan || rowPlan.includes(plan);
+      const matchStatus = !status || rowStatus === status;
+
+      if (matchText && matchBatch && matchPlan && matchStatus) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('feeSearchInput').addEventListener('input', filterFeesTable);
+  document.getElementById('batchFeeSelect').addEventListener('change', filterFeesTable);
+  document.getElementById('planFeeSelect').addEventListener('change', filterFeesTable);
+  document.getElementById('statusFeeSelect').addEventListener('change', filterFeesTable);
+
+  function resetFeeFilters() {
+    document.getElementById('feeSearchInput').value = '';
+    document.getElementById('batchFeeSelect').value = '';
+    document.getElementById('planFeeSelect').value = '';
+    document.getElementById('statusFeeSelect').value = '';
+    document.querySelectorAll('.pill-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.pill-tab-btn:first-child').classList.add('active');
+    filterFeesTable();
+  }
+
+  function filterByTab(btn, statusFilter) {
+    document.querySelectorAll('.pill-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('statusFeeSelect').value = (statusFilter === 'all') ? '' : statusFilter;
+    filterFeesTable();
+  }
+
+  // Close modal when clicking on overlay background
+  document.getElementById('recordPaymentModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('active');
+    }
+  });
+</script>
+
+</body>
+</html>
+

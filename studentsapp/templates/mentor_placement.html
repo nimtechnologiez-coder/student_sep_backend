@@ -1,0 +1,666 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Career & Placement Readiness - NIM Academy Faculty Portal</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+  <style>
+    .kpi-cards-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1100px) {
+      .kpi-cards-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 640px) {
+      .kpi-cards-grid-4 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Skills Pill Tag */
+    .skill-tag-pill {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      border-radius: 4px;
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+      margin: 2px;
+    }
+    .skill-tag-pill.verified {
+      background: #f0fdf4;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component with role='mentor' and active_page='mentor_placement' -->
+  {% include 'sidebar.html' with active_page='mentor_placement' role='mentor' is_mentor=True %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" id="placementSearchInput" placeholder="Search mentees by name, verified skills, or hiring partner...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Mon, 24 Sep 2026</span>
+        </div>
+
+        <a href="{% url 'mentor_notifications' %}" class="header-notif-btn" title="Mentor Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">4</span>
+        </a>
+
+        <!-- Mentor Profile in Header -->
+        <div class="header-user-profile" title="Faculty Mentor Profile">
+          <div class="user-avatar-circle" style="background-color: #1d4ed8; color: #ffffff; font-weight: 700;">RS</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Dr. Rajiv Sen</span>
+            <span class="user-role-sub">Faculty Mentor • GenAI</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mentor Workspace -->
+    <div class="admin-workspace">
+
+      <!-- Page Title Row -->
+      <div class="page-title-row">
+        <div class="title-text-group">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="status-badge badge-role-mentor">
+              <span class="badge-dot" style="background: #1d4ed8;"></span> Faculty Workspace
+            </span>
+            <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Cohorts: Batch AI-09 &amp; Batch AI-10</span>
+          </div>
+          <h1 class="main-page-title">Career &amp; Placement Readiness</h1>
+          <p class="main-page-subtitle">Endorse technical competency radars, verify GitHub project repos, review mock interviews, and approve hiring eligibility.</p>
+        </div>
+
+        <div class="page-actions-group">
+          <button class="btn-secondary-action" onclick="alert('Exporting placement telemetry and recruiter dossier...');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Placement Report</span>
+          </button>
+          <button class="btn-primary-add" onclick="openEndorseModal('Aarav Sharma', 'Batch AI-09');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 15 2 2 4-4"/><rect width="18" height="14" x="3" y="7" rx="2"/></svg>
+            <span>Endorse Student Skills</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards (4 Cards) -->
+      <div class="kpi-cards-grid-4">
+        
+        <!-- 1. Placement Ready -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 15 2 2 4-4"/><rect width="18" height="14" x="3" y="7" rx="2"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">38</span>
+            <span class="kpi-stat-label">Placement Ready</span>
+            <span class="kpi-trend-row"><span class="trend-green">69.1%</span> of assigned mentees</span>
+          </div>
+        </div>
+
+        <!-- 2. In Interview Drives -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">12</span>
+            <span class="kpi-stat-label">In Active Drives</span>
+            <span class="kpi-trend-row"><span class="trend-blue">Top Tech Partners</span> interviewing</span>
+          </div>
+        </div>
+
+        <!-- 3. Offers Secured -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">5</span>
+            <span class="kpi-stat-label">Offers Secured</span>
+            <span class="kpi-trend-row"><span class="trend-purple">Highest ₹24.5 LPA</span> • Avg ₹14.2 LPA</span>
+          </div>
+        </div>
+
+        <!-- 4. Portfolio Polish Needed -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">9</span>
+            <span class="kpi-stat-label">Portfolio Polish Needed</span>
+            <span class="kpi-trend-row"><span class="trend-amber">Mentor Action</span> required</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-card-bar">
+        <div class="filter-search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="placementTableFilter" placeholder="Filter by student, verified skill, or drive stage...">
+        </div>
+
+        <div class="filter-dropdown-group">
+          <select class="filter-dropdown" id="placementCohortSelect">
+            <option value="">All Cohorts (AI-09 &amp; AI-10)</option>
+            <option value="Batch AI-09">Batch AI-09</option>
+            <option value="Batch AI-10">Batch AI-10</option>
+          </select>
+
+          <select class="filter-dropdown" id="placementStageSelect">
+            <option value="">All Placement Stages</option>
+            <option value="Offer Accepted">Offer Accepted</option>
+            <option value="In Interview Drive">In Interview Drive</option>
+            <option value="Placement Ready">Placement Ready</option>
+            <option value="Polish Needed">Polish Needed</option>
+          </select>
+
+          <select class="filter-dropdown" id="placementInterviewSelect">
+            <option value="">Mock Interview Status</option>
+            <option value="Cleared">Cleared (&gt;8.5/10)</option>
+            <option value="Pending">Pending Review</option>
+          </select>
+
+          <button class="filter-reset-link" onclick="document.getElementById('placementTableFilter').value=''; document.getElementById('placementCohortSelect').value=''; document.getElementById('placementStageSelect').value=''; filterPlacementTable();">Reset</button>
+        </div>
+      </div>
+
+      <!-- Placement Roster Table Card -->
+      <div class="admin-table-card">
+        <div class="table-card-header">
+          <div class="table-title-group">
+            <h2 class="table-main-heading">Assigned Students Career Readiness Roster</h2>
+            <span class="table-count-badge" id="placementCountBadge">55 Students Monitored</span>
+          </div>
+          <span style="font-size: 0.8125rem; color: #64748b;">Faculty Mentor: Dr. Rajiv Sen</span>
+        </div>
+
+        <div class="admin-table-wrapper">
+          <table class="admin-data-table" id="placementTable">
+            <thead>
+              <tr>
+                <th>Student &amp; ID</th>
+                <th>Cohort</th>
+                <th>Verified Technical Skills</th>
+                <th>ATS Resume</th>
+                <th>GitHub Repo Status</th>
+                <th>Mock Interview</th>
+                <th>Placement Stage</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Student 1: Aarav Sharma (Offer Accepted) -->
+              <tr style="background: #f0fdf4;">
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #16a34a; color: #ffffff;">AS</div>
+                    <div>
+                      <div class="user-primary-name">Aarav Sharma</div>
+                      <div class="user-sub-id">NIM-2026-AI09-01</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-admin">Batch AI-09</span></td>
+                <td>
+                  <div>
+                    <span class="skill-tag-pill verified">LangChain ✓</span>
+                    <span class="skill-tag-pill verified">Qdrant ✓</span>
+                    <span class="skill-tag-pill verified">LoRA ✓</span>
+                    <span class="skill-tag-pill verified">vLLM ✓</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #15803d;">96%</span>
+                  <div style="font-size: 0.72rem; color: #64748b;">ATS Optimized</div>
+                </td>
+                <td>
+                  <span class="status-badge badge-paid">Verified (12 Repos)</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #15803d;">9.5 / 10</span>
+                  <div style="font-size: 0.72rem; color: #15803d; font-weight: 600;">Cleared (A+)</div>
+                </td>
+                <td>
+                  <span class="status-badge badge-paid" style="background: #dcfce7; color: #15803d; font-weight: 700;">
+                    ★ Offer Accepted (₹24.5 LPA)
+                  </span>
+                  <div style="font-size: 0.72rem; color: #15803d;">GenAI Solutions Corp</div>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action" onclick="alert('Viewing offer letter verification for Aarav Sharma');">Offer</button>
+                </td>
+              </tr>
+
+              <!-- Student 2: Rohan Verma (In Interview Drive) -->
+              <tr style="background: #eff6ff;">
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #2563eb; color: #ffffff;">RV</div>
+                    <div>
+                      <div class="user-primary-name">Rohan Verma</div>
+                      <div class="user-sub-id">NIM-2026-AI09-08</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-admin">Batch AI-09</span></td>
+                <td>
+                  <div>
+                    <span class="skill-tag-pill verified">PyTorch ✓</span>
+                    <span class="skill-tag-pill verified">RAG Architectures ✓</span>
+                    <span class="skill-tag-pill verified">FastAPI ✓</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #0f172a;">92%</span>
+                </td>
+                <td>
+                  <span class="status-badge badge-paid">Verified (8 Repos)</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #15803d;">9.1 / 10</span>
+                  <div style="font-size: 0.72rem; color: #15803d;">Cleared (A)</div>
+                </td>
+                <td>
+                  <span class="status-badge" style="background: #dbeafe; color: #1e40af; font-weight: 700;">
+                    In Interview Drive (Final Round)
+                  </span>
+                  <div style="font-size: 0.72rem; color: #1e40af;">Hyperscale AI Cloud</div>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action primary" onclick="openEndorseModal('Rohan Verma', 'Batch AI-09');">Endorse</button>
+                </td>
+              </tr>
+
+              <!-- Student 3: Meera Nair (In Interview Drive) -->
+              <tr style="background: #eff6ff;">
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #8b5cf6; color: #ffffff;">MN</div>
+                    <div>
+                      <div class="user-primary-name">Meera Nair</div>
+                      <div class="user-sub-id">NIM-2026-AI10-04</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-mentor">Batch AI-10</span></td>
+                <td>
+                  <div>
+                    <span class="skill-tag-pill verified">Multi-Agent ✓</span>
+                    <span class="skill-tag-pill verified">LangGraph ✓</span>
+                    <span class="skill-tag-pill verified">VectorDB ✓</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #0f172a;">94%</span>
+                </td>
+                <td>
+                  <span class="status-badge badge-paid">Verified (10 Repos)</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #15803d;">9.3 / 10</span>
+                  <div style="font-size: 0.72rem; color: #15803d;">Cleared (A)</div>
+                </td>
+                <td>
+                  <span class="status-badge" style="background: #dbeafe; color: #1e40af; font-weight: 700;">
+                    In Interview Drive (Tech Round 2)
+                  </span>
+                  <div style="font-size: 0.72rem; color: #1e40af;">Autonomous Cognitive Labs</div>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action primary" onclick="openEndorseModal('Meera Nair', 'Batch AI-10');">Endorse</button>
+                </td>
+              </tr>
+
+              <!-- Student 4: Karthik Subramanian (Placement Ready) -->
+              <tr>
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #10b981; color: #ffffff;">KS</div>
+                    <div>
+                      <div class="user-primary-name">Karthik Subramanian</div>
+                      <div class="user-sub-id">NIM-2026-AI09-12</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-admin">Batch AI-09</span></td>
+                <td>
+                  <div>
+                    <span class="skill-tag-pill verified">LoRA Tuning ✓</span>
+                    <span class="skill-tag-pill verified">PEFT ✓</span>
+                    <span class="skill-tag-pill">Docker</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #0f172a;">88%</span>
+                </td>
+                <td>
+                  <span class="status-badge badge-paid">Verified (6 Repos)</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #15803d;">8.8 / 10</span>
+                  <div style="font-size: 0.72rem; color: #15803d;">Cleared</div>
+                </td>
+                <td>
+                  <span class="status-badge badge-ontrack">Placement Ready</span>
+                  <div style="font-size: 0.72rem; color: #64748b;">Shortlisted for 3 Drives</div>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action" onclick="openEndorseModal('Karthik Subramanian', 'Batch AI-09');">Endorse</button>
+                </td>
+              </tr>
+
+              <!-- Student 5: Pooja Patel (Placement Ready) -->
+              <tr>
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #ec4899; color: #ffffff;">PP</div>
+                    <div>
+                      <div class="user-primary-name">Pooja Patel</div>
+                      <div class="user-sub-id">NIM-2026-AI10-11</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-mentor">Batch AI-10</span></td>
+                <td>
+                  <div>
+                    <span class="skill-tag-pill verified">RAG Architectures ✓</span>
+                    <span class="skill-tag-pill verified">LlamaIndex ✓</span>
+                    <span class="skill-tag-pill verified">FastAPI ✓</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #0f172a;">95%</span>
+                </td>
+                <td>
+                  <span class="status-badge badge-paid">Verified (9 Repos)</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #15803d;">9.2 / 10</span>
+                  <div style="font-size: 0.72rem; color: #15803d;">Cleared (A)</div>
+                </td>
+                <td>
+                  <span class="status-badge badge-ontrack">Placement Ready</span>
+                  <div style="font-size: 0.72rem; color: #64748b;">Eligible for Tier-1 Drives</div>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action" onclick="openEndorseModal('Pooja Patel', 'Batch AI-10');">Endorse</button>
+                </td>
+              </tr>
+
+              <!-- Student 6: Divya Iyer (Polish Needed) -->
+              <tr style="background: #fffbfb;">
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #ef4444; color: #ffffff;">DI</div>
+                    <div>
+                      <div class="user-primary-name">Divya Iyer</div>
+                      <div class="user-sub-id">NIM-2026-AI09-14</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-admin">Batch AI-09</span></td>
+                <td>
+                  <div>
+                    <span class="skill-tag-pill">PyTorch</span>
+                    <span class="skill-tag-pill">Vector Search</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #ea580c;">74%</span>
+                  <div style="font-size: 0.72rem; color: #dc2626;">Needs ATS Revision</div>
+                </td>
+                <td>
+                  <span class="status-badge badge-pending">Needs 2 More Repos</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #d97706;">7.2 / 10</span>
+                  <div style="font-size: 0.72rem; color: #d97706;">Retake Recommended</div>
+                </td>
+                <td>
+                  <span class="status-badge badge-attention">Polish Needed</span>
+                  <div style="font-size: 0.72rem; color: #dc2626;">Pending Mentor Sign-off</div>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action" style="color: #dc2626; border-color: #fca5a5;" onclick="alert('Scheduling mock interview redo for Divya Iyer');">Mock Redo</button>
+                </td>
+              </tr>
+
+              <!-- Student 7: Tushar Gupta (Polish Needed) -->
+              <tr style="background: #fffbfb;">
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #d97706; color: #ffffff;">TG</div>
+                    <div>
+                      <div class="user-primary-name">Tushar Gupta</div>
+                      <div class="user-sub-id">NIM-2026-AI10-18</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-mentor">Batch AI-10</span></td>
+                <td>
+                  <div>
+                    <span class="skill-tag-pill">Deep Learning</span>
+                    <span class="skill-tag-pill">Transformers</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #ea580c;">68%</span>
+                  <div style="font-size: 0.72rem; color: #dc2626;">Resume Unfinished</div>
+                </td>
+                <td>
+                  <span class="status-badge badge-attention">Unverified Repos</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #64748b;">Scheduled</span>
+                </td>
+                <td>
+                  <span class="status-badge badge-attention">Polish Needed</span>
+                  <div style="font-size: 0.72rem; color: #dc2626;">Capstone Pending</div>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action" onclick="alert('Opening resume feedback editor for Tushar Gupta');">Feedback</button>
+                </td>
+              </tr>
+
+              <!-- Student 8: Sneha Kulkarni (Offer Accepted) -->
+              <tr style="background: #f0fdf4;">
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #6366f1; color: #ffffff;">SK</div>
+                    <div>
+                      <div class="user-primary-name">Sneha Kulkarni</div>
+                      <div class="user-sub-id">NIM-2026-AI09-29</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-admin">Batch AI-09</span></td>
+                <td>
+                  <div>
+                    <span class="skill-tag-pill verified">LoRA ✓</span>
+                    <span class="skill-tag-pill verified">Quantization ✓</span>
+                    <span class="skill-tag-pill verified">vLLM ✓</span>
+                    <span class="skill-tag-pill verified">Triton ✓</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #15803d;">98%</span>
+                </td>
+                <td>
+                  <span class="status-badge badge-paid">Verified (14 Repos)</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: #15803d;">9.8 / 10</span>
+                  <div style="font-size: 0.72rem; color: #15803d; font-weight: 600;">Cleared (A+)</div>
+                </td>
+                <td>
+                  <span class="status-badge badge-paid" style="background: #dcfce7; color: #15803d; font-weight: 700;">
+                    ★ Offer Accepted (₹21.0 LPA)
+                  </span>
+                  <div style="font-size: 0.72rem; color: #15803d;">Nexus Neural AI</div>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action" onclick="alert('Viewing offer verification for Sneha Kulkarni');">Offer</button>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal: Endorse Skills & Mock Interview -->
+<div class="admin-modal-backdrop" id="endorseModal">
+  <div class="admin-modal-box" style="max-width: 600px;">
+    <div class="modal-header-row">
+      <div class="modal-title-group">
+        <h3 class="modal-main-title" id="endorseModalTitle">Faculty Skill Endorsement</h3>
+        <p class="modal-sub-title" id="endorseModalSubtitle">Confirm mentee technical readiness for enterprise placement drives.</p>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('endorseModal').classList.remove('active');">&times;</button>
+    </div>
+    <div class="modal-body-content">
+      <form onsubmit="event.preventDefault(); alert('Skills successfully endorsed and published to Placement Cell!'); document.getElementById('endorseModal').classList.remove('active');">
+        <div class="modal-form-grid">
+          <div class="form-field-group full-width">
+            <label class="form-field-label">Verified Core Competencies (Check all confirmed in labs)</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 6px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8125rem;">
+                <input type="checkbox" checked> Enterprise RAG Architectures
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8125rem;">
+                <input type="checkbox" checked> LoRA Parameter-Efficient Fine-Tuning
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8125rem;">
+                <input type="checkbox" checked> Vector Databases (Qdrant/Milvus)
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8125rem;">
+                <input type="checkbox" checked> LangGraph Multi-Agent Workflows
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8125rem;">
+                <input type="checkbox"> Continuous Batching &amp; vLLM Serving
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8125rem;">
+                <input type="checkbox" checked> Docker Containerization &amp; APIs
+              </label>
+            </div>
+          </div>
+
+          <div class="form-field-group">
+            <label class="form-field-label">Mock Interview Score (1 to 10)</label>
+            <input type="number" step="0.1" class="form-field-input" value="9.2" min="1" max="10" required>
+          </div>
+
+          <div class="form-field-group">
+            <label class="form-field-label">Placement Readiness Recommendation</label>
+            <select class="form-field-select">
+              <option>Recommended for Tier-1 AI Roles (₹18+ LPA)</option>
+              <option>Recommended for Core ML Engineer Roles</option>
+              <option>Needs 1 More Capstone Iteration</option>
+            </select>
+          </div>
+
+          <div class="form-field-group full-width">
+            <label class="form-field-label">Faculty Endorsement Note (Visible to Partner Recruiters)</label>
+            <textarea class="form-field-textarea" rows="3" placeholder="Candidate has displayed exceptional mastery over vector indexing, prompt evaluation, and clean production code in all module assignments..." required></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions-footer">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('endorseModal').classList.remove('active');">Cancel</button>
+          <button type="submit" class="btn-submit">Publish Faculty Endorsement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openEndorseModal(student, batch) {
+    document.getElementById('endorseModalTitle').innerText = 'Faculty Endorsement: ' + student;
+    document.getElementById('endorseModalSubtitle').innerText = batch + ' • Faculty Mentor: Dr. Rajiv Sen';
+    document.getElementById('endorseModal').classList.add('active');
+  }
+
+  function filterPlacementTable() {
+    const search = document.getElementById('placementTableFilter').value.toLowerCase();
+    const cohort = document.getElementById('placementCohortSelect').value.toLowerCase();
+    const stage = document.getElementById('placementStageSelect').value.toLowerCase();
+    const rows = document.querySelectorAll('#placementTable tbody tr');
+    let count = 0;
+
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      const matchesSearch = !search || text.includes(search);
+      const matchesCohort = !cohort || text.includes(cohort);
+      const matchesStage = !stage || text.includes(stage);
+
+      if (matchesSearch && matchesCohort && matchesStage) {
+        row.style.display = '';
+        count++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    document.getElementById('placementCountBadge').innerText = count + ' Students Showing';
+  }
+
+  document.getElementById('placementTableFilter').addEventListener('input', filterPlacementTable);
+  document.getElementById('placementCohortSelect').addEventListener('change', filterPlacementTable);
+  document.getElementById('placementStageSelect').addEventListener('change', filterPlacementTable);
+  document.getElementById('placementSearchInput').addEventListener('input', function(e) {
+    document.getElementById('placementTableFilter').value = e.target.value;
+    filterPlacementTable();
+  });
+</script>
+
+</body>
+</html>
+

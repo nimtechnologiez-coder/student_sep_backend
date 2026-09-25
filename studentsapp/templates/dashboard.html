@@ -1,0 +1,554 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIM Academy - Admin Dashboard</title>
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Separate CSS Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component -->
+  {% include 'sidebar.html' %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" placeholder="Search students, batches, reports...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Mon, 15 Sep 2025</span>
+        </div>
+
+        <button class="header-notif-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">5</span>
+        </button>
+
+        <div class="header-user-profile" title="{{ role_title|default:'Admin Account' }}">
+          <div class="user-avatar-circle" style="background-color: #0f172a; color: #ffffff; font-weight: 700;">{{ user_initials|default:'SN' }}</div>
+          <div class="user-text-info">
+            <span class="user-name-title">{{ user_name|default:'Sneha N' }}</span>
+            <span class="user-role-sub">{{ user_role|default:'Administrator' }}</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content Area -->
+    <div class="dashboard-content-area">
+      
+      <!-- Welcome Header & Inspiration Quote Card -->
+      <div class="welcome-section-row">
+        <div class="welcome-title-group">
+          <h1>Welcome back, {{ user_name|default:'Admin' }}!</h1>
+          <p>{{ focus_area|default:"Here's what's happening at NIM Academy today." }}</p>
+        </div>
+
+        <div class="inspiration-quote-card">
+          <div class="quote-icon-cap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+          <div class="quote-text-group">
+            <div class="quote-main">"Education is the key to a better tomorrow."</div>
+            <div class="quote-sub">Let's make an impact today!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4x2 KPI Cards Grid (8 Cards) -->
+      <div class="kpi-cards-grid">
+        
+        <!-- 1. Total Students -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-blue-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Total Students</span>
+            <span class="kpi-card-number">{{ metrics.total_students }}</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ {{ metrics.students_trend }}</span> vs last month</span>
+          </div>
+        </div>
+
+        <!-- 2. Active Batches -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-green-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Active Batches</span>
+            <span class="kpi-card-number">{{ metrics.active_batches }}</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ {{ metrics.batches_trend }}</span> vs last month</span>
+          </div>
+        </div>
+
+        <!-- 3. Admissions (YTD) -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-orange-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Admissions (YTD)</span>
+            <span class="kpi-card-number">{{ metrics.admissions }}</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ {{ metrics.admissions_trend }}</span> vs last year</span>
+          </div>
+        </div>
+
+        <!-- 4. Fee Collection (YTD) -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-purple-light">₹</div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Fee Collection (YTD)</span>
+            <span class="kpi-card-number">{{ metrics.fee_collection }}</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ {{ metrics.fee_trend }}</span> vs last year</span>
+          </div>
+        </div>
+
+        <!-- 5. Placement Offers -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-red-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Placement Offers</span>
+            <span class="kpi-card-number">{{ metrics.placement_offers }}</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ {{ metrics.placement_trend }}</span> vs last year</span>
+          </div>
+        </div>
+
+        <!-- 6. Classes Scheduled -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-green-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Classes Scheduled</span>
+            <span class="kpi-card-number">{{ metrics.classes_scheduled }}</span>
+            <span class="kpi-card-trend">Today</span>
+          </div>
+        </div>
+
+        <!-- 7. Trainer Count -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-cyan-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Trainer Count</span>
+            <span class="kpi-card-number">{{ metrics.trainer_count }}</span>
+            <span class="kpi-card-trend">Active Trainers</span>
+          </div>
+        </div>
+
+        <!-- 8. Average Attendance -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-blue-light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-card-title">Average Attendance</span>
+            <span class="kpi-card-number">{{ metrics.average_attendance }}</span>
+            <span class="kpi-card-trend"><span class="trend-green">↑ {{ metrics.attendance_trend }}</span> vs last month</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Middle Row: Student Status, Batch-wise Students, Fee Collection -->
+      <div class="three-cards-row">
+        
+        <!-- Column 1: Student Status -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Student Status</span>
+            <a href="{% url 'students' %}" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="donut-chart-flex"></div>
+          </div>
+
+          <!-- Column 2: Batch-wise Students -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Batch-wise Students</span>
+            <a href="{% url 'batches' %}" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="batch-chart-wrapper"></div>
+          </div>
+
+          <!-- Column 3: Fee Collection -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row" style="margin-bottom: 6px;">
+            <span class="panel-title">Fee Collection</span>
+            <div class="dropdown-container" style="position: relative; display: inline-block;">
+              <button class="dropdown-pill-btn" onclick="toggleFeeDropdown(event)">
+                <span>{{ current_fee_year_label|default:"This Year" }}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="feeDropdownMenu" class="dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10; min-width: 120px; margin-top: 4px; overflow: hidden;">
+                <a href="#" onclick="fetchFeeData('this_year', 'This Year'); return false;" style="display: block; padding: 8px 12px; text-decoration: none; color: #334155; font-size: 13px; font-weight: 500;">This Year</a>
+                <a href="#" onclick="fetchFeeData('last_year', 'Last Year'); return false;" style="display: block; padding: 8px 12px; text-decoration: none; color: #334155; font-size: 13px; font-weight: 500; border-top: 1px solid #f1f5f9;">Last Year</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="fee-chart-top">
+            <div class="fee-metric-large">
+              <span class="fee-rupee-val">{{ metrics.fee_collection }}</span>
+              <span class="fee-trend-badge">↑ {{ metrics.fee_trend }} vs last year</span>
+            </div>
+          </div>
+
+          <div class="fee-line-chart-svg"></div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: Recent Registrations, Today's Classes, Recent Activities -->
+      <div class="three-cards-row">
+        
+        <!-- Recent Registrations -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Recent Registrations</span>
+            <a href="{% url 'students' %}" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="admissions-list">
+              {% for admission in recent_admissions %}
+              <div class="admission-item-row">
+                <div class="admission-left">
+                  {% if admission.avatar_url %}
+                    <img src="{{ admission.avatar_url }}" class="avatar" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                  {% else %}
+                    <div class="initials-avatar-circle">{{ admission.name|slice:":2"|upper }}</div>
+                  {% endif %}
+                  <div class="admission-info">
+                    <span class="admission-name">{{ admission.name }}</span>
+                    <span class="admission-course">{{ admission.course }}</span>
+                  </div>
+                </div>
+                <div class="admission-right">
+                  <span class="admission-date">{{ admission.join_date|date:"d M Y" }}</span>
+                  <span class="status-badge-{% if admission.status == 'Active' %}confirmed{% else %}pending{% endif %}">{{ admission.status }}</span>
+                </div>
+              </div>
+              {% empty %}
+              <div style="padding: 24px; text-align: center; color: var(--text-muted);">
+                <p>No Recent Registrations available.</p>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Today's Classes -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Today's Classes</span>
+            <a href="{% url 'classes' %}" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="classes-list">
+              {% for class_item in todays_classes %}
+              <div class="class-item-row">
+                <div class="class-left">
+                  <span class="class-time-text">{{ class_item.time|time:"h:i A" }}</span>
+                  <div class="class-info">
+                    <span class="class-subject-title">{{ class_item.subject }}</span>
+                    <span class="class-batch-sub">{{ class_item.batch.name }}</span>
+                  </div>
+                </div>
+                <span class="class-mode-badge {% if class_item.mode == 'Online' %}badge-online{% else %}badge-offline{% endif %}">{{ class_item.mode }}</span>
+              </div>
+              {% empty %}
+              <div style="padding: 24px; text-align: center; color: var(--text-muted);">
+                <p>No classes scheduled for today.</p>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Recent Activities -->
+        <div class="dash-panel-card">
+          <div class="panel-header-row">
+            <span class="panel-title">Recent Activities</span>
+            <a href="{% url 'reports' %}" class="panel-link-view">View All →</a>
+          </div>
+
+          <div class="activities-list">
+              {% for activity in recent_activities %}
+              <div class="activity-item-row">
+                <div class="activity-left">
+                  <div class="activity-icon-circle {{ activity.color_class|default:'activity-blue' }}">
+                    {% if activity.icon_svg %}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{{ activity.icon_svg|safe }}</svg>
+                    {% else %}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {% endif %}
+                  </div>
+                  <span class="activity-text-desc">{{ activity.description|safe }}</span>
+                </div>
+                <span class="activity-time-ago">{{ activity.timestamp|timesince }} ago</span>
+              </div>
+              {% empty %}
+              <div style="padding: 24px; text-align: center; color: var(--text-muted);">
+                <p>No recent activities found.</p>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+  </main>
+
+</div>
+
+<!-- Chart Tooltip Container -->
+<div class="chart-tooltip" id="chartTooltip"></div>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const emptyStateHTML = "<div style='padding:40px; text-align:center; color:#94a3b8; width:100%; display:flex; align-items:center; justify-content:center; height:100%;'>No data available</div>";
+
+
+    // 1. Student Status Donut
+    try {
+        const statusData = JSON.parse(document.getElementById('studentStatusData').textContent);
+        if (statusData && statusData.length > 0) {
+            let total = 0;
+            const statusMap = { 'Active': 0, 'Onboarding': 0, 'Completed': 0, 'Dropped': 0 };
+            statusData.forEach(d => {
+                total += d.count;
+                statusMap[d.status] = d.count;
+            });
+            
+            if (total > 0) {
+                const colors = { 'Active': '#2563eb', 'Onboarding': '#10b981', 'Completed': '#f59e0b', 'Dropped': '#ef4444' };
+                const order = ['Active', 'Onboarding', 'Completed', 'Dropped'];
+                
+                let svgHTML = `<div class="donut-svg-container"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f1f5f9" stroke-width="4.8"/>`;
+                let legendHTML = '<div class="donut-legend-col">';
+                
+                let currentOffset = 25; // Start at top
+                order.forEach(status => {
+                    const count = statusMap[status];
+                    const pct = Math.round((count / total) * 100);
+                    if (count > 0) {
+                        const dasharray = `${pct} ${100 - pct}`;
+                        svgHTML += `<circle class="chart-interactive donut-segment" data-tooltip="${status}: ${count} Students (${pct}%)" cx="21" cy="21" r="15.915" fill="transparent" stroke="${colors[status]}" stroke-width="4.8" stroke-dasharray="${dasharray}" stroke-dashoffset="${currentOffset}"/>`;
+                        currentOffset -= pct;
+                        if (currentOffset < 0) currentOffset += 100;
+                    }
+                    
+                    const colorClass = {'Active':'blue', 'Onboarding':'green', 'Completed':'yellow', 'Dropped':'red'}[status];
+                    legendHTML += `<div class="donut-legend-row">
+                      <div class="legend-left"><span class="legend-circle circle-${colorClass}"></span><span>${status}</span></div>
+                      <div><span class="legend-count">${count}</span><span class="legend-pct">(${pct}%)</span></div>
+                    </div>`;
+                });
+                
+                svgHTML += `</svg><div class="donut-center-info"><div class="donut-center-num">${total}</div><div class="donut-center-sub">Students</div></div></div>`;
+                legendHTML += `</div>`;
+                
+                document.querySelector('.donut-chart-flex').innerHTML = svgHTML + legendHTML;
+            } else {
+                document.querySelector('.donut-chart-flex').innerHTML = emptyStateHTML;
+            }
+        } else {
+            document.querySelector('.donut-chart-flex').innerHTML = emptyStateHTML;
+        }
+    } catch(e) { console.error('Error rendering status chart', e); }
+
+    // 2. Batch-wise Bar Chart
+    try {
+        const batchData = JSON.parse(document.getElementById('batchStudentsData').textContent);
+        if (batchData && batchData.length > 0) {
+            let maxCount = Math.max(...batchData.map(d => d.student_count));
+            if (maxCount < 80) maxCount = 80;
+            
+            let svgHTML = `<svg viewBox="0 0 380 170" preserveAspectRatio="none">
+                <text x="18" y="24" font-size="10" fill="#94a3b8" text-anchor="end">${maxCount}</text>
+                <line x1="28" y1="20" x2="370" y2="20" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="18" y="54" font-size="10" fill="#94a3b8" text-anchor="end">${Math.round(maxCount*0.75)}</text>
+                <line x1="28" y1="50" x2="370" y2="50" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="18" y="84" font-size="10" fill="#94a3b8" text-anchor="end">${Math.round(maxCount*0.5)}</text>
+                <line x1="28" y1="80" x2="370" y2="80" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="18" y="114" font-size="10" fill="#94a3b8" text-anchor="end">${Math.round(maxCount*0.25)}</text>
+                <line x1="28" y1="110" x2="370" y2="110" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="18" y="144" font-size="10" fill="#94a3b8" text-anchor="end">0</text>
+                <line x1="28" y1="140" x2="370" y2="140" stroke="#cbd5e1" stroke-width="1"/>
+            `;
+            
+            batchData.forEach((d, i) => {
+                const xCenter = 90 + i * 90;
+                const rectX = xCenter - 14;
+                const height = (d.student_count / maxCount) * 120;
+                const yPos = 140 - height;
+                const textY = yPos - 6;
+                
+                const parts = d.name.split(' ');
+                const line1 = parts[0];
+                const line2 = parts.slice(1).join(' ');
+                
+                svgHTML += `
+                    <text x="${xCenter}" y="${textY}" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle">${d.student_count}</text>
+                    <rect class="chart-interactive batch-bar" data-tooltip="${d.name}: ${d.student_count} Students" x="${rectX}" y="${yPos}" width="28" height="${height}" rx="3" fill="#2563eb"/>
+                    <text x="${xCenter}" y="154" font-size="11" fill="#475569" text-anchor="middle">${line1}</text>
+                    <text x="${xCenter}" y="168" font-size="11" fill="#475569" text-anchor="middle">${line2}</text>
+                `;
+            });
+            svgHTML += `</svg>`;
+            document.querySelector('.batch-chart-wrapper').innerHTML = svgHTML;
+        } else {
+            document.querySelector('.batch-chart-wrapper').innerHTML = emptyStateHTML;
+        }
+    } catch(e) { console.error('Error rendering batch chart', e); }
+
+    
+
+    
+    window.renderFeeChart = function(feeData) {
+        const hasFees = feeData && feeData.some(d => d.amount_lakhs > 0);
+        
+        if (hasFees) {
+            let svgHTML = `<svg viewBox="0 0 360 140" preserveAspectRatio="none">
+                <text x="12" y="12" font-size="8" fill="#94a3b8" text-anchor="middle">₹ (Lakh)</text>
+                <text x="20" y="24" font-size="8.5" fill="#94a3b8" text-anchor="end">40</text>
+                <line x1="28" y1="20" x2="350" y2="20" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="20" y="49" font-size="8.5" fill="#94a3b8" text-anchor="end">30</text>
+                <line x1="28" y1="45" x2="350" y2="45" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="20" y="74" font-size="8.5" fill="#94a3b8" text-anchor="end">20</text>
+                <line x1="28" y1="70" x2="350" y2="70" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="20" y="99" font-size="8.5" fill="#94a3b8" text-anchor="end">10</text>
+                <line x1="28" y1="95" x2="350" y2="95" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="20" y="116" font-size="8.5" fill="#94a3b8" text-anchor="end">0</text>
+                <line x1="28" y1="112" x2="350" y2="112" stroke="#cbd5e1" stroke-width="1"/>
+            `;
+            
+            let pathD = "";
+            const xStep = 35;
+            let startX = 40;
+            
+            feeData.forEach((d, i) => {
+                const cx = startX + (i * xStep);
+                const cy = 112 - ((d.amount_lakhs / 40) * 92);
+                
+                if (i === 0) pathD += `M ${cx},${cy} `;
+                else pathD += `L ${cx},${cy} `;
+                
+                svgHTML += `<text x="${cx}" y="132" font-size="11" fill="#94a3b8" text-anchor="middle">${d.month}</text>`;
+                svgHTML += `<circle class="chart-interactive fee-point" data-tooltip="${d.month}: ₹ ${d.amount_lakhs.toFixed(1)} L" cx="${cx}" cy="${cy}" r="3.5" fill="#2563eb"/>`;
+            });
+            
+            svgHTML += `<path d="${pathD}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/></svg>`;
+            document.querySelector('.fee-line-chart-svg').innerHTML = svgHTML;
+        } else {
+            document.querySelector('.fee-line-chart-svg').innerHTML = emptyStateHTML;
+        }
+    };
+    
+    window.fetchFeeData = function(yearValue, labelText) {
+        // Update label immediately
+        document.querySelector('.dropdown-pill-btn span').textContent = labelText;
+        document.getElementById('feeDropdownMenu').style.display = 'none';
+        
+        fetch(`/api/fee-data/?year=${yearValue}`)
+            .then(res => res.json())
+            .then(data => {
+                document.querySelector('.fee-rupee-val').textContent = data.fee_collection_str;
+                renderFeeChart(data.fee_collection_data);
+            })
+            .catch(err => console.error("Error fetching fee data:", err));
+    };
+
+    // 3. Fee Line Chart (Initial render)
+    try {
+        const feeData = JSON.parse(document.getElementById('feeCollectionData').textContent);
+        renderFeeChart(feeData);
+    } catch(e) { console.error('Error rendering fee chart', e); }
+
+    
+    // Tooltips
+    const tooltip = document.getElementById('chartTooltip');
+    document.querySelector('.dashboard-main').addEventListener('mouseenter', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('chart-interactive')) {
+            const text = e.target.getAttribute('data-tooltip');
+            if (!text) return;
+            tooltip.textContent = text;
+            tooltip.classList.add('active');
+            tooltip.style.left = e.clientX + 'px';
+            tooltip.style.top = (e.clientY - 12) + 'px';
+        }
+    }, true);
+    document.querySelector('.dashboard-main').addEventListener('mousemove', (e) => {
+        if (tooltip.classList.contains('active')) {
+            tooltip.style.left = e.clientX + 'px';
+            tooltip.style.top = (e.clientY - 12) + 'px';
+        }
+    }, true);
+    document.querySelector('.dashboard-main').addEventListener('mouseleave', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('chart-interactive')) {
+            tooltip.classList.remove('active');
+        }
+    }, true);
+});
+</script>
+
+
+
+
+{{ student_status_data|json_script:"studentStatusData" }}
+{{ batch_students_data|json_script:"batchStudentsData" }}
+
+
+{{ student_status_data|json_script:"studentStatusData" }}
+{{ batch_students_data|json_script:"batchStudentsData" }}
+{{ fee_collection_data|json_script:"feeCollectionData" }}
+
+
+<script>
+function toggleFeeDropdown(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('feeDropdownMenu');
+    if (menu.style.display === 'none') {
+        menu.style.display = 'block';
+    } else {
+        menu.style.display = 'none';
+    }
+}
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('feeDropdownMenu');
+    if (menu && menu.style.display === 'block') {
+        menu.style.display = 'none';
+    }
+});
+</script>
+</body>
+
+</html>

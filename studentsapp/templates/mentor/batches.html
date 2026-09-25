@@ -1,0 +1,102 @@
+{% extends 'mentor/base.html' %}
+
+{% block title %}Assigned Batches - NIM Academy{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mentor-welcome-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span class="badge-pill badge-blue">{{ program_name }}</span>
+        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Faculty Mentor: Dr. Rajiv Sen</span>
+      </div>
+      <h1 class="mentor-page-heading">Assigned Batches &amp; Cohorts</h1>
+      <p class="mentor-page-subline">
+        Manage cohort pacing, weekly lecture timetable, student capacity, and syllabus coverage.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-nim-secondary" onclick="alert('Downloading master cohort syllabus PDF...');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download Syllabus</span>
+      </button>
+      <button class="btn-nim-primary" onclick="alert('Opening announcement broadcast modal...');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px;"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        <span>Broadcast to Batch</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Batches Grid Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px;">
+  {% for b in batches %}
+  <div class="mentor-card" style="padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+    <!-- Batch Top Strip -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+          <span class="badge-pill badge-green">{{ b.status }}</span>
+        </div>
+        <h2 style="font-size: 1.25rem; font-weight: 800; color: #0a1b39; margin: 0 0 2px;">{{ b.code }}</h2>
+        <p style="font-size: 0.78125rem; color: #64748b; margin: 0;">Trainer: <strong style="color: #0a1b39;">{{ b.trainer }}</strong></p>
+      </div>
+
+      <div style="text-align: right;">
+        <span style="font-size: 1.5rem; font-weight: 900; color: #0062eb;">{{ b.enrolled }} / {{ b.capacity }}</span>
+        <div style="font-size: 0.71875rem; color: #64748b; font-weight: 600;">Students Enrolled</div>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; background: #f8fafc; padding: 14px; border-radius: 10px; border: 1px solid #edf2f7; font-size: 0.8125rem;">
+      <div>
+        <span style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Class Schedule:</span>
+        <div style="font-weight: 700; color: #0f172a; margin-top: 2px;">{{ b.schedule }}</div>
+      </div>
+      <div>
+        <span style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Mode &amp; Location:</span>
+        <div style="font-weight: 700; color: #0f172a; margin-top: 2px;">{{ b.mode }}</div>
+      </div>
+      <div>
+        <span style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Current Topic:</span>
+        <div style="font-weight: 700; color: #0062eb; margin-top: 2px;">{{ b.current_topic }}</div>
+      </div>
+      <div>
+        <span style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Next Session:</span>
+        <div style="font-weight: 700; color: #dc2626; margin-top: 2px;">{{ b.next_class }}</div>
+      </div>
+    </div>
+
+    <!-- Syllabus Progress Bar -->
+    <div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; font-weight: 700; margin-bottom: 6px;">
+        <span style="color: #334155;">Curriculum Pace (Module AI-104)</span>
+        <span style="color: #0062eb;">{{ b.progress }}% Completed</span>
+      </div>
+      <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
+        <div style="width: {{ b.progress }}%; height: 100%; background: #0062eb; border-radius: 9999px;"></div>
+      </div>
+    </div>
+
+    <!-- Batch Actions Footer -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--nim-border-subtle); padding-top: 14px; flex-wrap: wrap; gap: 8px;">
+      <a href="{% url 'mentor_students' %}?batch={{ b.code }}" class="btn-nim-secondary" style="font-size: 0.78125rem;">
+        <span>View {{ b.enrolled }} Students</span>
+      </a>
+      <div style="display: flex; gap: 8px;">
+        <a href="{% url 'mentor_classes' %}" class="btn-nim-secondary" style="font-size: 0.78125rem;">
+          <span>Classes</span>
+        </a>
+        <a href="{% url 'mentor_attendance' %}" class="btn-nim-primary" style="font-size: 0.78125rem;">
+          <span>Take Attendance</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+

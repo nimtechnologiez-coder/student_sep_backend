@@ -1,0 +1,430 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assessments & Evaluations - NIM Academy Admin Portal</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component with active_page='assessments' -->
+  {% include 'sidebar.html' with active_page='assessments' %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" placeholder="Search assessments, batches, rubrics, submissions...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Mon, 24 Sep 2026</span>
+        </div>
+
+        <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">5</span>
+        </a>
+
+        <div class="header-user-profile" title="Admin Account">
+          <div class="user-avatar-circle" style="background-color: #0f172a; color: #ffffff; font-weight: 700;">SN</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Sneha N</span>
+            <span class="user-role-sub">Admin</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Assessments Admin Workspace -->
+    <div class="admin-workspace">
+
+      <!-- Page Title & Actions -->
+      <div class="page-title-row">
+        <div class="title-text-group">
+          <h1 class="main-page-title">Assessments & Evaluations</h1>
+          <p class="main-page-subtitle">Track proctored coding exams, capstone submissions, cohort score distributions, and grading queues.</p>
+        </div>
+
+        <div class="page-actions-group">
+          <button class="btn-secondary-action" onclick="alert('Exporting Master Gradebook CSV...');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Export Gradebook</span>
+          </button>
+          <button class="btn-primary-add" onclick="document.getElementById('addAssessmentModal').classList.add('active');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Create Assessment</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPI Summary Cards -->
+      <div class="kpi-cards-grid">
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x1="13" x2="8" y2="13"/><line x1="16" x1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.total }}</span>
+            <span class="kpi-stat-label">Active Assessments</span>
+            <span class="kpi-trend-row"><span class="trend-green">3 Capstones</span> • 5 Coding Labs</span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.avg_score }}</span>
+            <span class="kpi-stat-label">Total Submissions</span>
+            <span class="kpi-trend-row"><span class="trend-green">↑ 94.2%</span> Turn-in compliance</span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.pending }}</span>
+            <span class="kpi-stat-label">Average Cohort Score</span>
+            <span class="kpi-trend-row"><span class="trend-blue">Benchmark: &gt;70%</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.high }}</span>
+            <span class="kpi-stat-label">Pending Evaluation</span>
+            <span class="kpi-trend-row"><span class="trend-amber">Assigned to Mentors</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search Bar Card -->
+      <div class="filter-controls-card">
+        <div class="filter-controls-row">
+          <div class="filter-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" class="filter-search-input" id="assessmentSearchInput" placeholder="Search by title, batch code, module or format...">
+          </div>
+
+          <div class="filter-dropdowns-group">
+            <select class="filter-select" id="batchFilterSelect">
+              <option value="">All Batches</option>
+              <option value="AI-09">Batch AI-09 (GenAI)</option>
+              <option value="AI-10">Batch AI-10 (Weekend)</option>
+              <option value="CLOUD-04">Batch CLOUD-04</option>
+              <option value="FS-12">Batch FS-12</option>
+              <option value="DATA-06">Batch DATA-06</option>
+            </select>
+
+            <select class="filter-select" id="typeFilterSelect">
+              <option value="">All Types</option>
+              <option value="Capstone">Capstone Project</option>
+              <option value="Coding Lab">Coding Lab</option>
+              <option value="MCQ">MCQ Sprint</option>
+              <option value="Viva">Viva Defense</option>
+            </select>
+
+            <select class="filter-select" id="statusFilterSelect">
+              <option value="">Evaluation: All</option>
+              <option value="Graded">Graded</option>
+              <option value="Pending Review">Pending Review</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Scheduled">Scheduled</option>
+            </select>
+
+            <button class="btn-filter-reset" onclick="resetAssessmentFilters()">Reset</button>
+          </div>
+        </div>
+
+        <!-- Category Pill Tabs -->
+        <div class="filter-tabs-row">
+          <button class="pill-tab-btn active" onclick="filterByTab(this, 'all')">
+            <span>All Assessments</span>
+            <span class="pill-tab-count">14</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'In Progress')">
+            <span>Active / In Progress</span>
+            <span class="pill-tab-count">5</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'Pending Review')">
+            <span>Needs Review</span>
+            <span class="pill-tab-count">3</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'Graded')">
+            <span>Graded</span>
+            <span class="pill-tab-count">4</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'Scheduled')">
+            <span>Scheduled</span>
+            <span class="pill-tab-count">2</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Assessments Table Card -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <div class="table-header-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>Assessments Schedule & Submission Ledger</span>
+            <span class="table-records-count">14 Assessments</span>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="alert('Evaluations synced with Git Classroom.');">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Sync Submissions</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-scroll-container">
+          <table class="admin-data-table" id="assessmentsTable">
+            <thead>
+              <tr>
+                <th style="width: 290px;">Assessment Title & Type</th>
+                <th>Target Batch</th>
+                <th>Module Code</th>
+                <th>Scheduled Date & Deadline</th>
+                <th>Submissions</th>
+                <th>Score Summary</th>
+                <th>Evaluation Status</th>
+                <th style="text-align: right; width: 140px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+                  {% for assessment in assessments %}
+                  <tr>
+                    <td>
+                      <div class="entity-info">
+                        <span class="entity-name">{{ assessment.title }}</span>
+                        <span class="entity-sub">{{ assessment.module.name }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge-role-admin">{{ assessment.module.course }}</span>
+                    </td>
+                    <td>
+                      <div class="entity-cell">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2" style="margin-right: 6px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <span class="entity-sub">{{ assessment.date|date:"d M, Y" }}</span>
+                      </div>
+                    </td>
+                    <td style="text-align: right;">
+                      <div class="action-buttons">
+                        <button class="action-btn" title="View Results"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8;">No assessments found.</td></tr>
+                  {% endfor %}
+                </tbody>
+          </table>
+        </div>
+
+        <!-- Table Pagination -->
+        <div class="pagination-row">
+          <div>Showing <strong>1 - 6</strong> of <strong>14</strong> assessments</div>
+          <div class="pagination-controls">
+            <button class="btn-page-nav" disabled>Previous</button>
+            <button class="btn-page-nav active">1</button>
+            <button class="btn-page-nav">2</button>
+            <button class="btn-page-nav">Next</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Create Assessment Modal -->
+<div class="modal-overlay" id="addAssessmentModal">
+  <div class="modal-box">
+    <div class="modal-header-bar">
+      <div class="modal-title-text">Create Assessment</div>
+      <button class="btn-close-modal" onclick="document.getElementById('addAssessmentModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form onsubmit="event.preventDefault(); alert('Assessment published and notified to batch students!'); document.getElementById('addAssessmentModal').classList.remove('active');">
+      <div class="modal-body-content">
+        <div class="form-group-field">
+          <label class="form-label-title">Assessment Title *</label>
+          <input type="text" class="form-input-text" placeholder="e.g. Capstone: Production Agent Swarm" required>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Assessment Type *</label>
+            <select class="form-select-box" required>
+              <option value="">Select Type</option>
+              <option value="capstone">Capstone Project</option>
+              <option value="coding_lab">Coding Lab Exam</option>
+              <option value="mcq">MCQ Sprint</option>
+              <option value="viva">Viva Voce Defense</option>
+            </select>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Target Batch *</label>
+            <select class="form-select-box" required>
+              <option value="">Select Batch</option>
+              <option value="AI-09">Batch AI-09 (GenAI)</option>
+              <option value="AI-10">Batch AI-10 (Weekend)</option>
+              <option value="CLOUD-04">Batch CLOUD-04</option>
+              <option value="FS-12">Batch FS-12</option>
+              <option value="DATA-06">Batch DATA-06</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Curriculum Module</label>
+            <select class="form-select-box">
+              <option value="AIML-301">AIML-301: Advanced GenAI & Agents</option>
+              <option value="AIML-101">AIML-101: Deep Learning Foundations</option>
+              <option value="CLD-202">CLD-202: Kubernetes & GitOps</option>
+              <option value="FSD-204">FSD-204: Microservices & Kafka</option>
+            </select>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Total Points / Passing %</label>
+            <input type="text" class="form-input-text" placeholder="100 Marks (70% Pass)" value="100 Marks (70% Pass)">
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Release Date & Time *</label>
+            <input type="datetime-local" class="form-input-text" value="2026-09-25T10:00" required>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Submission Deadline *</label>
+            <input type="datetime-local" class="form-input-text" value="2026-09-30T23:59" required>
+          </div>
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-label-title">Proctoring & Submission Mode</label>
+          <select class="form-select-box">
+            <option value="github">GitHub Classroom Repository + Auto-Test CI</option>
+            <option value="browser">Proctored Browser Code Runner (Sandboxed)</option>
+            <option value="pdf">Document / Architecture Diagram Upload</option>
+            <option value="panel">1-on-1 Live Interview Defense</option>
+          </select>
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-label-title">Evaluation Rubric & Submission Guidelines</label>
+          <textarea class="form-textarea" placeholder="Detail rubric criteria, code coverage requirements, grading breakdown..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-secondary-action" onclick="document.getElementById('addAssessmentModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-primary-add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Publish Assessment</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Live filter function for Assessments table
+  function filterAssessmentsTable() {
+    const query = document.getElementById('assessmentSearchInput').value.toLowerCase().trim();
+    const batch = document.getElementById('batchFilterSelect').value.toLowerCase();
+    const type = document.getElementById('typeFilterSelect').value.toLowerCase();
+    const status = document.getElementById('statusFilterSelect').value.toLowerCase();
+
+    const rows = document.querySelectorAll('#assessmentsTable tbody tr');
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      const rowBatch = (row.getAttribute('data-batch') || '').toLowerCase();
+      const rowType = (row.getAttribute('data-type') || '').toLowerCase();
+      const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
+
+      const matchText = !query || text.includes(query);
+      const matchBatch = !batch || rowBatch.includes(batch);
+      const matchType = !type || rowType.includes(type);
+      const matchStatus = !status || rowStatus === status;
+
+      if (matchText && matchBatch && matchType && matchStatus) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('assessmentSearchInput').addEventListener('input', filterAssessmentsTable);
+  document.getElementById('batchFilterSelect').addEventListener('change', filterAssessmentsTable);
+  document.getElementById('typeFilterSelect').addEventListener('change', filterAssessmentsTable);
+  document.getElementById('statusFilterSelect').addEventListener('change', filterAssessmentsTable);
+
+  function resetAssessmentFilters() {
+    document.getElementById('assessmentSearchInput').value = '';
+    document.getElementById('batchFilterSelect').value = '';
+    document.getElementById('typeFilterSelect').value = '';
+    document.getElementById('statusFilterSelect').value = '';
+    document.querySelectorAll('.pill-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.pill-tab-btn:first-child').classList.add('active');
+    filterAssessmentsTable();
+  }
+
+  function filterByTab(btn, statusFilter) {
+    document.querySelectorAll('.pill-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('statusFilterSelect').value = (statusFilter === 'all') ? '' : statusFilter;
+    filterAssessmentsTable();
+  }
+
+  // Close modal when clicking on overlay background
+  document.getElementById('addAssessmentModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('active');
+    }
+  });
+</script>
+
+</body>
+</html>
+

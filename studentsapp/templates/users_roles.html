@@ -1,0 +1,639 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users & Roles - NIM Academy Admin Portal</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component with active_page='users_roles' -->
+  {% include 'sidebar.html' with active_page='users_roles' %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" placeholder="Search by name, email, phone, role, or ID...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Mon, 24 Sep 2026</span>
+        </div>
+
+        <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">5</span>
+        </a>
+
+        <div class="header-user-profile" title="Admin Account">
+          <div class="user-avatar-circle" style="background-color: #0f172a; color: #ffffff; font-weight: 700;">SN</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Sneha N</span>
+            <span class="user-role-sub">Admin</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Users & Roles Workspace -->
+    <div class="admin-workspace">
+
+      <!-- Page Title & Actions -->
+      <div class="page-title-row">
+        <div class="title-text-group">
+          <h1 class="main-page-title">Users & Roles</h1>
+          <p class="main-page-subtitle">Configure role-based access control (RBAC), security permissions, and user accounts for all campus stakeholders.</p>
+        </div>
+
+        <div class="page-actions-group">
+          <button class="btn-primary-add" onclick="document.getElementById('addUserModal').classList.add('active');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Invite User</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPI Summary Cards -->
+      <div class="kpi-cards-grid">
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.total }}</span>
+            <span class="kpi-stat-label">Total System Accounts</span>
+            <span class="kpi-trend-row"><span class="trend-green">{{ kpi.active }} Active</span> &bull; {{ kpi.blocked }} Blocked</span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.blocked }}</span>
+              <span class="kpi-stat-label">Blocked Accounts</span>
+              <span class="kpi-trend-row"><span class="trend-blue">Access Revoked</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.mentors }}</span>
+            <span class="kpi-stat-label">Faculty & Mentors</span>
+            <span class="kpi-trend-row"><span class="trend-green">All cohorts covered</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.accountants }}</span>
+            <span class="kpi-stat-label">Accountants</span>
+              <span class="kpi-trend-row"><span class="trend-blue">Finance Dept</span></span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Role Tabs Card -->
+      <div class="filter-controls-card">
+        <div class="filter-controls-row">
+          <div class="filter-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" class="filter-search-input" id="userSearchInput" placeholder="Search by name, email, phone, role or batch...">
+          </div>
+
+          <div class="filter-dropdowns-group">
+            <select class="filter-select" id="roleFilterSelect" name="role">
+                <option value="all" {% if current_role == "all" %}selected{% endif %}>All Roles</option>
+              
+              
+              <option value="Accountant" {% if current_role == "Accountant" %}selected{% endif %}>Accountant</option>
+              <option value="Mentor" {% if current_role == "Mentor" %}selected{% endif %}>Mentor</option>
+              
+            </select>
+
+            <select class="filter-select" id="statusUserSelect">
+                <option value="" {% if current_status == "" %}selected{% endif %}>Status: All</option>
+                <option value="Active" {% if current_status == "Active" %}selected{% endif %}>Active</option>
+                <option value="Blocked" {% if current_status == "Blocked" %}selected{% endif %}>Blocked</option>
+              </select>
+
+            <button class="btn-filter-reset" onclick="resetUserFilters()">Reset</button>
+          </div>
+        </div>
+
+        <!-- 5 User Role Pill Tabs Required: Admin, Accountant, Mentor, Student, Parent -->
+        <div class="filter-tabs-row">
+          <button class="pill-tab-btn {% if not current_role or current_role == 'all' %}active{% endif %}" onclick="filterByRoleTab('all')">
+            <span>All Users</span>
+            <span class="pill-tab-count">{{ users.count|default:'0' }}</span>
+          </button>
+          
+          <button class="pill-tab-btn {% if current_role == 'Accountant' %}active{% endif %}" onclick="filterByRoleTab('Accountant')">
+            <span>Accountant</span>
+            <span class="pill-tab-count">{{ kpi.accountants }}</span>
+          </button>
+          <button class="pill-tab-btn {% if current_role == 'Mentor' %}active{% endif %}" onclick="filterByRoleTab('Mentor')">
+            <span>Mentor</span>
+            <span class="pill-tab-count">{{ kpi.mentors }}</span>
+          </button>
+          
+          
+        </div>
+      </div>
+
+      <!-- Users & Roles Table Card -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <div class="table-header-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Role-Based Access Control & User Directory</span>
+            <span class="table-records-count">{{ users.paginator.count|default:"0" }} Accounts</span>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="alert('Auditing permissions matrix across all active accounts...');">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Security Audit</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-scroll-container">
+          <table class="admin-data-table" id="usersTable">
+            <thead>
+              <tr>
+                <th style="width: 250px;">User & Email</th>
+                <th>Role</th>
+                  <th>Username</th>
+                  <th>Password</th>
+                  <th>Department / Affiliation</th>
+                <th>Account Status</th>
+                <th style="text-align: right; width: 130px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for app_user in users %}
+              <tr data-id="{{ app_user.id }}" data-role="{{ app_user.role }}" data-status="{{ app_user.status|default:"Active" }}">
+                <td>
+                  <div class="entity-cell">
+                    <div class="entity-avatar" style="background: linear-gradient(135deg, #0f172a, #1e293b);">{{ app_user.name|slice:":1"|upper }}</div>
+                    <div class="entity-info">
+                      <span class="entity-name">{{ app_user.name }}</span>
+                      <span class="entity-sub">{{ app_user.email }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge badge-role-{{ app_user.role|lower }}">
+                    <span class="badge-dot" style="background: #7c3aed;"></span> {{ app_user.role }}
+                  </span>
+                </td>
+                  <td>{{ app_user.username|default:"-" }}</td>
+                  <td><span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">{{ app_user.portal_password|default:"-" }}</span></td>
+                <td>
+                  <span style="font-weight: 600; color: var(--admin-text-main);">{% if app_user.role == 'Admin' %}Core Administration{% elif app_user.role == 'Mentor' %}Training Department{% else %}Finance Department{% endif %}</span>
+                    <div style="font-size: 0.71875rem; color: var(--admin-text-muted);">General Access</div>
+                </td>
+                <td>
+                    {% if app_user.status == 'Blocked' %}
+                    <span class="status-badge" style="background:#fee2e2; color:#ef4444;">Blocked</span>
+                    {% else %}
+                    <span class="status-badge badge-active"><span class="badge-dot"></span> Active</span>
+                    {% endif %}
+                  </td>
+                <td>
+                  <div class="table-actions-cell" style="justify-content: flex-end;">
+                      <button title="Edit" onclick="openEditUserModal(this);" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted); margin-right: 10px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='var(--text-muted)'"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                      </button>
+                      {% if app_user.status == 'Blocked' %}
+                      <button title="Unblock" onclick="openUnblockUserModal(this);" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted); margin-right: 10px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='var(--text-muted)'"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                      </button>
+                      {% else %}
+                      <button title="Block" onclick="openBlockUserModal(this);" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted); margin-right: 10px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" onmouseover="this.style.color='#f59e0b'" onmouseout="this.style.color='var(--text-muted)'"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                      </button>
+                      {% endif %}
+                      <button title="Delete" onclick="openDeleteUserModal(this);" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted);">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-muted)'"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
+                    </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem;">No users found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Pagination -->
+        <div class="pagination-row">
+            <div>Showing <strong>{{ users.start_index|default:"0" }} - {{ users.end_index|default:"0" }}</strong> of <strong>{{ users.paginator.count|default:"0" }}</strong> registered users</div>
+            <div class="pagination-controls">
+              {% if users.has_previous %}
+              <button class="btn-page-nav" onclick="goToPage({{ users.previous_page_number }})">Previous</button>
+              <button class="btn-page-nav" onclick="goToPage(1)">1</button>
+              {% if users.number > 3 %}
+                <span style="padding: 0 10px; color: var(--admin-text-muted);">...</span>
+              {% endif %}
+              {% else %}
+              <button class="btn-page-nav" disabled>Previous</button>
+              {% endif %}
+
+              <button class="btn-page-nav active">{{ users.number }}</button>
+
+              {% if users.has_next %}
+              {% if users.paginator.num_pages > users.number|add:"1" %}
+                <span style="padding: 0 10px; color: var(--admin-text-muted);">...</span>
+              {% endif %}
+              <button class="btn-page-nav" onclick="goToPage({{ users.paginator.num_pages }})">{{ users.paginator.num_pages }}</button>
+              <button class="btn-page-nav" onclick="goToPage({{ users.next_page_number }})">Next</button>
+              {% else %}
+              <button class="btn-page-nav" disabled>Next</button>
+              {% endif %}
+            </div>
+          </div>
+
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="editUserModal">
+  <div class="modal-box">
+    <div class="modal-header-bar">
+      <div class="modal-title-text">Edit User</div>
+      <button class="btn-close-modal" onclick="document.getElementById('editUserModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form onsubmit="saveEditUser(event)">
+      <div class="modal-body-content">
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Full Name</label>
+            <input type="text" id="editUserName" class="form-input-text" required>
+          </div>
+          <div class="form-group-field">
+            <label class="form-label-title">Role Assignment</label>
+            <select id="editUserRole" class="form-select-box" required>
+              
+              <option value="Accountant" {% if current_role == "Accountant" %}selected{% endif %}>Accountant</option>
+              <option value="Mentor" {% if current_role == "Mentor" %}selected{% endif %}>Mentor</option>
+            </select>
+          </div>
+          <div class="form-group-field">
+            <label class="form-label-title">Email Address</label>
+            <input type="email" id="editUserEmail" class="form-input-text" required>
+          </div>
+          <div class="form-group-field">
+            <label class="form-label-title">Username</label>
+            <input type="text" id="editUserUsername" class="form-input-text" readonly style="background-color: #f1f5f9; color: var(--admin-text-muted); cursor: not-allowed;">
+          </div>
+          <div class="form-group-field">
+            <label class="form-label-title">Password</label>
+            <input type="text" id="editUserPassword" class="form-input-text" readonly style="background-color: #f1f5f9; color: var(--admin-text-muted); cursor: not-allowed; font-family: monospace;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-secondary-action" onclick="document.getElementById('editUserModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-primary-add">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal-overlay" id="deleteUserModal">
+  <div class="modal-box" style="max-width: 400px;">
+    <div class="modal-header-bar">
+      <div class="modal-title-text" style="color: #ef4444;">Delete User</div>
+      <button class="btn-close-modal" onclick="document.getElementById('deleteUserModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body-content" style="padding: 1.5rem;">
+      <p style="font-size: 0.875rem; color: var(--text-main); margin-bottom: 1rem;">Are you sure you want to permanently delete <strong id="deleteStudentName">this user</strong>? This action cannot be undone.</p>
+      <div class="modal-footer-bar" style="padding: 0; border: none; background: transparent;">
+        <button class="btn-secondary-action" onclick="document.getElementById('deleteUserModal').classList.remove('active');">Cancel</button>
+        <button class="btn-primary-add" style="background-color: #ef4444;" onclick="confirmDeleteUser()">Delete User</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Unblock User Modal -->
+<div class="modal-overlay" id="unblockUserModal">
+  <div class="modal-box" style="max-width: 400px;">
+    <div class="modal-header-bar">
+      <div class="modal-title-text" style="color: #10b981;">Unblock User</div>
+      <button class="btn-close-modal" onclick="document.getElementById('unblockUserModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body-content" style="padding: 1.5rem;">
+      <p style="font-size: 0.875rem; color: var(--text-main); margin-bottom: 1rem;">Are you sure you want to unblock <strong id="unblockStudentName">this user</strong>? They will regain full access to the portal.</p>
+      <div class="modal-footer-bar" style="padding: 0; border: none; background: transparent;">
+        <button class="btn-secondary-action" onclick="document.getElementById('unblockUserModal').classList.remove('active');">Cancel</button>
+        <button class="btn-primary-add" style="background-color: #10b981;" onclick="confirmUnblockUser()">Unblock User</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Block User Modal -->
+<div class="modal-overlay" id="blockUserModal">
+  <div class="modal-box" style="max-width: 400px;">
+    <div class="modal-header-bar">
+      <div class="modal-title-text" style="color: #ef4444;">Block User</div>
+      <button class="btn-close-modal" onclick="document.getElementById('blockUserModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body-content" style="padding: 1.5rem;">
+      <p style="font-size: 0.875rem; color: var(--text-main); margin-bottom: 1rem;">Are you sure you want to block <strong id="blockStudentName">this user</strong>? They will immediately lose access to the portal.</p>
+      <div class="modal-footer-bar" style="padding: 0; border: none; background: transparent;">
+        <button class="btn-secondary-action" onclick="document.getElementById('blockUserModal').classList.remove('active');">Cancel</button>
+        <button class="btn-primary-add" style="background-color: #ef4444;" onclick="confirmBlockUser()">Block User</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Invite User Modal -->
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal-box">
+    <div class="modal-header-bar">
+      <div class="modal-title-text">Invite User & Assign Role</div>
+      <button class="btn-close-modal" onclick="document.getElementById('addUserModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form onsubmit="addUser(event)">
+      <div class="modal-body-content">
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Full Name *</label>
+            <input type="text" id="addUserName" class="form-input-text" placeholder="e.g. Meera Joshi" required>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Role Assignment *</label>
+            <select id="addUserRole" class="form-select-box" required>
+              <option value="">Select Role</option>
+              
+              <option value="Accountant">Accountant (Billing & Receipts)</option>
+              <option value="Mentor">Mentor (Trainer & Grading)</option>
+              
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Official Email Address *</label>
+            <input type="email" id="addUserEmail" class="form-input-text" placeholder="e.g. meera.j@nim.edu" required>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Mobile Phone Number *</label>
+            <input type="tel" class="form-input-text" placeholder="e.g. +91 98450 12345" required>
+          </div>
+        </div>
+
+        
+
+        <div class="form-group-field">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78125rem; font-weight: 600; color: var(--admin-text-main); cursor: pointer;">
+            <input type="checkbox" checked style="accent-color: var(--admin-blue);">
+            Send welcome email with password creation link and 2FA setup instructions
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-secondary-action" onclick="document.getElementById('addUserModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-primary-add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Send Invitation</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+  <script>
+    
+    let currentActionRow = null;
+
+    function openEditUserModal(btn) {
+      currentActionRow = btn.closest('tr');
+      document.getElementById('editUserName').value = currentActionRow.querySelector('.entity-name').innerText;
+      document.getElementById('editUserEmail').value = currentActionRow.querySelector('.entity-sub').innerText;
+      document.getElementById('editUserRole').value = currentActionRow.getAttribute('data-role');
+      document.getElementById('editUserUsername').value = currentActionRow.cells[2].innerText === '-' ? '' : currentActionRow.cells[2].innerText;
+      document.getElementById('editUserPassword').value = currentActionRow.cells[3].innerText === '-' ? '' : currentActionRow.cells[3].innerText;
+      document.getElementById('editUserModal').classList.add('active');
+    }
+
+    function saveEditUser(e) {
+      e.preventDefault();
+      if (!currentActionRow) return;
+      const userId = currentActionRow.getAttribute('data-id');
+      const name = document.getElementById('editUserName').value;
+      const email = document.getElementById('editUserEmail').value;
+      const role = document.getElementById('editUserRole').value;
+      const username = document.getElementById('editUserUsername').value;
+      const portal_password = document.getElementById('editUserPassword').value;
+
+      fetch(`/api/edit-appuser/${userId}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, role, username, portal_password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          location.reload(); // Quickest way to reflect all complex UI changes
+        } else {
+          alert('Error: ' + data.error);
+        }
+      });
+    }
+
+    
+    function openUnblockUserModal(btn) {
+      currentActionRow = btn.closest('tr');
+      document.getElementById('unblockStudentName').innerText = currentActionRow.querySelector('.entity-name').innerText;
+      document.getElementById('unblockUserModal').classList.add('active');
+    }
+
+    function confirmUnblockUser() {
+      if (!currentActionRow) return;
+      const userId = currentActionRow.getAttribute('data-id');
+      
+      fetch(`/api/unblock-appuser/${userId}/`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          location.reload(); // Quickest way to reflect UI toggle between Block/Unblock
+        } else alert('Error unblocking user.');
+      });
+    }
+
+    document.getElementById('unblockUserModal').addEventListener('click', function(e) { if(e.target===this) this.classList.remove('active'); });
+
+    function openBlockUserModal(btn) {
+      currentActionRow = btn.closest('tr');
+      document.getElementById('blockStudentName').innerText = currentActionRow.querySelector('.entity-name').innerText;
+      document.getElementById('blockUserModal').classList.add('active');
+    }
+
+    function confirmBlockUser() {
+      if (!currentActionRow) return;
+      const userId = currentActionRow.getAttribute('data-id');
+      
+      fetch(`/api/block-appuser/${userId}/`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          location.reload();
+        } else alert('Error blocking user.');
+      });
+    }
+
+    // Modal background close bindings
+    document.getElementById('editUserModal').addEventListener('click', function(e) { if(e.target===this) this.classList.remove('active'); });
+    
+    function openDeleteUserModal(btn) {
+      currentActionRow = btn.closest('tr');
+      document.getElementById('deleteStudentName').innerText = currentActionRow.querySelector('.entity-name').innerText;
+      document.getElementById('deleteUserModal').classList.add('active');
+    }
+
+    function confirmDeleteUser() {
+      if (!currentActionRow) return;
+      const userId = currentActionRow.getAttribute('data-id');
+      
+      fetch(`/api/delete-appuser/${userId}/`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          currentActionRow.remove();
+          document.getElementById('deleteUserModal').classList.remove('active');
+        } else alert('Error deleting user.');
+      });
+    }
+
+    document.getElementById('deleteUserModal').addEventListener('click', function(e) { if(e.target===this) this.classList.remove('active'); });
+
+    document.getElementById('blockUserModal').addEventListener('click', function(e) { if(e.target===this) this.classList.remove('active'); });
+
+    function addUser(e) {
+      e.preventDefault();
+      const name = document.getElementById('addUserName').value;
+      const role = document.getElementById('addUserRole').value;
+      const email = document.getElementById('addUserEmail').value;
+      
+      fetch('/api/add-user/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, role, email })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          alert('User invited successfully!');
+          location.reload();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      });
+    }
+
+  // Live filter function for Users table
+  function updateFilters(params) {
+      const urlParams = new URLSearchParams(window.location.search);
+      for (const [key, value] of Object.entries(params)) {
+        if (value) urlParams.set(key, value);
+        else urlParams.delete(key);
+      }
+      urlParams.delete('page');
+      window.location.search = urlParams.toString();
+    }
+
+    document.getElementById('userSearchInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') updateFilters({q: this.value});
+    });
+    document.getElementById('roleFilterSelect').addEventListener('change', function() {
+      updateFilters({role: this.value === 'all' ? '' : this.value});
+    });
+    document.getElementById('statusUserSelect').addEventListener('change', function() {
+      updateFilters({status: this.value});
+    });
+
+    function filterByRoleTab(roleFilter) {
+      updateFilters({role: roleFilter === 'all' ? '' : roleFilter});
+    }
+
+    function resetUserFilters() {
+      window.location.href = window.location.pathname;
+    }
+
+    function goToPage(page) {
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('page', page);
+      window.location.search = urlParams.toString();
+    }
+
+  // Close modal when clicking on overlay background
+  document.getElementById('addUserModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('active');
+    }
+  });
+</script>
+
+</body>
+</html>
+

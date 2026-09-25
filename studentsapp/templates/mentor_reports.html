@@ -1,0 +1,589 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faculty Academic & Performance Reports - NIM Academy</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+  <style>
+    .kpi-cards-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1100px) {
+      .kpi-cards-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 640px) {
+      .kpi-cards-grid-4 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Comparison Dual Grid */
+    .report-analytics-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+    }
+    @media (max-width: 1024px) {
+      .report-analytics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .analytics-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .cohort-comparison-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .comparison-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8125rem;
+      font-weight: 600;
+    }
+    .comp-bar-track {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .comp-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+    }
+
+    /* Grade Distribution Badges */
+    .grade-bar-strip {
+      display: flex;
+      height: 28px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .grade-bar-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component with role='mentor' and active_page='mentor_reports' -->
+  {% include 'sidebar.html' with active_page='mentor_reports' role='mentor' is_mentor=True %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" id="reportSearchInput" placeholder="Search reports by student name, cohort, or metrics...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Mon, 24 Sep 2026</span>
+        </div>
+
+        <a href="{% url 'mentor_notifications' %}" class="header-notif-btn" title="Mentor Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">4</span>
+        </a>
+
+        <!-- Mentor Profile in Header -->
+        <div class="header-user-profile" title="Faculty Mentor Profile">
+          <div class="user-avatar-circle" style="background-color: #1d4ed8; color: #ffffff; font-weight: 700;">RS</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Dr. Rajiv Sen</span>
+            <span class="user-role-sub">Faculty Mentor • GenAI</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mentor Workspace -->
+    <div class="admin-workspace">
+
+      <!-- Page Title Row -->
+      <div class="page-title-row">
+        <div class="title-text-group">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="status-badge badge-role-mentor">
+              <span class="badge-dot" style="background: #1d4ed8;"></span> Faculty Workspace
+            </span>
+            <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Cohorts: Batch AI-09 &amp; Batch AI-10</span>
+          </div>
+          <h1 class="main-page-title">Mentor Performance &amp; Academic Reports</h1>
+          <p class="main-page-subtitle">Examine student academic progression, attendance trajectories, assignment velocities, and comparative batch telemetry.</p>
+        </div>
+
+        <div class="page-actions-group">
+          <button class="btn-secondary-action" onclick="alert('Exporting detailed cohort analytics to CSV...');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+            <span>Export CSV</span>
+          </button>
+          <button class="btn-primary-add" onclick="alert('Compiling official Semester Performance Dossier PDF for Batch AI-09 & AI-10...');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Download PDF Dossier</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards (4 Cards) -->
+      <div class="kpi-cards-grid-4">
+        
+        <!-- 1. Cohort Attendance -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">91.4%</span>
+            <span class="kpi-stat-label">Cohort Attendance</span>
+            <span class="kpi-trend-row"><span class="trend-green">↑ 3.2%</span> vs academy avg</span>
+          </div>
+        </div>
+
+        <!-- 2. Assignment Completion -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">88.6%</span>
+            <span class="kpi-stat-label">Lab Turn-In Rate</span>
+            <span class="kpi-trend-row"><span class="trend-blue">422 / 476</span> completed on-time</span>
+          </div>
+        </div>
+
+        <!-- 3. Assessment Mastery -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">84.8%</span>
+            <span class="kpi-stat-label">Assessment Mastery</span>
+            <span class="kpi-trend-row"><span class="trend-purple">32 Students</span> scored A/A+</span>
+          </div>
+        </div>
+
+        <!-- 4. Faculty Satisfaction -->
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">4.85 / 5</span>
+            <span class="kpi-stat-label">Mentor Rating</span>
+            <span class="kpi-trend-row"><span class="trend-green">96.4%</span> student satisfaction</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Comparison Analytics & Mastery Distribution Grid -->
+      <div class="report-analytics-grid">
+        
+        <!-- Card 1: Cohort Performance Comparison (AI-09 vs AI-10) -->
+        <div class="analytics-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 style="margin: 0 0 4px 0; font-size: 1.0625rem; font-weight: 800; color: #0f172a;">
+                Cohort Comparative Benchmark
+              </h3>
+              <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
+                Batch AI-09 (Weekday Intensive) vs Batch AI-10 (Weekend Executive)
+              </p>
+            </div>
+            <span class="status-badge badge-active">Week 8 vs Week 6</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 6px;">
+            <!-- Attendance -->
+            <div class="cohort-comparison-row">
+              <div class="comparison-meta">
+                <span>Classroom Attendance</span>
+                <span>AI-09: <strong>92.8%</strong> vs AI-10: <strong>89.6%</strong></span>
+              </div>
+              <div class="comp-bar-track">
+                <div class="comp-bar-fill" style="width: 92.8%; background: #2563eb;"></div>
+              </div>
+            </div>
+
+            <!-- Lab Completion -->
+            <div class="cohort-comparison-row">
+              <div class="comparison-meta">
+                <span>Lab Assignments Completed</span>
+                <span>AI-09: <strong>91.2%</strong> vs AI-10: <strong>85.4%</strong></span>
+              </div>
+              <div class="comp-bar-track">
+                <div class="comp-bar-fill" style="width: 91.2%; background: #8b5cf6;"></div>
+              </div>
+            </div>
+
+            <!-- Capstone Milestone Readiness -->
+            <div class="cohort-comparison-row">
+              <div class="comparison-meta">
+                <span>Capstone 1 Milestone Readiness</span>
+                <span>AI-09: <strong>88.0%</strong> vs AI-10: <strong>80.5%</strong></span>
+              </div>
+              <div class="comp-bar-track">
+                <div class="comp-bar-fill" style="width: 88%; background: #10b981;"></div>
+              </div>
+            </div>
+
+            <!-- Average Assessment Grade -->
+            <div class="cohort-comparison-row">
+              <div class="comparison-meta">
+                <span>Average Examination Score</span>
+                <span>AI-09: <strong>87.5 / 100</strong> vs AI-10: <strong>85.1 / 100</strong></span>
+              </div>
+              <div class="comp-bar-track">
+                <div class="comp-bar-fill" style="width: 87.5%; background: #f59e0b;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Grade Mastery Distribution -->
+        <div class="analytics-card">
+          <div>
+            <h3 style="margin: 0 0 4px 0; font-size: 1.0625rem; font-weight: 800; color: #0f172a;">
+              Assessment Grade Mastery
+            </h3>
+            <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
+              Distribution across 55 assigned mentees in Module AIML-301
+            </p>
+          </div>
+
+          <!-- Color Bar Strip -->
+          <div class="grade-bar-strip">
+            <div class="grade-bar-segment" style="width: 32%; background: #16a34a;" title="A+ Grade: 32%">32% A+</div>
+            <div class="grade-bar-segment" style="width: 44%; background: #2563eb;" title="A Grade: 44%">44% A</div>
+            <div class="grade-bar-segment" style="width: 18%; background: #f59e0b;" title="B Grade: 18%">18% B</div>
+            <div class="grade-bar-segment" style="width: 6%; background: #dc2626;" title="Remedial: 6%">6%</div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8125rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #16a34a;"></span>
+                Grade A+ (&gt;90 Points)
+              </span>
+              <span style="font-weight: 700; color: #0f172a;">18 Students (32%)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #2563eb;"></span>
+                Grade A (80 - 90 Points)
+              </span>
+              <span style="font-weight: 700; color: #0f172a;">24 Students (44%)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></span>
+                Grade B (70 - 79 Points)
+              </span>
+              <span style="font-weight: 700; color: #0f172a;">10 Students (18%)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #dc2626;"></span>
+                Remedial / Revision Needed (&lt;70 Points)
+              </span>
+              <span style="font-weight: 700; color: #dc2626;">3 Students (6%)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Filter Controls Bar -->
+      <div class="filter-card-bar">
+        <div class="filter-search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="reportTableFilter" placeholder="Filter student reports by name or roll...">
+        </div>
+
+        <div class="filter-dropdown-group">
+          <select class="filter-dropdown" id="repCohortSelect">
+            <option value="">All Cohorts (AI-09 &amp; AI-10)</option>
+            <option value="Batch AI-09">Batch AI-09</option>
+            <option value="Batch AI-10">Batch AI-10</option>
+          </select>
+
+          <select class="filter-dropdown" id="repPaceSelect">
+            <option value="">All Care Indexes</option>
+            <option value="Top Performer">Top Performer</option>
+            <option value="On Track">On Track</option>
+            <option value="Attention Required">Attention Required</option>
+          </select>
+
+          <button class="filter-reset-link" onclick="document.getElementById('reportTableFilter').value=''; document.getElementById('repCohortSelect').value=''; document.getElementById('repPaceSelect').value=''; filterReportTable();">Reset</button>
+        </div>
+      </div>
+
+      <!-- Detailed Student Progress Report Table Card -->
+      <div class="admin-table-card">
+        <div class="table-card-header">
+          <div class="table-title-group">
+            <h2 class="table-main-heading">Individualized Student Progress &amp; Telemetry Report</h2>
+            <span class="table-count-badge" id="repCountBadge">55 Assigned Students</span>
+          </div>
+          <span style="font-size: 0.8125rem; color: #64748b;">Semester Progress: Week 8 of 12</span>
+        </div>
+
+        <div class="admin-table-wrapper">
+          <table class="admin-data-table" id="reportTable">
+            <thead>
+              <tr>
+                <th>Student &amp; ID</th>
+                <th>Cohort</th>
+                <th>Attendance %</th>
+                <th>Labs Completed</th>
+                <th>Capstone Milestone</th>
+                <th>Avg. Assessment Score</th>
+                <th>Care Index</th>
+                <th style="text-align: right;">Report Dossier</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Aarav Sharma -->
+              <tr>
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #2563eb; color: #ffffff;">AS</div>
+                    <div>
+                      <div class="user-primary-name">Aarav Sharma</div>
+                      <div class="user-sub-id">NIM-2026-AI09-01</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-admin">Batch AI-09</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">96%</span></td>
+                <td><span class="status-badge badge-paid">4 / 4 Labs</span></td>
+                <td><span style="font-weight: 700; color: #2563eb;">100% (Defended)</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">94 / 100</span></td>
+                <td><span class="status-badge badge-highperformer">Top Performer</span></td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action primary" onclick="alert('Generating Aarav Sharma Semester PDF Dossier...');">Generate PDF</button>
+                </td>
+              </tr>
+
+              <!-- Divya Iyer -->
+              <tr style="background: #fffbfb;">
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #ef4444; color: #ffffff;">DI</div>
+                    <div>
+                      <div class="user-primary-name">Divya Iyer</div>
+                      <div class="user-sub-id">NIM-2026-AI09-14</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-admin">Batch AI-09</span></td>
+                <td><span style="font-weight: 700; color: #dc2626;">72% (Alert)</span></td>
+                <td><span class="status-badge badge-pending">3 / 4 Labs</span></td>
+                <td><span style="font-weight: 700; color: #ea580c;">65%</span></td>
+                <td><span style="font-weight: 700; color: #b45309;">74 / 100</span></td>
+                <td><span class="status-badge badge-attention">Attention Required</span></td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action" onclick="alert('Generating Divya Iyer Care Dossier...');">Generate PDF</button>
+                </td>
+              </tr>
+
+              <!-- Meera Nair -->
+              <tr>
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #8b5cf6; color: #ffffff;">MN</div>
+                    <div>
+                      <div class="user-primary-name">Meera Nair</div>
+                      <div class="user-sub-id">NIM-2026-AI10-04</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-mentor">Batch AI-10</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">92%</span></td>
+                <td><span class="status-badge badge-paid">4 / 4 Labs</span></td>
+                <td><span style="font-weight: 700; color: #2563eb;">90%</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">91 / 100</span></td>
+                <td><span class="status-badge badge-ontrack">On Track</span></td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action primary" onclick="alert('Generating Meera Nair Semester PDF Dossier...');">Generate PDF</button>
+                </td>
+              </tr>
+
+              <!-- Rohan Verma -->
+              <tr>
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #0284c7; color: #ffffff;">RV</div>
+                    <div>
+                      <div class="user-primary-name">Rohan Verma</div>
+                      <div class="user-sub-id">NIM-2026-AI09-08</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-admin">Batch AI-09</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">88%</span></td>
+                <td><span class="status-badge badge-paid">4 / 4 Labs</span></td>
+                <td><span style="font-weight: 700; color: #2563eb;">85%</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">89 / 100</span></td>
+                <td><span class="status-badge badge-ontrack">On Track</span></td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action primary" onclick="alert('Generating Rohan Verma Semester PDF Dossier...');">Generate PDF</button>
+                </td>
+              </tr>
+
+              <!-- Tushar Gupta -->
+              <tr style="background: #fffbfb;">
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #d97706; color: #ffffff;">TG</div>
+                    <div>
+                      <div class="user-primary-name">Tushar Gupta</div>
+                      <div class="user-sub-id">NIM-2026-AI10-18</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-mentor">Batch AI-10</span></td>
+                <td><span style="font-weight: 700; color: #ea580c;">76% (Warning)</span></td>
+                <td><span class="status-badge badge-pending">2 / 4 Labs</span></td>
+                <td><span style="font-weight: 700; color: #ea580c;">58%</span></td>
+                <td><span style="font-weight: 700; color: #dc2626;">68 / 100</span></td>
+                <td><span class="status-badge badge-attention">Attention Required</span></td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action" onclick="alert('Generating Tushar Gupta Care Dossier...');">Generate PDF</button>
+                </td>
+              </tr>
+
+              <!-- Pooja Patel -->
+              <tr>
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #ec4899; color: #ffffff;">PP</div>
+                    <div>
+                      <div class="user-primary-name">Pooja Patel</div>
+                      <div class="user-sub-id">NIM-2026-AI10-11</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-mentor">Batch AI-10</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">96%</span></td>
+                <td><span class="status-badge badge-paid">4 / 4 Labs</span></td>
+                <td><span style="font-weight: 700; color: #2563eb;">95%</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">95 / 100</span></td>
+                <td><span class="status-badge badge-highperformer">Top Performer</span></td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action primary" onclick="alert('Generating Pooja Patel Semester PDF Dossier...');">Generate PDF</button>
+                </td>
+              </tr>
+
+              <!-- Sneha Kulkarni -->
+              <tr>
+                <td>
+                  <div class="user-cell-flex">
+                    <div class="user-avatar-mini" style="background: #6366f1; color: #ffffff;">SK</div>
+                    <div>
+                      <div class="user-primary-name">Sneha Kulkarni</div>
+                      <div class="user-sub-id">NIM-2026-AI09-29</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-role-admin">Batch AI-09</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">96%</span></td>
+                <td><span class="status-badge badge-paid">4 / 4 Labs</span></td>
+                <td><span style="font-weight: 700; color: #2563eb;">100%</span></td>
+                <td><span style="font-weight: 700; color: #15803d;">96 / 100</span></td>
+                <td><span class="status-badge badge-highperformer">Top Performer</span></td>
+                <td style="text-align: right;">
+                  <button class="btn-table-action primary" onclick="alert('Generating Sneha Kulkarni Semester PDF Dossier...');">Generate PDF</button>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function filterReportTable() {
+    const search = document.getElementById('reportTableFilter').value.toLowerCase();
+    const cohort = document.getElementById('repCohortSelect').value.toLowerCase();
+    const pace = document.getElementById('repPaceSelect').value.toLowerCase();
+    const rows = document.querySelectorAll('#reportTable tbody tr');
+    let count = 0;
+
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      const matchesSearch = !search || text.includes(search);
+      const matchesCohort = !cohort || text.includes(cohort);
+      const matchesPace = !pace || text.includes(pace);
+
+      if (matchesSearch && matchesCohort && matchesPace) {
+        row.style.display = '';
+        count++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    document.getElementById('repCountBadge').innerText = count + ' Students Showing';
+  }
+
+  document.getElementById('reportTableFilter').addEventListener('input', filterReportTable);
+  document.getElementById('repCohortSelect').addEventListener('change', filterReportTable);
+  document.getElementById('repPaceSelect').addEventListener('change', filterReportTable);
+  document.getElementById('reportSearchInput').addEventListener('input', function(e) {
+    document.getElementById('reportTableFilter').value = e.target.value;
+    filterReportTable();
+  });
+</script>
+
+</body>
+</html>
+

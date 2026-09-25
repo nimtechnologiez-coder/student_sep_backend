@@ -1,0 +1,184 @@
+{% extends 'mentor/base.html' %}
+
+{% block title %}{{ task.id }} Evaluation - NIM Academy{% endblock %}
+
+{% block content %}
+<!-- Back to Tasks Queue -->
+<div style="margin-bottom: 4px;">
+  <a href="{% url 'mentor_tasks' %}" class="btn-nim-secondary" style="padding: 6px 12px; font-size: 0.78125rem;">
+    &larr; Back to Tasks Queue
+  </a>
+</div>
+
+<!-- Task Specification Header Card -->
+<div class="mentor-card" style="padding: 24px; background: linear-gradient(135deg, #ffffff 0%, #f0f6fe 100%);">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+        <span class="badge-pill badge-blue">{{ task.id }}</span>
+        <span class="badge-pill badge-slate">{{ task.category }}</span>
+        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">{{ task.module_code }}: {{ task.module_title }}</span>
+      </div>
+      <h1 style="font-size: 1.35rem; font-weight: 800; color: #0a1b39; margin: 0 0 6px;">{{ task.title }}</h1>
+      <p style="font-size: 0.84375rem; color: #475569; margin: 0 0 10px; max-width: 850px; line-height: 1.45;">
+        {{ task.objective }}
+      </p>
+      <div style="display: flex; gap: 16px; font-size: 0.75rem; color: #64748b; font-weight: 600;">
+        <span>📅 Due Date: <strong style="color: #0f172a;">{{ task.due_date }}</strong></span>
+        <span>🎯 Maximum Marks: <strong style="color: #0062eb;">{{ task.max_marks }} Points</strong></span>
+      </div>
+    </div>
+
+    <div>
+      <button class="btn-nim-primary" onclick="openEvalModal('Arjun Kumar', 'NIM-2026-0482', 94);">
+        <span>Evaluate Next Submission</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Rubric Criteria Box -->
+  <div style="margin-top: 18px; background: #ffffff; border: 1px solid var(--nim-border); border-radius: 10px; padding: 14px 18px;">
+    <h4 style="margin: 0 0 8px; font-size: 0.8125rem; font-weight: 800; color: #0a1b39;">Rubric Evaluation Criteria:</h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 0.78125rem;">
+      {% for r in task.rubric_items %}
+      <div style="background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+        <div style="font-weight: 700; color: #0f172a;">{{ r.criterion }}</div>
+        <div style="color: #0062eb; font-weight: 700; font-size: 0.72rem;">Max: {{ r.max }} Points</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Student Submissions Table Card -->
+<div class="mentor-card">
+  <div class="mentor-card-header">
+    <h3 class="mentor-card-title">Mentee Submissions Queue</h3>
+    <span class="badge-pill badge-blue">{{ submissions|length }} Submissions Listed</span>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table class="mentor-table">
+      <thead>
+        <tr>
+          <th>Student ID &amp; Name</th>
+          <th>Submitted Timestamp</th>
+          <th>Status</th>
+          <th>Awarded Score</th>
+          <th>Faculty Feedback</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in submissions %}
+        <tr {% if s.status == 'Overdue' %}style="background: #fffafa;"{% endif %}>
+          <td>
+            <a href="{% url 'mentor_student_detail' s.student_id %}" style="font-weight: 700; color: #0a1b39; text-decoration: none;">
+              {{ s.student_name }}
+            </a>
+            <div style="font-size: 0.71875rem; color: #64748b;">{{ s.student_id }}</div>
+          </td>
+          <td>
+            <span style="font-size: 0.78125rem; font-weight: 600; color: #475569;">{{ s.submitted_at }}</span>
+          </td>
+          <td>
+            {% if s.status == 'Submitted' %}
+              <span class="badge-pill badge-green">Submitted</span>
+            {% elif s.status == 'Overdue' %}
+              <span class="badge-pill badge-rose">Overdue</span>
+            {% else %}
+              <span class="badge-pill badge-blue">{{ s.status }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if s.score %}
+              <span style="font-weight: 800; color: #16a34a; font-size: 0.875rem;">{{ s.score }} / 100</span>
+            {% else %}
+              <span style="color: #64748b; font-size: 0.8125rem;">Pending</span>
+            {% endif %}
+          </td>
+          <td style="max-width: 280px;">
+            <div style="font-size: 0.75rem; color: #475569; line-height: 1.35;">{{ s.feedback }}</div>
+          </td>
+          <td style="text-align: right;">
+            {% if s.status != 'Overdue' %}
+              <button class="btn-table-sm primary" onclick="openEvalModal('{{ s.student_name }}', '{{ s.student_id }}', '{{ s.score }}');">
+                Evaluate
+              </button>
+            {% else %}
+              <button class="btn-table-sm" style="color: #dc2626; border-color: #fca5a5;" onclick="alert('Reminder sent to {{ s.student_name }}');">
+                Ping Student
+              </button>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Evaluate Rubric -->
+<div class="mentor-modal-backdrop" id="evalModal">
+  <div class="mentor-modal-box">
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--nim-border); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.0625rem; font-weight: 800; color: #0a1b39;" id="modalStudentTitle">Evaluate Submission</h3>
+      <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="document.getElementById('evalModal').classList.remove('active');">&times;</button>
+    </div>
+    <form onsubmit="event.preventDefault(); alert('Evaluation published to student portal!'); document.getElementById('evalModal').classList.remove('active');" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Matrix Ops (Max 30)</label>
+          <input type="number" id="sc1" value="28" max="30" min="0" oninput="calcTotal()" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;">
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Masking Logic (Max 25)</label>
+          <input type="number" id="sc2" value="24" max="25" min="0" oninput="calcTotal()" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;">
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Multi-Head Proj (Max 25)</label>
+          <input type="number" id="sc3" value="23" max="25" min="0" oninput="calcTotal()" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;">
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Unit Tests (Max 20)</label>
+          <input type="number" id="sc4" value="19" max="20" min="0" oninput="calcTotal()" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;">
+        </div>
+      </div>
+
+      <div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0;">
+        <span style="font-weight: 700; font-size: 0.84375rem; color: #0a1b39;">Total Score:</span>
+        <span style="font-weight: 900; font-size: 1.125rem; color: #0062eb;" id="totalScore">94 / 100</span>
+      </div>
+
+      <div>
+        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Mentor Feedback Remarks</label>
+        <textarea rows="3" class="form-field-textarea" placeholder="Provide constructive remarks..." style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">Clean vectorized tensor ops. Great causal masking verification.</textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button type="button" class="btn-nim-secondary" onclick="document.getElementById('evalModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-nim-primary">Publish Grade &amp; Feedback</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function openEvalModal(name, id, score) {
+    document.getElementById('modalStudentTitle').innerText = 'Evaluate: ' + name + ' (' + id + ')';
+    document.getElementById('evalModal').classList.add('active');
+  }
+
+  function calcTotal() {
+    const s1 = parseInt(document.getElementById('sc1').value) || 0;
+    const s2 = parseInt(document.getElementById('sc2').value) || 0;
+    const s3 = parseInt(document.getElementById('sc3').value) || 0;
+    const s4 = parseInt(document.getElementById('sc4').value) || 0;
+    document.getElementById('totalScore').innerText = (s1 + s2 + s3 + s4) + ' / 100';
+  }
+</script>
+{% endblock %}
+

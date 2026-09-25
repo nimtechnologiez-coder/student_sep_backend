@@ -1,0 +1,287 @@
+/* ==========================================================================
+   NIM ACADEMY - EXACT MATCH SIDEBAR STYLESHEET
+   Matches Screenshot: Dark Navy (#0f172a), White Text, Blue Active Pill
+   ========================================================================== */
+
+:root {
+  --sidebar-bg: #0f172a;
+  --sidebar-width: 250px;
+  --sidebar-text: #cbd5e1;
+  --sidebar-text-hover: #ffffff;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+  --sidebar-active-bg: #2563eb;
+  --sidebar-active-text: #ffffff;
+}
+
+/* Sidebar Root Container */
+.erp-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
+  height: 100vh;
+  background-color: var(--sidebar-bg);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 50;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Header & Logo */
+.sidebar-header {
+  padding: 24px 20px 18px 20px;
+  flex-shrink: 0;
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand-logo-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.brand-logo-icon svg {
+  width: 32px !important;
+  height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  display: block;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brand-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.brand-subline {
+  font-size: 0.67rem;
+  color: #94a3b8;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Scrollable Navigation List */
+.sidebar-menu-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 12px 12px 12px;
+}
+
+.sidebar-menu-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-menu-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.sidebar-nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item {
+  position: relative;
+  width: 100%;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--sidebar-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  user-select: none;
+  width: 100%;
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  max-width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.nav-icon svg {
+  width: 17px !important;
+  height: 17px !important;
+  max-width: 17px !important;
+  max-height: 17px !important;
+  display: block;
+}
+
+.nav-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-arrow {
+  display: none !important;
+  color: #64748b;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  max-width: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-arrow svg {
+  width: 13px !important;
+  height: 13px !important;
+  max-width: 13px !important;
+  max-height: 13px !important;
+  display: block;
+}
+
+/* Hover State */
+.nav-link:hover {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--sidebar-text-hover);
+}
+
+.nav-link:hover .nav-arrow {
+  color: #94a3b8;
+}
+
+/* Active State (Dashboard) */
+.nav-item.active .nav-link {
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  font-weight: 600;
+}
+
+.nav-item.active .nav-arrow {
+  display: none;
+}
+
+/* Red Notification Badge */
+.nav-badge-red {
+  background-color: #ef4444;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Sidebar Footer Card */
+.sidebar-footer {
+  padding: 14px 12px 18px 12px;
+  flex-shrink: 0;
+}
+
+.footer-academy-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-icon-box {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: #1e293b;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.footer-icon-box svg {
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  display: block;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.footer-brand {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.footer-desc {
+  font-size: 0.67rem;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.footer-version {
+  font-size: 0.62rem;
+  color: #475569;
+  margin-top: 1px;
+}

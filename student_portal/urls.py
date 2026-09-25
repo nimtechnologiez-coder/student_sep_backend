@@ -1,0 +1,50 @@
+"""
+URL configuration for student_portal project.
+"""
+from django.contrib import admin
+from django.urls import path
+from studentsapp import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', views.login_view, name='login'),
+    path('login/', views.login_view, name='login_page'),
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('api/fee-data/', views.api_fee_data, name='api_fee_data'),
+    path('api/approve-student/<str:student_id>/', views.api_approve_student, name='api_approve_student'),
+    path('api/reject-student/<str:student_id>/', views.api_reject_student, name='api_reject_student'),
+    path('api/block-student/<str:student_id>/', views.api_block_student, name='api_block_student'),
+    path('api/edit-student/<str:student_id>/', views.api_edit_student, name='api_edit_student'),
+    path('api/add-user/', views.api_add_user, name='api_add_user'),
+    path('api/edit-appuser/<int:user_id>/', views.api_edit_appuser, name='api_edit_appuser'),
+    path('api/block-appuser/<int:user_id>/', views.api_block_appuser, name='api_block_appuser'),
+    path('api/unblock-appuser/<int:user_id>/', views.api_unblock_appuser, name='api_unblock_appuser'),
+    path('api/add-batch/', views.api_add_batch, name='api_add_batch'),
+    path('api/edit-batch/<int:batch_id>/', views.api_edit_batch, name='api_edit_batch'),
+    path('api/delete-batch/<int:batch_id>/', views.api_delete_batch, name='api_delete_batch'),
+    path('api/delete-appuser/<int:user_id>/', views.api_delete_appuser, name='api_delete_appuser'),
+    path('mentor/dashboard/', views.mentor_dashboard, name='mentor_dashboard'),
+    path('mentor/students/', views.mentor_students, name='mentor_students'),
+    path('mentor/students/<str:student_id>/', views.mentor_student_detail, name='mentor_student_detail'),
+    path('mentor/batches/', views.mentor_batches, name='mentor_batches'),
+    path('mentor/classes/', views.mentor_classes, name='mentor_classes'),
+    path('mentor/attendance/', views.mentor_attendance, name='mentor_attendance'),
+    path('mentor/academic/', views.mentor_academic, name='mentor_academic'),
+    path('mentor/tasks/', views.mentor_tasks, name='mentor_tasks'),
+    path('mentor/tasks/<str:task_id>/', views.mentor_task_detail, name='mentor_task_detail'),
+    path('mentor/assessments/', views.mentor_assessments, name='mentor_assessments'),
+    path('mentor/assessments/<str:assessment_id>/', views.mentor_assessment_detail, name='mentor_assessment_detail'),
+    path('mentor/placement/', views.mentor_placement, name='mentor_placement'),
+    path('mentor/reports/', views.mentor_reports, name='mentor_reports'),
+    path('mentor/notifications/', views.mentor_notifications, name='mentor_notifications'),
+    path('students/', views.students, name='students'),
+    path('batches/', views.batches, name='batches'),
+    path('classes/', views.classes, name='classes'),
+    path('academic/', views.academic, name='academic'),
+    path('assessments/', views.assessments, name='assessments'),
+    path('fees/', views.fees, name='fees'),
+    path('placement/', views.placement, name='placement'),
+    path('reports/', views.reports, name='reports'),
+    path('users/', views.users_roles, name='users_roles'),
+    path('notifications/', views.notifications, name='notifications'),
+]

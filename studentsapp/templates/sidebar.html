@@ -1,0 +1,238 @@
+{% load static %}
+<!-- =========================================================================
+     NIM ACADEMY - EXACT MATCH SIDEBAR
+     Matches Screenshot: Dark Navy (#0f172a), White Text, Blue Active Pill
+     ========================================================================= -->
+<aside class="erp-sidebar" id="erpSidebar">
+  
+  <!-- Brand Logo Header -->
+  <div class="sidebar-header">
+    <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="brand-wrapper" title="NIM Academy">
+      <div class="brand-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">NIM Academy</span>
+        <span class="brand-subline">Learn • Grow • Succeed</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Navigation Menu List -->
+  <div class="sidebar-menu-scroll">
+    <ul class="sidebar-nav-list">
+      
+      <!-- 1. Dashboard -->
+      <li class="nav-item {% if active_page == 'dashboard' or active_page == 'mentor_dashboard' or not active_page %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="7" height="9" x="3" y="3" rx="1"/>
+              <rect width="7" height="5" x="14" y="3" rx="1"/>
+              <rect width="7" height="9" x="14" y="12" rx="1"/>
+              <rect width="7" height="5" x="3" y="16" rx="1"/>
+            </svg>
+          </span>
+          <span class="nav-label">Dashboard</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+
+      <!-- 2. Students -->
+      <li class="nav-item {% if active_page == 'students' or active_page == 'mentor_students' %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_students' %}{% else %}{% url 'students' %}{% endif %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </span>
+          <span class="nav-label">Students</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+
+      <!-- 3. Batches -->
+      <li class="nav-item {% if active_page == 'batches' or active_page == 'mentor_batches' %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_batches' %}{% else %}{% url 'batches' %}{% endif %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          </span>
+          <span class="nav-label">Batches</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+
+      <!-- 4. Classes -->
+      <li class="nav-item {% if active_page == 'classes' or active_page == 'mentor_classes' %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_classes' %}{% else %}{% url 'classes' %}{% endif %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="14" x="2" y="3" rx="2"/>
+              <line x1="8" x2="16" y1="21" y2="21"/>
+              <line x1="12" x2="12" y1="17" y2="21"/>
+            </svg>
+          </span>
+          <span class="nav-label">Classes</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+
+      <!-- 5. Academic -->
+      <li class="nav-item {% if active_page == 'academic' or active_page == 'mentor_academic' %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_academic' %}{% else %}{% url 'academic' %}{% endif %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+              <path d="M6 6h10"/>
+              <path d="M6 10h10"/>
+            </svg>
+          </span>
+          <span class="nav-label">Academic</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+
+      <!-- 6. Assessments -->
+      <li class="nav-item {% if active_page == 'assessments' or active_page == 'mentor_assessments' %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_assessments' %}{% else %}{% url 'assessments' %}{% endif %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" x2="8" y1="13" y2="13"/>
+              <line x1="16" x2="8" y1="17" y2="17"/>
+            </svg>
+          </span>
+          <span class="nav-label">Assessments</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+
+      <!-- Navigation Item 7 (Admin & Accounts only) -->
+      {% if role != 'mentor' and not is_mentor %}
+      <li class="nav-item {% if active_page == 'fees' %}active{% endif %}">
+        <a href="{% url 'fees' %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="14" x="2" y="5" rx="2"/>
+              <line x1="2" x2="22" y1="10" y2="10"/>
+            </svg>
+          </span>
+          <span class="nav-label">Fees & Payments</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+      {% endif %}
+
+      <!-- 8. Placement -->
+      <li class="nav-item {% if active_page == 'placement' or active_page == 'mentor_placement' %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_placement' %}{% else %}#placement{% endif %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 15 2 2 4-4"/>
+              <rect width="18" height="14" x="3" y="7" rx="2"/>
+              <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </span>
+          <span class="nav-label">Placement</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+
+      <!-- 9. Reports -->
+      <li class="nav-item {% if active_page == 'reports' or active_page == 'mentor_reports' %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_reports' %}{% else %}{% url 'reports' %}{% endif %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" x2="18" y1="20" y2="10"/>
+              <line x1="12" x2="12" y1="20" y2="4"/>
+              <line x1="6" x2="6" y1="20" y2="14"/>
+            </svg>
+          </span>
+          <span class="nav-label">Reports</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+
+      <!-- Navigation Item 10 (Admin only) -->
+      {% if role != 'mentor' and not is_mentor %}
+      <li class="nav-item {% if active_page == 'users_roles' %}active{% endif %}">
+        <a href="{% url 'users_roles' %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </span>
+          <span class="nav-label">Users & Roles</span>
+          <span class="nav-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </a>
+      </li>
+      {% endif %}
+
+      <!-- 11. Notifications (With Red Badge) -->
+      <li class="nav-item {% if active_page == 'notifications' or active_page == 'mentor_notifications' %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_notifications' %}{% else %}{% url 'notifications' %}{% endif %}" class="nav-link">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+          </span>
+          <span class="nav-label">Notifications</span>
+          <span class="nav-badge-red">5</span>
+        </a>
+      </li>
+
+    </ul>
+  </div>
+
+  <!-- Bottom NIM Academy Card -->
+  <div class="sidebar-footer">
+    <div class="footer-academy-card">
+      <div class="footer-icon-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+      </div>
+      <div class="footer-meta">
+        <span class="footer-brand">NIM Academy</span>
+        <span class="footer-desc">{% if role == 'mentor' or is_mentor %}Faculty Mentor Portal{% else %}Admin Control Center{% endif %}</span>
+        <span class="footer-version">v2.4.0</span>
+      </div>
+    </div>
+  </div>
+
+</aside>

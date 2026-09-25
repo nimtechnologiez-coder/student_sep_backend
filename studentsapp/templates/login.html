@@ -1,0 +1,1313 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Login - NIM Academy</title>
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       RESET & BASE STYLES
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f0f4f9;
+      color: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================================================
+       LAYOUT CONTAINER (50/50 SPLIT ON DESKTOP, 100VH NO-SCROLL)
+       ========================================================================== */
+    .login-container {
+      display: flex;
+      width: 100vw;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    @media (min-width: 1024px) {
+      .login-container {
+        height: 100vh;
+        overflow: hidden;
+      }
+    }
+
+    /* ==========================================================================
+       LEFT HERO PANEL (CAMPUS ARCHITECTURE + ROYAL BLUE OVERLAY)
+       ========================================================================== */
+    .left-hero-panel {
+      flex: 1.1;
+      height: 100%;
+      position: relative;
+      background: linear-gradient(
+        to right,
+        rgba(2, 38, 92, 0.98) 0%,
+        rgba(3, 48, 115, 0.93) 38%,
+        rgba(4, 68, 150, 0.60) 70%,
+        rgba(6, 85, 180, 0.20) 100%
+      ), url("{% static 'images/campus_bg.jpg' %}") center right / cover no-repeat;
+      padding: 38px 46px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: #ffffff;
+      z-index: 2;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .left-hero-panel::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (min-width: 1440px) {
+      .left-hero-panel {
+        padding: 46px 58px;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      .left-hero-panel {
+        display: none;
+      }
+    }
+
+    /* Top Left Branding */
+    .brand-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      color: #ffffff;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    }
+
+    .brand-title {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: rgba(191, 219, 254, 0.9);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* Main Hero Content */
+    .hero-content {
+      margin: auto 0;
+      padding: 24px 0;
+      max-width: 520px;
+    }
+
+    .hero-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .cyan-dash {
+      width: 28px;
+      height: 3px;
+      background-color: #38bdf8;
+      border-radius: 9999px;
+    }
+
+    .eyebrow-text {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #38bdf8;
+      text-transform: uppercase;
+    }
+
+    .hero-headline {
+      font-size: 2.75rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.025em;
+      line-height: 1.16;
+      margin-bottom: 12px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    @media (max-width: 1280px) {
+      .hero-headline {
+        font-size: 2.25rem;
+      }
+    }
+
+    .highlight-cyan {
+      color: #38bdf8;
+    }
+
+    .hero-subtext {
+      color: rgba(224, 238, 255, 0.92);
+      font-size: 14.5px;
+      line-height: 1.55;
+      margin-bottom: 24px;
+      font-weight: 400;
+    }
+
+    /* 2x2 Feature Grid (Frosted Cards) */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      max-width: 500px;
+      margin-bottom: 24px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      transition: all 0.2s ease-in-out;
+    }
+
+    .feature-card:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.26);
+      transform: translateY(-1.5px);
+    }
+
+    .feature-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1.5px solid rgba(255, 255, 255, 0.26);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .feature-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.25;
+    }
+
+    .feature-desc {
+      font-size: 11px;
+      color: rgba(219, 234, 254, 0.85);
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    /* Bottom Statistics Bar */
+    .stats-footer {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stat-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11.5px;
+      color: rgba(219, 234, 254, 0.85);
+      font-weight: 500;
+    }
+
+    /* ==========================================================================
+       RIGHT FORM PANEL (ROLE-BASED STAFF LOGIN CARD)
+       ========================================================================== */
+    .right-form-panel {
+      flex: 1.05;
+      height: 100%;
+      background-color: #f8fafc;
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-y: auto;
+      z-index: 1;
+    }
+
+    @media (max-width: 640px) {
+      .right-form-panel {
+        padding: 24px 16px;
+      }
+    }
+
+    /* The Floating White Login Card */
+    .floating-card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 20px 50px -12px rgba(12, 38, 75, 0.10),
+                  0 0 0 1px rgba(220, 230, 242, 0.85);
+      width: 100%;
+      max-width: 510px;
+      padding: 32px 36px 28px 36px;
+      position: relative;
+      margin: auto 0;
+      transition: all 0.2s ease-in-out;
+    }
+
+    @media (max-width: 640px) {
+      .floating-card {
+        padding: 24px 20px;
+        border-radius: 20px;
+      }
+    }
+
+    /* Card Header & Brand */
+    .card-brand-center {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .card-brand-icon-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      color: #2563eb;
+      margin-bottom: 10px;
+      border: 1px solid #bfdbfe;
+    }
+
+    .card-brand-title {
+      font-size: 23px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .card-brand-sub {
+      font-size: 12px;
+      color: #2563eb;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 3px;
+    }
+
+    .card-welcome-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 14px;
+      margin-bottom: 4px;
+      letter-spacing: -0.015em;
+    }
+
+    .card-welcome-desc {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    /* ==========================================================================
+       ROLE SELECTION SECTION (ADMIN, MENTOR, ACCOUNTANT)
+       ========================================================================== */
+    .role-selection-section {
+      margin-bottom: 18px;
+    }
+
+    .role-selection-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .role-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .role-card-option {
+      position: relative;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.18s ease-in-out;
+      user-select: none;
+    }
+
+    .role-card-option:hover {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .role-card-option.active {
+      background: #eff6ff;
+      border-color: #2563eb;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+    }
+
+    .role-card-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      background: #ffffff;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+      transition: all 0.18s ease;
+    }
+
+    .role-card-option.active .role-card-icon {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+    }
+
+    .role-card-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #1e293b;
+      line-height: 1.2;
+    }
+
+    .role-card-option.active .role-card-title {
+      color: #1d4ed8;
+    }
+
+    .role-card-sub {
+      font-size: 10.5px;
+      color: #64748b;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    .role-card-option.active .role-card-sub {
+      color: #2563eb;
+      font-weight: 600;
+    }
+
+    .role-check-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #ffffff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+    }
+
+    .role-card-option.active .role-check-badge {
+      display: flex;
+    }
+
+    /* Active Role Summary Callout */
+    .role-status-callout {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      font-size: 11.5px;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .role-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #2563eb;
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       LOGIN FORM CONTROLS
+       ========================================================================== */
+    .input-group {
+      margin-bottom: 14px;
+      width: 100%;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .field-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .field-icon {
+      position: absolute;
+      left: 14px;
+      color: #94a3b8;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 46px;
+      padding: 0 14px 0 42px;
+      background-color: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 13.5px;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.15s ease-in-out;
+      font-family: inherit;
+    }
+
+    .form-input::placeholder {
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .form-input:hover {
+      border-color: #cbd5e1;
+      background-color: #ffffff;
+    }
+
+    .form-input:focus {
+      border-color: #2563eb;
+      background-color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .form-input.has-error {
+      border-color: #ef4444 !important;
+      background-color: #fffbfb !important;
+    }
+
+    .error-text {
+      color: #ef4444;
+      font-size: 11.5px;
+      font-weight: 500;
+      margin-top: 4px;
+      display: none;
+    }
+
+    /* Eye Toggle for Password */
+    .eye-toggle-btn {
+      position: absolute;
+      right: 14px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 6px;
+      transition: color 0.15s ease;
+    }
+
+    .eye-toggle-btn:hover {
+      color: #475569;
+    }
+
+    /* Options Row: Remember Me & Forgot Password */
+    .options-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 12px 0 18px 0;
+      font-size: 12.5px;
+    }
+
+    .remember-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #475569;
+      cursor: pointer;
+      font-weight: 500;
+      user-select: none;
+    }
+
+    .remember-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      accent-color: #2563eb;
+      cursor: pointer;
+    }
+
+    .forgot-link {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-weight: 600;
+      font-size: 12.5px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: color 0.15s ease;
+    }
+
+    .forgot-link:hover {
+      color: #1d4ed8;
+      text-decoration: underline;
+    }
+
+    /* Primary Submit Button */
+    .submit-cta-btn {
+      width: 100%;
+      height: 48px;
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .submit-cta-btn:hover {
+      background-color: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+    }
+
+    .submit-cta-btn:active {
+      transform: translateY(0);
+    }
+
+    .submit-cta-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Demo Quick-Fill Bar */
+    .demo-accounts-bar {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px dashed #e2e8f0;
+      text-align: center;
+    }
+
+    .demo-accounts-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .demo-pills-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .demo-pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .demo-pill-btn:hover {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #2563eb;
+    }
+
+    /* Success Toast Alert */
+    .success-toast-bar {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      z-index: 1000;
+      animation: toast-down 0.25s ease-out;
+    }
+
+    @keyframes toast-down {
+      from { opacity: 0; transform: translate(-50%, -10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    .toast-check-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 12px;
+    }
+
+    /* Forgot Password Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 16px;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 440px;
+      padding: 24px 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      animation: modal-pop 0.2s ease-out;
+    }
+
+    @keyframes modal-pop {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Footer */
+    .footer-bar {
+      margin-top: 14px;
+      font-size: 11.5px;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 510px;
+    }
+
+    .footer-bar a {
+      color: #64748b;
+      text-decoration: none;
+    }
+
+    .footer-bar a:hover {
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  
+  <!-- =========================================================================
+       1. LEFT HERO PANEL (CAMPUS IDENTITY & ACADEMY PROMOTION)
+       ========================================================================= -->
+  <section class="left-hero-panel">
+    
+    <!-- Top Branding -->
+    <div class="brand-top">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+      </svg>
+      <div>
+        <div class="brand-title">NIM Academy</div>
+        <div class="brand-subtitle">Staff &amp; Faculty Command Center</div>
+      </div>
+    </div>
+
+    <!-- Main Hero Center -->
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span class="cyan-dash"></span>
+        <span class="eyebrow-text">Unified Staff Portal</span>
+      </div>
+
+      <h1 class="hero-headline">
+        Education Today<br>
+        for a <span class="highlight-cyan">Brighter</span><br>
+        Tomorrow
+      </h1>
+
+      <p class="hero-subtext">
+        Welcome to the NIM Academy administrative platform. Secure role-based management for campus administrators, faculty mentors, and finance accountants.
+      </p>
+
+      <!-- 2x2 Feature Highlights -->
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-badge">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div>
+            <div class="feature-title">Role-Based Access</div>
+            <div class="feature-desc">Granular admin permissions</div>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-badge">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <rect width="18" height="18" x="3" y="4" rx="2" /><line x1="16" x1="2" x2="16" y2="6" /><line x1="8" x1="2" x2="8" y2="6" /><line x1="3" x2="21" y1="10" y2="10" />
+            </svg>
+          </div>
+          <div>
+            <div class="feature-title">Lecture Timetables</div>
+            <div class="feature-desc">Live class tracking &amp; labs</div>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-badge">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" />
+            </svg>
+          </div>
+          <div>
+            <div class="feature-title">Fee Accounting</div>
+            <div class="feature-desc">Receivables &amp; GST invoices</div>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-badge">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <div class="feature-title">Evaluations &amp; Scores</div>
+            <div class="feature-desc">Capstone rubric grading</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Statistics -->
+    <div class="stats-footer">
+      <div class="stat-item">
+        <svg width="22" height="22" fill="none" stroke="#38bdf8" viewBox="0 0 24 24" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <div>
+          <div class="stat-number">428+</div>
+          <div class="stat-label">Active Students</div>
+        </div>
+      </div>
+
+      <div class="stat-item">
+        <svg width="22" height="22" fill="none" stroke="#38bdf8" viewBox="0 0 24 24" stroke-width="2">
+          <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        <div>
+          <div class="stat-number">18</div>
+          <div class="stat-label">Active Batches</div>
+        </div>
+      </div>
+
+      <div class="stat-item">
+        <svg width="22" height="22" fill="none" stroke="#38bdf8" viewBox="0 0 24 24" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <div>
+          <div class="stat-number">99.8%</div>
+          <div class="stat-label">System Uptime</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =========================================================================
+       2. RIGHT FORM PANEL (COMMON ROLE-BASED LOGIN UI)
+       ========================================================================= -->
+  <section class="right-form-panel">
+    
+    <!-- Floating Rounded Login Card -->
+    <div class="floating-card">
+      
+      <!-- Brand & Welcome Header -->
+      <div class="card-brand-center">
+        <div class="card-brand-icon-wrap">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div class="card-brand-title">NIM Academy</div>
+        <div class="card-brand-sub">Staff &amp; Faculty Access</div>
+        <h2 class="card-welcome-title">Sign in to your Workspace</h2>
+        <p class="card-welcome-desc">Select your authorized staff role to access your dedicated dashboard.</p>
+      </div>
+
+      <!-- =====================================================================
+           ROLE SELECTION SECTION (3 OPTIONS: ADMIN, MENTOR, ACCOUNTANT)
+           ===================================================================== -->
+      <div class="role-selection-section">
+        <div class="role-selection-label">
+          <span>1. Select Staff Role</span>
+          <span style="color: #2563eb; font-weight: 700;" id="activeRoleNameBadge">Admin Selected</span>
+        </div>
+
+        <div class="role-cards-grid">
+          
+          <!-- Option 1: Admin (Default Active) -->
+          <div class="role-card-option active" id="roleCardAdmin" onclick="setStaffRole('admin')">
+            <span class="role-check-badge">✓</span>
+            <div class="role-card-icon">
+              <!-- Admin Shield Icon -->
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <span class="role-card-title">Admin</span>
+            <span class="role-card-sub">Operations</span>
+          </div>
+
+          <!-- Option 2: Mentor -->
+          <div class="role-card-option" id="roleCardMentor" onclick="setStaffRole('mentor')">
+            <span class="role-check-badge">✓</span>
+            <div class="role-card-icon">
+              <!-- Mentor Graduation / Presentation Icon -->
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+              </svg>
+            </div>
+            <span class="role-card-title">Mentor</span>
+            <span class="role-card-sub">Faculty &amp; Labs</span>
+          </div>
+
+          <!-- Option 3: Accountant -->
+          <div class="role-card-option" id="roleCardAccountant" onclick="setStaffRole('accountant')">
+            <span class="role-check-badge">✓</span>
+            <div class="role-card-icon">
+              <!-- Accountant Invoicing / Calculator Icon -->
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M3 9h18" /><path d="M9 21V9" />
+              </svg>
+            </div>
+            <span class="role-card-title">Accountant</span>
+            <span class="role-card-sub">Fees &amp; Billing</span>
+          </div>
+
+        </div>
+
+        <!-- Role Context Status Bar -->
+        <div class="role-status-callout" id="roleContextCallout">
+          <span class="role-status-dot"></span>
+          <span id="roleContextText">Logging in as: <strong>Admin</strong> • Full Campus Operations &amp; User Control</span>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           LOGIN FORM (EMAIL, PASSWORD, REMEMBER ME, FORGOT, SUBMIT)
+           ===================================================================== -->
+      <form id="staffLoginForm" onsubmit="handleStaffLogin(event)">
+        
+        <!-- Field 1: Email / Username -->
+        <div class="input-group">
+          <label class="input-label" id="usernameLabel">Staff Email / Username</label>
+          <div class="field-wrapper">
+            <span class="field-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              id="staffUsernameInput"
+              class="form-input"
+              placeholder="e.g. admin@nim.edu or username"
+              value="admin@nim.edu"
+              required
+            >
+          </div>
+          <p class="error-text" id="usernameError">Please enter your staff email or username.</p>
+        </div>
+
+        <!-- Field 2: Password -->
+        <div class="input-group">
+          <label class="input-label">Password</label>
+          <div class="field-wrapper">
+            <span class="field-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </span>
+            <input
+              type="password"
+              id="staffPasswordInput"
+              class="form-input"
+              placeholder="••••••••••••"
+              value="Admin@2026"
+              required
+            >
+            <button
+              type="button"
+              class="eye-toggle-btn"
+              id="togglePasswordBtn"
+              title="Show password"
+              onclick="togglePasswordVisibility()"
+            >
+              <svg id="eyeIconSvg" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
+          <p class="error-text" id="passwordError">Password must be at least 6 characters.</p>
+        </div>
+
+        <!-- Remember Me & Forgot Password -->
+        <div class="options-row">
+          <label class="remember-label">
+            <input type="checkbox" id="rememberStaffCheck" checked>
+            <span>Remember my session</span>
+          </label>
+          <button type="button" class="forgot-link" onclick="openForgotModal()">Forgot Password?</button>
+        </div>
+
+        <!-- Dynamic Role-Based Login Button -->
+        <button type="submit" class="submit-cta-btn" id="loginSubmitBtn">
+          <span id="loginBtnText">Login as Admin</span>
+          <span style="font-size: 16px; font-weight: 800;">→</span>
+        </button>
+
+      </form>
+
+      <!-- Quick Demo Credentials Pill Bar -->
+      <div class="demo-accounts-bar">
+        <div class="demo-accounts-title">Quick Demo Logins</div>
+        <div class="demo-pills-row">
+          <button type="button" class="demo-pill-btn" onclick="quickFillCredentials('admin')">
+            <span>🛡️ Admin</span>
+          </button>
+          <button type="button" class="demo-pill-btn" onclick="quickFillCredentials('mentor')">
+            <span>🎓 Mentor</span>
+          </button>
+          <button type="button" class="demo-pill-btn" onclick="quickFillCredentials('accountant')">
+            <span>💳 Accountant</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Outer Footer -->
+    <div class="footer-bar">
+      <span>© 2026 NIM Academy. All rights reserved.</span>
+      <div style="display: flex; gap: 8px;">
+        <a href="{% url 'dashboard' %}">Portal Home</a>
+        <span>•</span>
+        <a href="javascript:void(0)" onclick="openForgotModal()">Help &amp; Support</a>
+      </div>
+    </div>
+
+  </section>
+
+</div>
+
+<!-- Success Notification Toast -->
+<div class="success-toast-bar" id="loginSuccessToast">
+  <div class="toast-check-icon">✓</div>
+  <span id="toastSuccessMessage">Login Successful! Redirecting to Admin Dashboard...</span>
+</div>
+
+<!-- Interactive Forgot Password Modal -->
+<div class="modal-backdrop" id="forgotModal">
+  <div class="modal-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h3 style="font-size: 17px; font-weight: 800; color: #0f172a;">Staff Password Recovery</h3>
+      <button onclick="closeForgotModal()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #94a3b8;">&times;</button>
+    </div>
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.45;">
+      Enter your staff email address or username to receive an authenticated password reset link and 2FA recovery token.
+    </p>
+    <div id="resetFeedback" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;"></div>
+    <form onsubmit="handleForgotSubmit(event)">
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">Registered Staff Email</label>
+        <input type="email" id="forgotEmailInput" class="form-input" placeholder="e.g. staff@nim.edu" required>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" onclick="closeForgotModal()" style="padding: 8px 16px; border: 1.5px solid #cbd5e1; background: #f8fafc; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #475569;">Cancel</button>
+        <button type="submit" style="padding: 8px 18px; border: none; background: #2563eb; color: #ffffff; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700;">Send Recovery Link</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================================================
+     JAVASCRIPT: ROLE SELECTION, VALIDATION, AND DASHBOARD REDIRECTION
+     ========================================================================= -->
+<script>
+  // Currently active staff role ('admin', 'mentor', 'accountant')
+  let selectedRole = 'admin';
+
+  // Role metadata dictionary
+  const roleConfig = {
+    'admin': {
+      title: 'Admin',
+      badge: 'Admin Selected',
+      context: 'Logging in as: <strong>Admin</strong> • Full Campus Operations &amp; User Control',
+      btnText: 'Login as Admin',
+      defaultEmail: 'admin@nim.edu',
+      defaultPwd: 'Admin@2026',
+      redirectUrl: "{% url 'dashboard' %}?role=admin"
+    },
+    'mentor': {
+      title: 'Mentor',
+      badge: 'Mentor Selected',
+      context: 'Logging in as: <strong>Mentor</strong> • Lecture Timetables, Attendance &amp; Grading Rubrics',
+      btnText: 'Login as Mentor',
+      defaultEmail: 'rajiv.mentor@nim.edu',
+      defaultPwd: 'Mentor@2026',
+      redirectUrl: "{% url 'mentor_dashboard' %}"
+    },
+    'accountant': {
+      title: 'Accountant',
+      badge: 'Accountant Selected',
+      context: 'Logging in as: <strong>Accountant</strong> • Tuition Fees, Invoices &amp; Financial Ledger',
+      btnText: 'Login as Accountant',
+      defaultEmail: 'manoj.accounts@nim.edu',
+      defaultPwd: 'Accounts@2026',
+      redirectUrl: "{% url 'dashboard' %}?role=accountant"
+    }
+  };
+
+  // Switch Role function
+  function setStaffRole(role) {
+    selectedRole = role;
+    const cfg = roleConfig[role] || roleConfig['admin'];
+
+    // Update active class on cards
+    document.querySelectorAll('.role-card-option').forEach(card => card.classList.remove('active'));
+    if (role === 'admin') document.getElementById('roleCardAdmin').classList.add('active');
+    if (role === 'mentor') document.getElementById('roleCardMentor').classList.add('active');
+    if (role === 'accountant') document.getElementById('roleCardAccountant').classList.add('active');
+
+    // Update role badges & context description
+    document.getElementById('activeRoleNameBadge').textContent = cfg.badge;
+    document.getElementById('roleContextText').innerHTML = cfg.context;
+    document.getElementById('loginBtnText').textContent = cfg.btnText;
+  }
+
+  // Quick Fill Demo Credentials
+  function quickFillCredentials(role) {
+    setStaffRole(role);
+    const cfg = roleConfig[role];
+    document.getElementById('staffUsernameInput').value = cfg.defaultEmail;
+    document.getElementById('staffPasswordInput').value = cfg.defaultPwd;
+    
+    // Clear any previous error states
+    document.getElementById('usernameError').style.display = 'none';
+    document.getElementById('passwordError').style.display = 'none';
+    document.getElementById('staffUsernameInput').classList.remove('has-error');
+    document.getElementById('staffPasswordInput').classList.remove('has-error');
+  }
+
+  // Password Visibility Toggle
+  function togglePasswordVisibility() {
+    const pwdInput = document.getElementById('staffPasswordInput');
+    const eyeSvg = document.getElementById('eyeIconSvg');
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      eyeSvg.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />`;
+    } else {
+      pwdInput.type = 'password';
+      eyeSvg.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+    }
+  }
+
+  // Form Submission Handler with Role-Based Redirection
+  function handleStaffLogin(e) {
+    e.preventDefault();
+
+    const usernameVal = document.getElementById('staffUsernameInput').value.trim();
+    const passwordVal = document.getElementById('staffPasswordInput').value;
+    const userErr = document.getElementById('usernameError');
+    const pwdErr = document.getElementById('passwordError');
+
+    let isValid = true;
+
+    if (!usernameVal) {
+      userErr.style.display = 'block';
+      document.getElementById('staffUsernameInput').classList.add('has-error');
+      isValid = false;
+    } else {
+      userErr.style.display = 'none';
+      document.getElementById('staffUsernameInput').classList.remove('has-error');
+    }
+
+    if (!passwordVal || passwordVal.length < 6) {
+      pwdErr.style.display = 'block';
+      document.getElementById('staffPasswordInput').classList.add('has-error');
+      isValid = false;
+    } else {
+      pwdErr.style.display = 'none';
+      document.getElementById('staffPasswordInput').classList.remove('has-error');
+    }
+
+    if (!isValid) return;
+
+    // Show loading state on login button
+    const btn = document.getElementById('loginSubmitBtn');
+    const originalText = document.getElementById('loginBtnText').textContent;
+    btn.disabled = true;
+    document.getElementById('loginBtnText').textContent = `Verifying ${roleConfig[selectedRole].title} Credentials...`;
+
+    setTimeout(() => {
+      // Show Success Toast
+      const toast = document.getElementById('loginSuccessToast');
+      const toastMsg = document.getElementById('toastSuccessMessage');
+      const targetRoleTitle = roleConfig[selectedRole].title;
+      
+      toastMsg.textContent = `✓ Login Successful! Redirecting to ${targetRoleTitle} Dashboard...`;
+      toast.style.display = 'flex';
+
+      // Redirect to Role-specific Dashboard Access after 800ms
+      setTimeout(() => {
+        window.location.href = roleConfig[selectedRole].redirectUrl;
+      }, 800);
+    }, 600);
+  }
+
+  // Forgot Password Modal Handlers
+  function openForgotModal() {
+    document.getElementById('forgotModal').style.display = 'flex';
+  }
+
+  function closeForgotModal() {
+    document.getElementById('forgotModal').style.display = 'none';
+    document.getElementById('resetFeedback').style.display = 'none';
+  }
+
+  function handleForgotSubmit(e) {
+    e.preventDefault();
+    const fb = document.getElementById('resetFeedback');
+    const email = document.getElementById('forgotEmailInput').value;
+    fb.innerHTML = `Password recovery link dispatched to <strong>${email}</strong>! Please check your staff inbox.`;
+    fb.style.display = 'block';
+    setTimeout(() => {
+      closeForgotModal();
+      document.getElementById('forgotEmailInput').value = '';
+    }, 2200);
+  }
+
+  // Close modal when clicking outside
+  document.getElementById('forgotModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeForgotModal();
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,344 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classes & Schedule - NIM Academy Admin Portal</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component with active_page='classes' -->
+  {% include 'sidebar.html' with active_page='classes' %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" placeholder="Search class topics, trainers, batches...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Mon, 24 Sep 2026</span>
+        </div>
+
+        <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">5</span>
+        </a>
+
+        <div class="header-user-profile" title="Admin Account">
+          <div class="user-avatar-circle" style="background-color: #0f172a; color: #ffffff; font-weight: 700;">SN</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Sneha N</span>
+            <span class="user-role-sub">Admin</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Classes Admin Workspace -->
+    <div class="admin-workspace">
+
+      <!-- Page Title & Actions -->
+      <div class="page-title-row">
+        <div class="title-text-group">
+          <h1 class="main-page-title">Classes & Schedule</h1>
+          <p class="main-page-subtitle">Track lecture timetables, trainer delivery, lab compute modes, and live attendance.</p>
+        </div>
+
+        <div class="page-actions-group">
+          <button class="btn-secondary-action" onclick="alert('Downloading daily timetable sheet...');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <span>Today's Timetable</span>
+          </button>
+          <button class="btn-primary-add" onclick="document.getElementById('addClassModal').classList.add('active');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Schedule Class</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPI Summary Cards -->
+      <div class="kpi-cards-grid">
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.total }}</span>
+            <span class="kpi-stat-label">Today's Sessions</span>
+            <span class="kpi-trend-row"><span class="trend-green">1 Live Now</span> • 5 Scheduled</span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.online }}</span>
+            <span class="kpi-stat-label">Avg Attendance</span>
+            <span class="kpi-trend-row"><span class="trend-green">↑ 1.4%</span> vs last week</span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.offline }}</span>
+            <span class="kpi-stat-label">Total Monthly Sessions</span>
+            <span class="kpi-trend-row"><span class="trend-blue">All 18 Batches</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.trainers }}</span>
+            <span class="kpi-stat-label">Recordings Uploaded</span>
+            <span class="kpi-trend-row"><span class="trend-green">92.8%</span> Archive rate</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search Bar Card -->
+      <div class="filter-controls-card">
+        <div class="filter-controls-row">
+          <div class="filter-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" class="filter-search-input" id="classSearchInput" placeholder="Search by lecture topic, trainer or batch...">
+          </div>
+
+          <div class="filter-dropdowns-group">
+            <select class="filter-select">
+              <option value="">All Batches</option>
+              <option value="ai01">BATCH-2026-AI01 (GenAI)</option>
+              <option value="py04">BATCH-2026-PY04 (Python)</option>
+              <option value="de02">BATCH-2026-DE02 (Data Eng)</option>
+            </select>
+
+            <select class="filter-select">
+              <option value="">All Modes</option>
+              <option value="online">Online (Zoom/Meet)</option>
+              <option value="offline">Offline (Campus Lab)</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+
+            <select class="filter-select">
+              <option value="">Status: All</option>
+              <option value="live">Live Now</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="completed">Completed</option>
+            </select>
+
+            <button class="btn-filter-reset" onclick="document.getElementById('classSearchInput').value='';">Reset</button>
+          </div>
+        </div>
+
+        <div class="filter-tabs-row">
+          <button class="pill-tab-btn active">All Classes <span class="pill-tab-count">84</span></button>
+          <button class="pill-tab-btn">Today's Schedule <span class="pill-tab-count">6</span></button>
+          <button class="pill-tab-btn">Upcoming <span class="pill-tab-count">24</span></button>
+          <button class="pill-tab-btn">Completed <span class="pill-tab-count">54</span></button>
+        </div>
+      </div>
+
+      <!-- Compact Clean Classes Table -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <div class="table-header-title">
+            <span>Session Timetable & Log</span>
+            <span class="table-records-count">84 Lectures</span>
+          </div>
+          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Updated 5 mins ago</span>
+        </div>
+
+        <div class="table-scroll-container">
+          <table class="admin-data-table">
+            <thead>
+              <tr>
+                <th>Schedule Date & Time</th>
+                <th>Topic & Subject</th>
+                <th>Trainer</th>
+                <th>Batch</th>
+                <th>Mode & Platform</th>
+                <th>Attendance</th>
+                <th>Status</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for class_item in classes %}
+              <tr>
+                <td>
+                  <div style="font-weight: 700; color: #0f172a;">{{ class_item.date }}</div>
+                  <div style="font-size: 0.71875rem; color: #64748b;">{{ class_item.time }}</div>
+                </td>
+                <td>
+                  <div class="entity-info">
+                    <span class="entity-name">{{ class_item.subject }}</span>
+                    <span class="entity-sub">Module 3 • LangChain, Pinecone & Hybrid Retrieval</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="entity-cell">
+                    <div class="entity-avatar" style="background-color: #2563eb;">RS</div>
+                    <div class="entity-info">
+                      <span class="entity-name">{{ class_item.trainer.name }}</span>
+                      <span class="entity-sub">AI Architect</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="font-mono-code">{{ class_item.batch.name }}</span>
+                </td>
+                <td>
+                  <div style="font-weight: 600; color: #1e293b;">{{ class_item.mode }}</div>
+                  <div style="font-size: 0.71875rem; color: #2563eb;">Zoom #8412 0914</div>
+                </td>
+                <td>
+                  <span class="status-badge badge-active">
+                    <span class="badge-dot"></span> 26 / 28 (93%)
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge badge-live-pulse">
+                    <span class="badge-dot"></span> Live Now
+                  </span>
+                </td>
+                <td style="text-align: right;">
+                  <div class="table-actions-cell" style="justify-content: flex-end;">
+                    <a href="#" class="btn-action-pill" style="background-color: #fee2e2; color: #dc2626; border-color: #fca5a5;">
+                      Join Live
+                    </a>
+                    <button class="btn-action-icon" title="Session Roster">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 20px;">No classes scheduled.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-row">
+          <span>Showing 1 to 4 of 84 classes</span>
+          <div class="pagination-controls">
+            <button class="btn-page-nav" disabled>Previous</button>
+            <button class="btn-page-nav active">1</button>
+            <button class="btn-page-nav">2</button>
+            <button class="btn-page-nav">3</button>
+            <button class="btn-page-nav">Next</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal: Schedule New Class -->
+<div class="modal-overlay" id="addClassModal">
+  <div class="modal-box">
+    <div class="modal-header-bar">
+      <h3 class="modal-title-text">Schedule Class Lecture</h3>
+      <button class="btn-close-modal" onclick="document.getElementById('addClassModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form onsubmit="event.preventDefault(); alert('Class lecture scheduled successfully!'); document.getElementById('addClassModal').classList.remove('active');">
+      <div class="modal-body-content">
+        <div class="form-group-field">
+          <label class="form-label-title">Lecture Topic *</label>
+          <input type="text" class="form-input-text" placeholder="e.g. Multi-Agent Collaboration with CrewAI & LangGraph" required>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Target Cohort / Batch *</label>
+            <select class="form-select-box" required>
+              <option value="">Select Cohort</option>
+              <option value="ai01">BATCH-2026-AI01 (GenAI)</option>
+              <option value="py04">BATCH-2026-PY04 (Python)</option>
+              <option value="de02">BATCH-2026-DE02 (Data Eng)</option>
+            </select>
+          </div>
+          <div class="form-group-field">
+            <label class="form-label-title">Trainer *</label>
+            <select class="form-select-box" required>
+              <option value="">Select Trainer</option>
+              <option value="dr_rajiv">Dr. Rajiv Sen</option>
+              <option value="vikram">Vikram Malhotra</option>
+              <option value="ananya">Ananya Roy</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Date & Start Time *</label>
+            <input type="datetime-local" class="form-input-text" required>
+          </div>
+          <div class="form-group-field">
+            <label class="form-label-title">Duration (Minutes) *</label>
+            <input type="number" class="form-input-text" value="150" required>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Delivery Mode *</label>
+            <select class="form-select-box" required>
+              <option value="online">Online (Zoom / Meet)</option>
+              <option value="offline">Offline (Campus Lab)</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+          <div class="form-group-field">
+            <label class="form-label-title">Meeting Link / Lab Room *</label>
+            <input type="text" class="form-input-text" placeholder="e.g. Zoom #8412 or Lab 3" required>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-secondary-action" onclick="document.getElementById('addClassModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-primary-add">Save & Notify Batch</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
+

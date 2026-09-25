@@ -1,0 +1,416 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Management - NIM Academy Admin Portal</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- Sidebar Component with active_page='academic' -->
+  {% include 'sidebar.html' with active_page='academic' %}
+
+  <!-- Main Content Workspace -->
+  <main class="dashboard-main">
+    
+    <!-- Top Header Bar -->
+    <header class="main-header">
+      <div class="header-search-wrap">
+        <span class="search-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" class="header-search-input" placeholder="Search programs, modules, topics, assignments...">
+      </div>
+
+      <div class="header-right-meta">
+        <div class="header-date-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Mon, 24 Sep 2026</span>
+        </div>
+
+        <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="header-notif-badge">5</span>
+        </a>
+
+        <div class="header-user-profile" title="Admin Account">
+          <div class="user-avatar-circle" style="background-color: #0f172a; color: #ffffff; font-weight: 700;">SN</div>
+          <div class="user-text-info">
+            <span class="user-name-title">Sneha N</span>
+            <span class="user-role-sub">Admin</span>
+          </div>
+          <span class="user-dropdown-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Academic Admin Workspace -->
+    <div class="admin-workspace">
+
+      <!-- Page Title & Actions -->
+      <div class="page-title-row">
+        <div class="title-text-group">
+          <h1 class="main-page-title">Academic Management</h1>
+          <p class="main-page-subtitle">Configure career degree programs, modular syllabi, hands-on assignments, and compute labs.</p>
+        </div>
+
+        <div class="page-actions-group">
+          <button class="btn-secondary-action" onclick="alert('Exporting Academic Syllabus Matrix (PDF)...');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Export Syllabus PDF</span>
+          </button>
+          <button class="btn-primary-add" onclick="document.getElementById('addAcademicModal').classList.add('active');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add Module / Program</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPI Summary Cards -->
+      <div class="kpi-cards-grid">
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.total }}</span>
+            <span class="kpi-stat-label">Active Programs</span>
+            <span class="kpi-trend-row"><span class="trend-green">AI, Cloud, FullStack, Data</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.topics }}</span>
+            <span class="kpi-stat-label">Curriculum Modules</span>
+            <span class="kpi-trend-row"><span class="trend-green">26 Live</span> • 6 In Pipeline</span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.progress }}</span>
+            <span class="kpi-stat-label">Syllabus Topics</span>
+            <span class="kpi-trend-row"><span class="trend-blue">94 Hands-on Projects</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-stat-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+          </div>
+          <div class="kpi-details-col">
+            <span class="kpi-stat-number">{{ kpi.assessments }}</span>
+            <span class="kpi-stat-label">Lab Cloud Runtimes</span>
+            <span class="kpi-trend-row"><span class="trend-green">A100 GPU & AWS Sandboxes</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search Bar Card -->
+      <div class="filter-controls-card">
+        <div class="filter-controls-row">
+          <div class="filter-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" class="filter-search-input" id="academicSearchInput" placeholder="Search by module code, title, topic or tech stack...">
+          </div>
+
+          <div class="filter-dropdowns-group">
+            <select class="filter-select" id="programSelect">
+              <option value="">All Programs</option>
+              <option value="Generative AI">Generative AI & LLMs</option>
+              <option value="Cloud DevOps">Cloud DevOps & SRE</option>
+              <option value="Full Stack">Full Stack Web Engineering</option>
+              <option value="Data Engineering">Data Engineering & Analytics</option>
+            </select>
+
+            <select class="filter-select" id="termSelect">
+              <option value="">All Semesters</option>
+              <option value="Sem 1">Semester 1 (Foundations)</option>
+              <option value="Sem 2">Semester 2 (Core)</option>
+              <option value="Sem 3">Semester 3 (Advanced/Capstone)</option>
+            </select>
+
+            <select class="filter-select" id="statusSelect">
+              <option value="">Status: All</option>
+              <option value="Active">Active</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Draft">Draft</option>
+            </select>
+
+            <button class="btn-filter-reset" onclick="resetAcademicFilters()">Reset</button>
+          </div>
+        </div>
+
+        <!-- Category Pill Tabs -->
+        <div class="filter-tabs-row">
+          <button class="pill-tab-btn active" onclick="filterByTab(this, 'all')">
+            <span>All Modules</span>
+            <span class="pill-tab-count">32</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'Active')">
+            <span>Active Syllabus</span>
+            <span class="pill-tab-count">26</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'Under Review')">
+            <span>Under Review</span>
+            <span class="pill-tab-count">4</span>
+          </button>
+          <button class="pill-tab-btn" onclick="filterByTab(this, 'Draft')">
+            <span>Drafts</span>
+            <span class="pill-tab-count">2</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modules & Topics Table Card -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <div class="table-header-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+            <span>Curriculum Modules & Learning Architecture</span>
+            <span class="table-records-count">32 Modules</span>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="alert('Program Structure Matrix refreshed.');">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-scroll-container">
+          <table class="admin-data-table" id="academicTable">
+            <thead>
+              <tr>
+                <th style="width: 280px;">Module Code & Name</th>
+                <th>Program Track</th>
+                <th>Term & Credits</th>
+                <th>Topics Count</th>
+                <th>Hands-on Labs</th>
+                <th>Compute / Lab Environment</th>
+                <th>Status</th>
+                <th style="text-align: right; width: 130px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+                  {% for module in modules %}
+                  <tr>
+                    <td>
+                      <div class="entity-info">
+                        <span class="entity-name">{{ module.name }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span style="font-weight: 600; color: #1e293b;">{{ module.course }}</span>
+                    </td>
+                    <td>
+                      <div style="display: flex; gap: 4px;">
+                        <span class="status-pill status-active">{{ module.status }}</span>
+                      </div>
+                    </td>
+                    <td style="text-align: right;">
+                      <div class="action-buttons">
+                        <button class="action-btn" title="View Module"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+                        <button class="action-btn" title="Edit"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8;">No modules found.</td></tr>
+                  {% endfor %}
+                </tbody>
+          </table>
+        </div>
+
+        <!-- Table Pagination -->
+        <div class="pagination-row">
+          <div>Showing <strong>1 - 7</strong> of <strong>32</strong> modules</div>
+          <div class="pagination-controls">
+            <button class="btn-page-nav" disabled>Previous</button>
+            <button class="btn-page-nav active">1</button>
+            <button class="btn-page-nav">2</button>
+            <button class="btn-page-nav">3</button>
+            <button class="btn-page-nav">Next</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Add Program / Module Modal -->
+<div class="modal-overlay" id="addAcademicModal">
+  <div class="modal-box">
+    <div class="modal-header-bar">
+      <div class="modal-title-text">Create Curriculum Module</div>
+      <button class="btn-close-modal" onclick="document.getElementById('addAcademicModal').classList.remove('active');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form onsubmit="event.preventDefault(); alert('New Academic Module published successfully!'); document.getElementById('addAcademicModal').classList.remove('active');">
+      <div class="modal-body-content">
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Program Track *</label>
+            <select class="form-select-box" required>
+              <option value="">Select Program</option>
+              <option value="genai">Generative AI & LLMs</option>
+              <option value="cloud">Cloud DevOps & SRE</option>
+              <option value="fullstack">Full Stack Web Engineering</option>
+              <option value="data">Data Engineering & Analytics</option>
+            </select>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Module Code *</label>
+            <input type="text" class="form-input-text" placeholder="e.g. AIML-303" required>
+          </div>
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-label-title">Module Title & Subject *</label>
+          <input type="text" class="form-input-text" placeholder="e.g. AI Agent Swarms & Tool Calling" required>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Academic Term / Semester</label>
+            <select class="form-select-box">
+              <option value="Sem 1">Semester 1</option>
+              <option value="Sem 2">Semester 2</option>
+              <option value="Sem 3">Semester 3 (Advanced / Capstone)</option>
+            </select>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Academic Credits</label>
+            <input type="number" class="form-input-text" value="5" min="1" max="10">
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Planned Topics Count</label>
+            <input type="number" class="form-input-text" placeholder="e.g. 12 Topics" value="12">
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Required Labs & Projects</label>
+            <input type="number" class="form-input-text" placeholder="e.g. 4 Projects" value="4">
+          </div>
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-label-title">Compute / Cloud Environment</label>
+          <select class="form-select-box">
+            <option value="gpu">NVIDIA A100 GPU Cluster (40GB/80GB)</option>
+            <option value="h100">NVIDIA H100 80GB SXM5 Node</option>
+            <option value="aws">AWS Multi-AZ Cloud Sandbox</option>
+            <option value="docker">Local Dev Container / Docker Compose</option>
+            <option value="databricks">Databricks Lakehouse Runtime</option>
+          </select>
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-label-title">Syllabus Overview & Objectives</label>
+          <textarea class="form-textarea" placeholder="Detail the core competencies, enterprise tools, and learning outcomes..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-secondary-action" onclick="document.getElementById('addAcademicModal').classList.remove('active');">Cancel</button>
+        <button type="submit" class="btn-primary-add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Publish Module</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Live filter function for Academic table
+  function filterAcademicTable() {
+    const query = document.getElementById('academicSearchInput').value.toLowerCase().trim();
+    const program = document.getElementById('programSelect').value.toLowerCase();
+    const term = document.getElementById('termSelect').value.toLowerCase();
+    const status = document.getElementById('statusSelect').value.toLowerCase();
+
+    const rows = document.querySelectorAll('#academicTable tbody tr');
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      const rowProg = (row.getAttribute('data-program') || '').toLowerCase();
+      const rowTerm = (row.getAttribute('data-term') || '').toLowerCase();
+      const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
+
+      const matchText = !query || text.includes(query);
+      const matchProg = !program || rowProg.includes(program);
+      const matchTerm = !term || rowTerm.includes(term);
+      const matchStatus = !status || rowStatus === status;
+
+      if (matchText && matchProg && matchTerm && matchStatus) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('academicSearchInput').addEventListener('input', filterAcademicTable);
+  document.getElementById('programSelect').addEventListener('change', filterAcademicTable);
+  document.getElementById('termSelect').addEventListener('change', filterAcademicTable);
+  document.getElementById('statusSelect').addEventListener('change', filterAcademicTable);
+
+  function resetAcademicFilters() {
+    document.getElementById('academicSearchInput').value = '';
+    document.getElementById('programSelect').value = '';
+    document.getElementById('termSelect').value = '';
+    document.getElementById('statusSelect').value = '';
+    document.querySelectorAll('.pill-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.pill-tab-btn:first-child').classList.add('active');
+    filterAcademicTable();
+  }
+
+  function filterByTab(btn, statusFilter) {
+    document.querySelectorAll('.pill-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('statusSelect').value = (statusFilter === 'all') ? '' : statusFilter;
+    filterAcademicTable();
+  }
+
+  // Close modal when clicking on overlay background
+  document.getElementById('addAcademicModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('active');
+    }
+  });
+</script>
+
+</body>
+</html>
+
