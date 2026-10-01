@@ -1,984 +1,3315 @@
 {% extends 'mentor/base.html' %}
+{% load static %}
 
-{% block title %}Classes - NIM Academy{% endblock %}
+{% block title %}My Classes - Mentor Portal{% endblock %}
 
 {% block extra_css %}
 <style>
-  /* =========================================================================
-     CLASSES PAGE (EXACT REPLICA OF REFERENCE UI)
-     Two-Column Layout: Left (Class Timetable) & Right (Create Class Form Panel)
-     ========================================================================= */
-
-  /* Page Wrapper: 2-Column Split */
-  .classes-page-layout {
-    display: grid;
-    grid-template-columns: 1fr 390px;
-    gap: 24px;
-    align-items: start;
-  }
-
-  @media (max-width: 1200px) {
-    .classes-page-layout {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* Left Column */
-  .classes-left-pane {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  /* Header Row */
-  .classes-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  .classes-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #0a1b39;
-    letter-spacing: -0.3px;
-    margin: 0;
-  }
-
-  .classes-subtitle {
-    font-size: 0.875rem;
-    color: #64748b;
-    margin-top: 4px;
-    font-weight: 500;
-  }
-
-  .btn-create-class-top {
-    background: #0062eb;
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.8125rem;
-    padding: 9px 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 2px 6px rgba(0, 98, 235, 0.25);
-    transition: all 0.15s ease;
-  }
-
-  .btn-create-class-top:hover {
-    background: #0052cc;
-  }
-
-  /* Filter Controls */
-  .classes-filter-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .classes-filter-select {
+    /* Edit Class Button */
+  .btn-edit-class {
+    padding: 7px 11px;
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 9px 14px;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #334155;
-    outline: none;
     cursor: pointer;
-  }
-
-  .classes-date-input-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 8px 14px;
-    font-size: 0.8125rem;
-    color: #64748b;
-    font-weight: 500;
-  }
-
-  .classes-date-input-box input {
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 0.8125rem;
-    color: #334155;
-    font-family: inherit;
-  }
-
-  /* Tab Pills */
-  .classes-tab-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 2px;
-  }
-
-  .classes-tab-pill {
-    padding: 7px 18px;
-    border-radius: 999px;
-    font-size: 0.8125rem;
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
     text-decoration: none;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-edit-class:hover {
+    background: #f0f9ff;
+    border-color: #38bdf8;
+    color: #0369a1;
+  }
+
+  .cal-day-cell {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin: 0 auto;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.75rem;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+
+  .cal-day-cell:hover {
+    background: #e2e8f0;
+  }
+
+  .cal-day-cell.is-today {
+    background: #ecfdf5;
+    color: #047857;
+    font-weight: 800;
+    border: 1.5px solid #10b981;
+  }
+
+  .cal-day-cell.active-selected {
+    background: #007782 !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    box-shadow: 0 2px 6px rgba(0, 119, 130, 0.35);
+  }
+
+  .cal-dot-mark {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    margin: 2px auto 0;
+  }
+
+  .cal-dot-mark.green { background: #10b981; }
+  .cal-dot-mark.blue { background: #3b82f6; }
+  .cal-dot-mark.purple { background: #8b5cf6; }
+  .cal-dot-mark.pink { background: #f43f5e; }
+
+  /* Calendar Filter Banner */
+  .cal-filter-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(2, 132, 199, 0.08);
+  }
+
+  .btn-clear-filter {
+    background: #ffffff;
+    border: 1px solid #7dd3fc;
+    color: #0284c7;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
     transition: all 0.15s ease;
   }
 
-  .classes-tab-pill.active {
-    background: #0062eb;
-    color: #ffffff;
-    box-shadow: 0 2px 6px rgba(0, 98, 235, 0.25);
-  }
-
-  .classes-tab-pill.inactive {
-    background: #eff6ff;
-    color: #475569;
-  }
-
-  .classes-tab-pill.inactive:hover {
+  .btn-clear-filter:hover {
     background: #e0f2fe;
-    color: #0062eb;
+    color: #0369a1;
   }
 
-  /* Class Cards & Rows */
-  .class-schedule-card {
-    background: #ffffff;
-    border: 1px solid var(--nim-border);
-    border-radius: var(--nim-radius-card);
-    padding: 20px 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  /* =========================================================================
+     PAGE WRAPPER & TOP BAR
+     ========================================================================= */
+  .classes-page-canvas {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 32px 60px;
   }
 
-  .class-schedule-header {
+  /* Top Header Flex Row */
+  .classes-top-header-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-  }
-
-  .class-schedule-title-box {
-    display: flex;
     align-items: flex-start;
-    gap: 10px;
+    margin-bottom: 22px;
   }
 
-  .class-schedule-title-box svg {
-    color: #0062eb;
-    margin-top: 2px;
-  }
-
-  .class-schedule-title {
-    font-size: 1rem;
+  .classes-page-title {
+    font-size: 1.85rem;
     font-weight: 800;
-    color: #0a1b39;
-    margin: 0;
+    color: #0f172a;
+    letter-spacing: -0.025em;
+    margin: 0 0 5px;
+    line-height: 1.2;
   }
 
-  .class-schedule-date-text {
-    font-size: 0.75rem;
+  .classes-page-subtitle {
+    font-size: 0.875rem;
     color: #64748b;
-    margin-top: 2px;
-    font-weight: 500;
+    margin: 0;
+    font-weight: 400;
   }
 
-  .btn-outline-calendar-view {
-    background: #ffffff;
-    border: 1.5px solid #0062eb;
-    color: #0062eb;
-    font-weight: 700;
-    font-size: 0.78125rem;
-    padding: 6px 14px;
-    border-radius: 8px;
+  .classes-breadcrumb-nav {
+    font-size: 0.8125rem;
+    color: #64748b;
     display: flex;
     align-items: center;
     gap: 6px;
-    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .classes-breadcrumb-nav a {
+    color: #64748b;
     text-decoration: none;
-    transition: all 0.15s ease;
   }
 
-  .btn-outline-calendar-view:hover {
-    background: #f0f7ff;
+  .classes-breadcrumb-nav a:hover {
+    color: #007782;
   }
 
-  /* Individual Class Row */
-  .class-row-item {
+  .classes-breadcrumb-nav .sep {
+    color: #cbd5e1;
+    font-size: 0.75rem;
+  }
+
+  .classes-breadcrumb-nav .current {
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  /* =========================================================================
+     4 KPI SUMMARY CARDS (Top Row)
+     ========================================================================= */
+  .kpi-row-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-stat-card {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 14px;
+    padding: 18px 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--nim-border-subtle);
     gap: 16px;
-    flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
-  .class-row-item:last-child {
-    border-bottom: none;
-    padding-bottom: 4px;
+  .kpi-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
   }
 
-  .class-row-left {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    min-width: 220px;
-  }
-
-  .class-video-icon-circle {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
+  .kpi-icon-box {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
   }
 
-  .class-row-title {
-    font-size: 0.9375rem;
-    font-weight: 800;
-    color: #0a1b39;
-    line-height: 1.25;
+  .kpi-icon-box.green {
+    background: #ecfdf5;
+    color: #10b981;
   }
 
-  .class-row-module {
-    font-size: 0.78125rem;
-    color: #64748b;
-    font-weight: 500;
-    margin-top: 2px;
+  .kpi-icon-box.purple {
+    background: #f5f3ff;
+    color: #8b5cf6;
   }
 
-  .class-batch-badge-pill {
+  .kpi-icon-box.teal {
+    background: #f0fdfa;
+    color: #0d9488;
+  }
+
+  .kpi-icon-box.blue {
     background: #eff6ff;
-    color: #0062eb;
-    border: 1px solid #dbeafe;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 2px 10px;
-    border-radius: 999px;
-    display: inline-block;
-    margin-top: 6px;
+    color: #3b82f6;
   }
 
-  .class-meta-details {
+  .kpi-icon-box.amber {
+    background: #fffbeb;
+    color: #d97706;
+  }
+
+  .kpi-meta-col {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    font-size: 0.78125rem;
-    color: #475569;
-    min-width: 170px;
   }
 
-  .class-meta-line {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .kpi-meta-lbl {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748b;
+    margin-bottom: 2px;
+  }
+
+  .kpi-meta-val {
+    font-size: 1.625rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+    margin-bottom: 2px;
+  }
+
+  .kpi-meta-sub {
+    font-size: 0.71875rem;
+    color: #94a3b8;
     font-weight: 500;
   }
 
-  .class-meta-line.time {
-    font-weight: 600;
+  /* =========================================================================
+     TWO-COLUMN MAIN LAYOUT
+     ========================================================================= */
+  .classes-main-two-col {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
   }
 
-  .class-meta-line svg {
-    color: #0062eb;
-    width: 13px;
-    height: 13px;
-    flex-shrink: 0;
+  /* Left Column */
+  .classes-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
-  .class-badge-status {
-    font-weight: 700;
-    font-size: 0.72rem;
-    padding: 4px 14px;
-    border-radius: 999px;
-    display: inline-block;
-    text-align: center;
-  }
-
-  .class-badge-status.published {
-    background: #dcfce7;
-    color: #16a34a;
-  }
-
-  .class-badge-status.scheduled {
-    background: #eff6ff;
-    color: #0062eb;
-  }
-
-  .class-badge-status.completed {
-    background: #dcfce7;
-    color: #16a34a;
-  }
-
-  .class-row-actions {
+  /* Tabs Bar */
+  .classes-nav-tabs-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 28px;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 6px;
   }
 
-  .btn-outline-class-sm {
-    border: 1.5px solid #0062eb;
-    color: #0062eb;
-    background: #ffffff;
-    font-weight: 700;
-    font-size: 0.75rem;
-    padding: 6px 14px;
-    border-radius: 8px;
+  .classes-tab-btn {
+    background: none;
+    border: none;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #64748b;
+    padding: 10px 4px 14px;
     cursor: pointer;
-    text-decoration: none;
-    transition: all 0.15s ease;
+    position: relative;
+    transition: color 0.15s ease;
   }
 
-  .btn-outline-class-sm:hover {
-    background: #f0f7ff;
+  .classes-tab-btn:hover {
+    color: #007782;
   }
 
-  .btn-solid-attendance-sm {
-    background: #0062eb;
-    border: 1.5px solid #0062eb;
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 0.75rem;
-    padding: 6px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.15s ease;
-    box-shadow: 0 2px 6px rgba(0, 98, 235, 0.2);
+  .classes-tab-btn.active {
+    color: #007782;
   }
 
-  .btn-solid-attendance-sm:hover {
-    background: #0052cc;
-    border-color: #0052cc;
+  .classes-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #007782;
+    border-radius: 3px 3px 0 0;
   }
 
-  /* Right Pane: Create Class Form Card */
-  .create-class-panel {
-    background: #ffffff;
-    border: 1px solid var(--nim-border);
-    border-radius: var(--nim-radius-card);
-    padding: 22px 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    position: sticky;
-    top: 90px;
-  }
-
-  .create-class-header {
+  /* Section Header */
+  .classes-section-header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 14px;
+    margin-top: 4px;
+    margin-bottom: 4px;
   }
 
-  .create-class-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: #0a1b39;
+  .classes-section-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .classes-section-title-wrap svg {
+    color: #007782;
+  }
+
+  .classes-section-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: #0f172a;
     margin: 0;
   }
 
-  .create-class-subtext {
-    font-size: 0.78125rem;
-    color: #64748b;
-    margin-top: 4px;
-    line-height: 1.35;
-  }
-
-  .btn-close-panel {
-    background: transparent;
-    border: none;
-    font-size: 1.25rem;
-    color: #64748b;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .create-class-form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .form-group-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .form-label-text {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #334155;
-  }
-
-  .form-label-text span.req {
-    color: #ef4444;
-  }
-
-  .form-input-field {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 8px 12px;
+  .link-view-calendar {
     font-size: 0.8125rem;
-    color: #0f172a;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .form-input-field:focus {
-    border-color: #0062eb;
-  }
-
-  .form-input-field.disabled {
-    background-color: #f8fafc;
-    color: #64748b;
-    cursor: not-allowed;
-  }
-
-  .time-date-grid-3 {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr 1fr;
-    gap: 8px;
-  }
-
-  /* Upload Boxes */
-  .upload-attachment-box {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 10px 12px;
-    display: flex;
+    font-weight: 600;
+    color: #0284c7;
+    text-decoration: none;
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 4px;
+    transition: color 0.15s ease;
+  }
+
+  .link-view-calendar:hover {
+    color: #0369a1;
+  }
+
+  /* Class Cards - Modern Chip & Two-Row Architecture */
+  .class-schedule-card {
     background: #ffffff;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
   }
 
-  .upload-attachment-box:hover {
-    border-color: #bfdbfe;
+  .class-schedule-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+  }
+
+  .card-top-content-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    width: 100%;
+  }
+
+  /* Date Badge */
+  .card-date-badge-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 68px;
+    text-align: center;
     background: #f8fafc;
-  }
-
-  .upload-box-icon {
-    color: #64748b;
-    width: 16px;
-    height: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 8px;
     flex-shrink: 0;
   }
 
-  .upload-box-title {
-    font-size: 0.75rem;
+  .date-badge-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1;
+  }
+
+  .date-badge-month {
+    font-size: 0.71875rem;
+    color: #64748b;
     font-weight: 700;
-    color: #334155;
+    margin: 4px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
-  .upload-box-desc {
+  .date-badge-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.65625rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  .date-badge-pill.green-solid {
+    background: #10b981;
+    color: #ffffff;
+  }
+
+  .date-badge-pill.blue-soft {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  .date-badge-pill.gray-soft {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  /* Batch Avatar */
+  .card-batch-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-batch-avatar.purple {
+    background: #f5f3ff;
+    color: #8b5cf6;
+  }
+
+  .card-batch-avatar.blue {
+    background: #eff6ff;
+    color: #3b82f6;
+  }
+
+  .card-batch-avatar.orange {
+    background: #fff7ed;
+    color: #f97316;
+  }
+
+  /* Content Details */
+  .card-info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+  }
+
+  .card-batch-name {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.015em;
+  }
+
+  .card-topic-text {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.35;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .card-module-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+    border-radius: 6px;
     font-size: 0.6875rem;
-    color: #94a3b8;
+    font-weight: 700;
   }
 
-  /* Form Actions */
-  .form-actions-row {
-    display: grid;
-    grid-template-columns: 1fr 1.3fr;
-    gap: 10px;
+  /* Meta Chips Row */
+  .card-meta-chips-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
     margin-top: 6px;
   }
 
-  .btn-save-draft {
-    background: #ffffff;
-    color: #0062eb;
-    border: 1.5px solid #0062eb;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 0.8125rem;
+  .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.78125rem;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+  }
+
+  .meta-chip svg {
+    color: #007782;
+    flex-shrink: 0;
+  }
+
+  .meta-chip.highlight-time {
+    background: #f0fdfa;
+    border-color: #99f6e4;
+    color: #0f766e;
     font-weight: 700;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.15s ease;
   }
 
-  .btn-save-draft:hover {
-    background: #f0f7ff;
+  /* Card Footer Action Row */
+  .card-footer-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid #f1f5f9;
+    width: 100%;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
-  .btn-publish-class {
-    background: #0062eb;
+  .card-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8125rem;
+    color: #64748b;
+  }
+
+  .card-trainer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #334155;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+  }
+
+  .card-top-tag {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    padding: 2px 9px;
+    border-radius: 9999px;
+  }
+
+  .card-top-tag.green-tag {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .card-top-tag.blue-tag {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  .card-top-tag.gray-tag {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  .card-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+
+  .btn-start-class {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: #007782;
     color: #ffffff;
     border: none;
     border-radius: 8px;
-    padding: 10px;
     font-size: 0.8125rem;
     font-weight: 700;
     cursor: pointer;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0, 98, 235, 0.25);
+    text-decoration: none;
+    box-shadow: 0 1px 3px rgba(0, 119, 130, 0.25);
     transition: all 0.15s ease;
   }
 
-  .btn-publish-class:hover {
-    background: #0052cc;
+  .btn-start-class:hover {
+    background: #00606b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 119, 130, 0.3);
+  }
+
+  .btn-edit-class {
+    padding: 7px 14px;
+    background: #f0f9ff;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-edit-class:hover {
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+    color: #0369a1;
+  }
+
+  .btn-view-details {
+    padding: 7px 14px;
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+
+  .btn-view-details:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+  }
+
+  .btn-delete-class {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .btn-delete-class:hover {
+    background: #fef2f2;
+    border-color: #f87171;
+  }
+
+  .btn-start-class {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    background: #007782;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .btn-start-class:hover {
+    background: #00606b;
+  }
+
+  .btn-view-details {
+    padding: 7px 14px;
+    background: #ffffff;
+    color: #007782;
+    border: 1px solid #007782;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+
+  .btn-view-details:hover {
+    background: #f0fdfa;
+  }
+
+  .btn-more-dots {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 1rem;
+    line-height: 1;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+  }
+
+  .btn-more-dots:hover {
+    color: #0f172a;
+  }
+
+  .btn-delete-class {
+    padding: 7px 10px;
+    background: #ffffff;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-delete-class:hover {
+    background: #fef2f2;
+    border-color: #f87171;
+  }
+
+  /* =========================================================================
+     RIGHT COLUMN (WIDGETS) - CLEAN MODERN UI
+     ========================================================================= */
+  .classes-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .widget-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    box-sizing: border-box;
+  }
+
+  .widget-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .widget-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9375rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+
+  .widget-title-wrap svg {
+    color: #007782;
+  }
+
+  /* Calendar Widget */
+  .calendar-nav-arrows {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .cal-arrow-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .cal-arrow-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+
+  .calendar-month-title {
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 12px;
+  }
+
+  .calendar-grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+
+  .calendar-grid-table th {
+    padding: 6px 2px;
+    color: #94a3b8;
+    font-weight: 700;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+  }
+
+  .calendar-grid-table td {
+    padding: 4px 1px;
+    color: #334155;
+    font-weight: 500;
+    position: relative;
+    vertical-align: middle;
+  }
+
+  .calendar-grid-table td.dimmed {
+    color: #cbd5e1;
+  }
+
+  .cal-day-cell {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin: 0 auto;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.78125rem;
+    transition: all 0.15s ease;
+  }
+
+  .cal-day-cell:hover {
+    background: #e2e8f0;
+  }
+
+  .cal-day-cell.is-today {
+    background: #007782;
+    color: #ffffff !important;
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(0, 119, 130, 0.3);
+  }
+
+  .cal-day-cell.active-selected {
+    background: #0f172a !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+  }
+
+  .cal-dot-mark {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    margin: 2px auto 0;
+  }
+
+  .cal-dot-mark.green { background: #10b981; }
+  .cal-dot-mark.blue { background: #3b82f6; }
+  .cal-dot-mark.purple { background: #8b5cf6; }
+  .cal-dot-mark.pink { background: #f43f5e; }
+
+  /* Calendar Legend Grid */
+  .calendar-legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  .legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-dot.green { background: #10b981; }
+  .legend-dot.blue { background: #3b82f6; }
+  .legend-dot.purple { background: #8b5cf6; }
+  .legend-dot.pink { background: #f43f5e; }
+
+  /* =========================================================================
+     TODAY'S CLASSES MINI CARDS
+     ========================================================================= */
+  /* Timing session pills (Morning, Afternoon, Evening) */
+  .timing-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: capitalize;
+    line-height: 1.2;
+  }
+
+  .timing-pill.morning {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+  }
+
+  .timing-pill.afternoon {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+
+  .timing-pill.evening {
+    background: #faf5ff;
+    color: #7e22ce;
+    border: 1px solid #e9d5ff;
+  }
+
+  /* Today's Classes Session Filter Bar */
+  .today-session-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .session-filter-pill {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .session-filter-pill:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+
+  .session-filter-pill.active {
+    background: #007782;
+    color: #ffffff;
+    border-color: #007782;
+  }
+
+  .today-class-card-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    transition: all 0.15s ease;
+  }
+
+  .today-class-card-item:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+  }
+
+  .today-card-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .today-batch-badge {
+    font-size: 0.8125rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+
+  .today-time-badge {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #007782;
+    background: #e6f4f1;
+    padding: 2px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .today-topic-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.35;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .today-card-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed #e2e8f0;
+  }
+
+  .today-students-meta {
+    font-size: 0.6875rem;
+    color: #64748b;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-today-join {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: #007782;
+    color: #ffffff;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .btn-today-join:hover {
+    background: #00606b;
+  }
+
+  /* =========================================================================
+     QUICK ACTIONS - CLEAN STACKED LIST
+     ========================================================================= */
+  .quick-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .quick-action-tile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+    background: #f8fafc;
+  }
+
+  .quick-action-tile:hover {
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .quick-action-tile.tile-create {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+
+  .quick-action-tile.tile-upload {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+  }
+
+  .quick-action-tile.tile-live {
+    background: #faf5ff;
+    border-color: #e9d5ff;
+  }
+
+  .quick-action-tile.tile-schedule {
+    background: #fff7ed;
+    border-color: #fed7aa;
+  }
+
+  .tile-icon-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tile-create .tile-icon-circle { background: #10b981; color: #ffffff; }
+  .tile-upload .tile-icon-circle { background: #0284c7; color: #ffffff; }
+  .tile-live .tile-icon-circle { background: #8b5cf6; color: #ffffff; }
+  .tile-schedule .tile-icon-circle { background: #f97316; color: #ffffff; }
+
+  .tile-text-col {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tile-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+  }
+
+  .tile-sub {
+    font-size: 0.6875rem;
+    color: #64748b;
+    margin-top: 1px;
+  }
+
+  .tile-arrow-icon {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  /* Toast Notification */
+  .classes-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 28px;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .classes-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .classes-toast svg {
+    color: #4ade80;
+  }
+
+  @media (max-width: 1200px) {
+    .kpi-row-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 1080px) {
+    .classes-main-two-col {
+      grid-template-columns: 1fr;
+    }
+    .kpi-row-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .kpi-row-grid {
+      grid-template-columns: 1fr;
+    }
+    .classes-page-canvas {
+      padding: 16px;
+    }
+  }
+
+  /* Add Class Header Button */
+  .btn-add-class-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background: #007782;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.84375rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 119, 130, 0.25);
+    transition: all 0.15s ease;
+  }
+
+  .btn-add-class-primary:hover {
+    background: #00606b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 119, 130, 0.3);
+  }
+
+  /* Add Class Modal Styles */
+  .modal-backdrop-add-class {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .modal-backdrop-add-class.open {
+    display: flex;
+  }
+
+  .add-class-modal-box {
+    background: #ffffff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalScaleIn 0.2s ease-out;
+  }
+
+  @keyframes modalScaleIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .add-class-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .add-class-modal-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px;
+  }
+
+  .add-class-modal-subtitle {
+    font-size: 0.8125rem;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .modal-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .modal-form-row.full {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-form-row.three-col {
+    grid-template-columns: 1.2fr 1.2fr 0.8fr;
+  }
+
+  .modal-form-row.four-col {
+    grid-template-columns: 1.1fr 1fr 1fr 0.9fr;
+  }
+
+  .form-group-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .form-group-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .form-group-input, .form-group-select, .form-group-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #0f172a;
+    box-sizing: border-box;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+
+  .form-group-input:focus, .form-group-select:focus, .form-group-textarea:focus {
+    outline: none;
+    border-color: #007782;
+    box-shadow: 0 0 0 3px rgba(0, 119, 130, 0.12);
+  }
+
+  /* Live Student Preview Card in Modal */
+  .student-card-preview-section {
+    margin-top: 18px;
+    margin-bottom: 20px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .preview-section-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .student-session-preview-card {
+    background: #ffffff;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 1px 4px rgba(59, 130, 246, 0.08);
+  }
+
+  .prev-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .prev-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    color: #059669;
+    letter-spacing: 0.04em;
+  }
+
+  .prev-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+  }
+
+  .prev-starts-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  .prev-class-title {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #0a1b39;
+    margin: 0 0 6px;
+    line-height: 1.3;
+  }
+
+  .prev-class-desc {
+    font-size: 0.8125rem;
+    color: #475569;
+    line-height: 1.45;
+    margin: 0 0 12px;
+  }
+
+  .prev-meta-grid {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .prev-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .prev-meta-item svg {
+    color: #2563eb;
+  }
+
+  .modal-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .btn-modal-cancel {
+    padding: 9px 18px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.84375rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .btn-modal-cancel:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .btn-modal-submit {
+    padding: 9px 22px;
+    background: #007782;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.84375rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 119, 130, 0.25);
+    transition: all 0.15s ease;
+  }
+
+  .btn-modal-submit:hover {
+    background: #00606b;
+  }
+
+
+/* Prominent session pills (Morning, Afternoon, Evening) */
+  .timing-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 3px 10px !important;
+    border-radius: 9999px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.015em !important;
+    line-height: 1.2 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+  }
+
+  .timing-pill.morning {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fcd34d !important;
+  }
+
+  .timing-pill.afternoon {
+    background: #dbeafe !important;
+    color: #1e40af !important;
+    border: 1px solid #93c5fd !important;
+  }
+
+  .timing-pill.evening {
+    background: #f3e8ff !important;
+    color: #6b21a8 !important;
+    border: 1px solid #d8b4fe !important;
+  }
+
+  .meta-chip.meta-chip-session {
+    font-weight: 700 !important;
+  }
+
+  .meta-chip.meta-chip-session.morning {
+    background: #fffbeb !important;
+    color: #b45309 !important;
+    border-color: #fde68a !important;
+  }
+
+  .meta-chip.meta-chip-session.afternoon {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+    border-color: #bfdbfe !important;
+  }
+
+  .meta-chip.meta-chip-session.evening {
+    background: #faf5ff !important;
+    color: #7e22ce !important;
+    border-color: #e9d5ff !important;
   }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="classes-page-canvas">
 
-<div class="classes-page-layout">
-
-  <!-- =========================================================================
-       LEFT COLUMN: Classes Roster & Filters
-       ========================================================================= -->
-  <div class="classes-left-pane">
-
-    <!-- 1. Header Row (Classes Title + Create Class Button) -->
-    <div class="classes-header-row">
-      <div>
-        <h1 class="classes-title">Classes</h1>
-        <p class="classes-subtitle">Manage and create your classes</p>
+  <!-- Top Header & Breadcrumbs with + Add Class Button -->
+  <div class="classes-top-header-row">
+    <div>
+      <h1 class="classes-page-title">My Classes</h1>
+      <p class="classes-page-subtitle">Manage your classes, take attendance, share materials and engage with students.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
+      <div class="classes-breadcrumb-nav">
+        <a href="/mentor/dashboard/">Home</a>
+        <span class="sep">&gt;</span>
+        <span class="current">My Classes</span>
       </div>
-
-      <button class="btn-create-class-top" onclick="document.getElementById('createClassPanel').scrollIntoView({behavior: 'smooth'});">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span>Create Class</span>
+      <button type="button" class="btn-add-class-primary" onclick="openAddClassModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        + Add Class
       </button>
     </div>
+  </div>
 
-    <!-- 2. Filters Bar -->
-    <div class="classes-filter-bar">
-      <select class="classes-filter-select" onchange="alert('Filtering batch: ' + this.value);">
-        <option>All Batches</option>
-        <option>Batch: AI-01</option>
-        <option>Batch: AI-02</option>
-      </select>
-
-      <select class="classes-filter-select" onchange="alert('Filtering module: ' + this.value);">
-        <option>All Modules</option>
-        <option>Module 1: Python Fundamentals</option>
-        <option>Module 2: Machine Learning</option>
-        <option>Module 3: Generative AI</option>
-      </select>
-
-      <select class="classes-filter-select" onchange="alert('Filtering status: ' + this.value);">
-        <option>All Status</option>
-        <option>Published</option>
-        <option>Scheduled</option>
-        <option>Completed</option>
-      </select>
-
-      <div class="classes-date-input-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <input type="text" placeholder="Select Date" onfocus="(this.type='date')" onblur="(this.type='text')">
+  <!-- 5 KPI Summary Cards -->
+  <div class="kpi-row-grid">
+    <!-- Card 1: Today's Classes -->
+    <div class="kpi-stat-card">
+      <div class="kpi-icon-box green">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div class="kpi-meta-col">
+        <span class="kpi-meta-lbl">Today's Classes</span>
+        <span class="kpi-meta-val" id="kpiToday">{{ kpi.today|default:"0" }}</span>
+        <span class="kpi-meta-sub">Live &amp; Scheduled</span>
       </div>
     </div>
 
-    <!-- 3. Tab Pills (Today (2), Upcoming (5), Completed (12)) -->
-    <div class="classes-tab-group">
-      <button class="classes-tab-pill active" onclick="showTab('today', this);">Today (2)</button>
-      <button class="classes-tab-pill inactive" onclick="showTab('upcoming', this);">Upcoming (5)</button>
-      <button class="classes-tab-pill inactive" onclick="showTab('completed', this);">Completed (12)</button>
+    <!-- Card 2: Upcoming Classes -->
+    <div class="kpi-stat-card">
+      <div class="kpi-icon-box purple">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <div class="kpi-meta-col">
+        <span class="kpi-meta-lbl">Upcoming Classes</span>
+        <span class="kpi-meta-val" id="kpiUpcoming">{{ kpi.upcoming|default:"0" }}</span>
+        <span class="kpi-meta-sub">After Today</span>
+      </div>
     </div>
 
-    <!-- 4. Section 1: Today's Classes -->
-    <div class="class-schedule-card" id="todayClassesSection">
-      <div class="class-schedule-header">
-        <div class="class-schedule-title-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 20px; height: 20px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <div>
-            <h2 class="class-schedule-title">Today's Classes</h2>
-            <div class="class-schedule-date-text">Tue, 22 Sep 2026</div>
-          </div>
-        </div>
+    <!-- Card 3: Past Classes -->
+    <div class="kpi-stat-card">
+      <div class="kpi-icon-box amber">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="kpi-meta-col">
+        <span class="kpi-meta-lbl">Past Classes</span>
+        <span class="kpi-meta-val" id="kpiPast">{{ kpi.past|default:"0" }}</span>
+        <span class="kpi-meta-sub">This Month</span>
+      </div>
+    </div>
 
-        <button class="btn-outline-calendar-view" onclick="alert('Viewing Month Calendar View...');">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span>View Calendar</span>
+    <!-- Card 4: Completed Classes -->
+    <div class="kpi-stat-card">
+      <div class="kpi-icon-box teal">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="kpi-meta-col">
+        <span class="kpi-meta-lbl">Completed Classes</span>
+        <span class="kpi-meta-val" id="kpiCompleted">{{ kpi.completed|default:"0" }}</span>
+        <span class="kpi-meta-sub">This Month</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Total Students -->
+    <div class="kpi-stat-card">
+      <div class="kpi-icon-box blue">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="kpi-meta-col">
+        <span class="kpi-meta-lbl">Total Students</span>
+        <span class="kpi-meta-val" id="kpiStudents">{{ kpi.students|default:"0" }}</span>
+        <span class="kpi-meta-sub">Mentor's Batches</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-Column Main Content -->
+  <div class="classes-main-two-col">
+
+    <!-- LEFT COLUMN: Tabs & Class Cards -->
+    <div class="classes-left-col">
+      <!-- Tabs Bar -->
+      <div class="classes-nav-tabs-bar">
+        <button type="button" class="classes-tab-btn active" id="tabTodayBtn" onclick="switchTab('today', this)">
+          Today's Classes (<span id="todayTabBadgeCount">{{ today_classes|length }}</span>)
+        </button>
+        <button type="button" class="classes-tab-btn" id="tabUpcomingBtn" onclick="switchTab('upcoming', this)">
+          Upcoming Classes (<span id="upcomingBadgeCount">{{ upcoming_classes|length }}</span>)
+        </button>
+        <button type="button" class="classes-tab-btn" id="tabPastBtn" onclick="switchTab('past', this)">
+          Past Classes (<span id="pastBadgeCount">{{ past_classes|length }}</span>)
         </button>
       </div>
 
-      <!-- Class Items -->
-      {% for cls in today_classes %}
-      <div class="class-row-item">
-        <div class="class-row-left">
-          <div class="class-video-icon-circle" style="background-color: {{ cls.icon_bg }}; color: {{ cls.icon_color }};">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      <!-- Section Header -->
+      <div class="classes-section-header">
+        <div class="classes-section-title-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <h2 class="classes-section-title" id="classesSectionTitle">Today's Classes</h2>
+        </div>
+        <a href="#calendar" class="link-view-calendar">View Calendar &rarr;</a>
+      </div>
+
+      <!-- Class Cards Container -->
+            <!-- CALENDAR FILTER BANNER (Dynamically shown on calendar click) -->
+      <div id="calendarFilterBanner" class="cal-filter-banner" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span style="font-size: 0.84375rem; font-weight: 600; color: #0c4a6e;">
+            Showing classes for <strong id="filterDateDisplay">Today</strong>
+            <span id="filterCountBadge" style="margin-left: 6px; padding: 2px 8px; background: #0284c7; color: #fff; border-radius: 9999px; font-size: 0.71875rem; font-weight: 700;">0 Classes</span>
+          </span>
+        </div>
+        <button type="button" class="btn-clear-filter" onclick="clearDateFilter()">Show All Classes &times;</button>
+      </div>
+
+      <!-- No Classes for Selected Date -->
+      <div id="noDateClassesBox" style="display: none; text-align: center; padding: 42px 20px; background: #ffffff; border-radius: 12px; border: 1px dashed #cbd5e1; margin-bottom: 14px;">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom: 10px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <h4 style="margin: 0 0 6px; font-size: 0.9375rem; color: #334155; font-weight: 700;">No Classes Scheduled on <span id="noDateDisplay">this date</span></h4>
+        <p style="margin: 0 0 14px; font-size: 0.8125rem; color: #64748b;">You can schedule an online class session for this specific date.</p>
+        <button type="button" class="btn-add-class-primary" onclick="scheduleClassForSelectedDate()" style="display: inline-flex; margin: 0 auto; font-size: 0.8125rem;">
+          + Schedule Class on this Day
+        </button>
+      </div>
+
+      <div id="classCardsWrap" style="display: flex; flex-direction: column; gap: 14px;">
+
+                <!-- TODAY'S CLASSES LIST (Active by default) -->
+        <div id="todayClassesWrap" style="display: flex; flex-direction: column; gap: 14px;">
+          {% for item in today_classes %}
+            <div class="class-schedule-card" id="class-card-{{ item.id }}" data-date="{{ item.date|date:'Y-m-d' }}">
+              <!-- Top Content Row -->
+              <div class="card-top-content-row">
+                <!-- Date Badge -->
+                <div class="card-date-badge-box">
+                  <span class="date-badge-num">{{ item.date|date:"d" }}</span>
+                  <span class="date-badge-month">{{ item.date|date:"M" }}</span>
+                  {% if item.date == today %}
+                    <span class="date-badge-pill green-solid">Today</span>
+                  {% else %}
+                    <span class="date-badge-pill blue-soft">{{ item.date|date:"D" }}</span>
+                  {% endif %}
+                </div>
+
+                <!-- Batch Avatar -->
+                <div class="card-batch-avatar {% cycle 'purple' 'blue' 'orange' %}">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+
+                <!-- Content Details -->
+                <div class="card-info-content">
+                  <div class="card-badge-row">
+                    <span class="card-batch-name">{{ item.batch.name|default:"General Batch" }}</span>
+                    <span class="timing-pill {{ item.session_lower|default:'morning' }}">
+                      {% if item.session_lower == 'morning' %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+                      {% elif item.session_lower == 'afternoon' %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/></svg>
+                      {% else %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                      {% endif %}
+                      {{ item.session|default:"Morning" }}
+                    </span>
+                    {% if item.is_completed %}
+                      <span class="card-module-pill">Completed Session</span>
+                      <span class="card-top-tag gray-tag">Completed</span>
+                    {% elif item.is_live %}
+                      <span class="card-module-pill">Online Class</span>
+                      <span class="card-top-tag green-tag">Live Now</span>
+                    {% elif item.date == today %}
+                      <span class="card-module-pill">Online Class</span>
+                      <span class="card-top-tag green-tag">Live Today</span>
+                    {% else %}
+                      <span class="card-module-pill">Online Class</span>
+                      <span class="card-top-tag blue-tag">{{ item.date|date:"d M Y" }}</span>
+                    {% endif %}
+                  </div>
+
+                  <h3 class="card-topic-text">{{ item.subject }}</h3>
+
+                  <!-- Clean Meta Chips Row -->
+                  <div class="card-meta-chips-row">
+                    <div class="meta-chip highlight-time">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span>{{ item.time|time:"h:i A" }}{% if item.end_time %} - {{ item.end_time|time:"h:i A" }}{% endif %} ({{ item.duration|default:"90 Mins" }})</span>
+                    </div>
+
+                    <div class="meta-chip meta-chip-session {{ item.session_lower|default:'morning' }}">
+                      {% if item.session_lower == 'morning' %}
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                      {% elif item.session_lower == 'afternoon' %}
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+                      {% else %}
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                      {% endif %}
+                      <span>{{ item.session|default:"Morning" }} Batch</span>
+                    </div>
+
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                      <span>{{ item.mode|default:"Online" }}</span>
+                    </div>
+
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                      <span>{{ item.batch.students.count|default:"0" }} Students</span>
+                    </div>
+
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <span>{{ item.batch.course|default:"Generative AI & LLMs" }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Footer Action Row -->
+              <div class="card-footer-action-row">
+                <div class="card-footer-left">
+                  <span class="card-trainer-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Faculty: {{ item.trainer.name|default:user_name|default:"Lead Mentor" }}
+                  </span>
+                </div>
+
+                <div class="card-actions-row">
+                  {% if item.is_completed %}
+                    <span class="card-top-tag gray-tag" style="padding: 6px 12px; font-size: 0.8125rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      Completed
+                    </span>
+                  {% elif item.meeting_link %}
+                    <a href="{{ item.meeting_link }}" target="_blank" class="btn-start-class">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                      Start Class
+                    </a>
+                  {% else %}
+                    <button type="button" class="btn-start-class" onclick="triggerStartClass('{{ item.batch.name|escapejs }}', '{{ item.subject|escapejs }}')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                      Start Class
+                    </button>
+                  {% endif %}
+                  <button type="button" class="btn-edit-class" title="Edit Class" onclick="openEditClassModal({{ item.id }})">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Edit
+                  </button>
+                  <button type="button" class="btn-view-details" onclick="triggerViewDetails('{{ item.batch.name|escapejs }}', '{{ item.subject|escapejs }}', '{{ item.time|time:"h:i A" }}{% if item.end_time %} - {{ item.end_time|time:"h:i A" }}{% endif %}', '{{ item.batch.students.count|default:"0" }} Students', '{{ item.mode|escapejs }}')">
+                    View Details
+                  </button>
+                  <button type="button" class="btn-delete-class" title="Delete Class" onclick="confirmDeleteClass({{ item.id }}, '{{ item.subject|escapejs }}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div style="text-align: center; padding: 48px 20px; background: #ffffff; border-radius: 12px; border: 1px dashed #cbd5e1;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom: 12px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <h4 style="margin: 0 0 6px; font-size: 1rem; color: #1e293b; font-weight: 700;">No Classes Scheduled for Today</h4>
+              <p style="margin: 0 0 16px; font-size: 0.84375rem; color: #64748b;">Schedule a live online class for your students today.</p>
+              <button type="button" class="btn-add-class-primary" onclick="openAddClassModal()" style="display: inline-flex; margin: 0 auto;">
+                + Schedule Class for Today
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- UPCOMING CLASSES LIST -->
+        <div id="upcomingClassesList" style="display: none; flex-direction: column; gap: 14px;">
+          {% for item in upcoming_classes %}
+            <div class="class-schedule-card" id="class-card-{{ item.id }}" data-date="{{ item.date|date:'Y-m-d' }}">
+              <!-- Top Content Row -->
+              <div class="card-top-content-row">
+                <!-- Date Badge -->
+                <div class="card-date-badge-box">
+                  <span class="date-badge-num">{{ item.date|date:"d" }}</span>
+                  <span class="date-badge-month">{{ item.date|date:"M" }}</span>
+                  {% if item.date == today %}
+                    <span class="date-badge-pill green-solid">Today</span>
+                  {% else %}
+                    <span class="date-badge-pill blue-soft">{{ item.date|date:"D" }}</span>
+                  {% endif %}
+                </div>
+
+                <!-- Batch Avatar -->
+                <div class="card-batch-avatar {% cycle 'purple' 'blue' 'orange' %}">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+
+                <!-- Content Details -->
+                <div class="card-info-content">
+                  <div class="card-badge-row">
+                    <span class="card-batch-name">{{ item.batch.name|default:"General Batch" }}</span>
+                    <span class="timing-pill {{ item.session_lower|default:'morning' }}">
+                      {% if item.session_lower == 'morning' %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+                      {% elif item.session_lower == 'afternoon' %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/></svg>
+                      {% else %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                      {% endif %}
+                      {{ item.session|default:"Morning" }}
+                    </span>
+                    {% if item.is_completed %}
+                      <span class="card-module-pill">Completed Session</span>
+                      <span class="card-top-tag gray-tag">Completed</span>
+                    {% elif item.is_live %}
+                      <span class="card-module-pill">Online Class</span>
+                      <span class="card-top-tag green-tag">Live Now</span>
+                    {% elif item.date == today %}
+                      <span class="card-module-pill">Online Class</span>
+                      <span class="card-top-tag green-tag">Live Today</span>
+                    {% else %}
+                      <span class="card-module-pill">Online Class</span>
+                      <span class="card-top-tag blue-tag">{{ item.date|date:"d M Y" }}</span>
+                    {% endif %}
+                  </div>
+
+                  <h3 class="card-topic-text">{{ item.subject }}</h3>
+
+                  <!-- Clean Meta Chips Row -->
+                  <div class="card-meta-chips-row">
+                    <div class="meta-chip highlight-time">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span>{{ item.time|time:"h:i A" }}{% if item.end_time %} - {{ item.end_time|time:"h:i A" }}{% endif %} ({{ item.duration|default:"90 Mins" }})</span>
+                    </div>
+
+                    <div class="meta-chip meta-chip-session {{ item.session_lower|default:'morning' }}">
+                      {% if item.session_lower == 'morning' %}
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                      {% elif item.session_lower == 'afternoon' %}
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+                      {% else %}
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                      {% endif %}
+                      <span>{{ item.session|default:"Morning" }} Batch</span>
+                    </div>
+
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                      <span>{{ item.mode|default:"Online" }}</span>
+                    </div>
+
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                      <span>{{ item.batch.students.count|default:"0" }} Students</span>
+                    </div>
+
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <span>{{ item.batch.course|default:"Generative AI & LLMs" }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Footer Action Row -->
+              <div class="card-footer-action-row">
+                <div class="card-footer-left">
+                  <span class="card-trainer-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Faculty: {{ item.trainer.name|default:user_name|default:"Lead Mentor" }}
+                  </span>
+                </div>
+
+                <div class="card-actions-row">
+                  {% if item.is_completed %}
+                    <span class="card-top-tag gray-tag" style="padding: 6px 12px; font-size: 0.8125rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      Completed
+                    </span>
+                  {% elif item.meeting_link %}
+                    <a href="{{ item.meeting_link }}" target="_blank" class="btn-start-class">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                      Start Class
+                    </a>
+                  {% else %}
+                    <button type="button" class="btn-start-class" onclick="triggerStartClass('{{ item.batch.name|escapejs }}', '{{ item.subject|escapejs }}')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                      Start Class
+                    </button>
+                  {% endif %}
+                  <button type="button" class="btn-edit-class" title="Edit Class" onclick="openEditClassModal({{ item.id }})">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Edit
+                  </button>
+                  <button type="button" class="btn-view-details" onclick="triggerViewDetails('{{ item.batch.name|escapejs }}', '{{ item.subject|escapejs }}', '{{ item.time|time:"h:i A" }}{% if item.end_time %} - {{ item.end_time|time:"h:i A" }}{% endif %}', '{{ item.batch.students.count|default:"0" }} Students', '{{ item.mode|escapejs }}')">
+                    View Details
+                  </button>
+                  <button type="button" class="btn-delete-class" title="Delete Class" onclick="confirmDeleteClass({{ item.id }}, '{{ item.subject|escapejs }}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div style="text-align: center; padding: 48px 20px; background: #ffffff; border-radius: 12px; border: 1px dashed #cbd5e1;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom: 12px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <h4 style="margin: 0 0 6px; font-size: 1rem; color: #1e293b; font-weight: 700;">No Upcoming Classes Found</h4>
+              <p style="margin: 0 0 16px; font-size: 0.84375rem; color: #64748b;">Schedule future classes for your upcoming curriculum modules.</p>
+              <button type="button" class="btn-add-class-primary" onclick="openAddClassModal()" style="display: inline-flex; margin: 0 auto;">
+                + Schedule Upcoming Class
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- PAST CLASSES LIST -->
+        <div id="pastClassesList" style="display: none; flex-direction: column; gap: 14px;">
+          {% for item in past_classes %}
+            <div class="class-schedule-card" id="class-card-{{ item.id }}" data-date="{{ item.date|date:'Y-m-d' }}" style="opacity: 0.92;">
+              <!-- Top Content Row -->
+              <div class="card-top-content-row">
+                <!-- Date Badge -->
+                <div class="card-date-badge-box">
+                  <span class="date-badge-num">{{ item.date|date:"d" }}</span>
+                  <span class="date-badge-month">{{ item.date|date:"M" }}</span>
+                  <span class="date-badge-pill gray-soft">Past</span>
+                </div>
+
+                <!-- Batch Avatar -->
+                <div class="card-batch-avatar orange">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+
+                <!-- Content Details -->
+                <div class="card-info-content">
+                  <div class="card-badge-row">
+                    <span class="card-batch-name">{{ item.batch.name|default:"General Batch" }}</span>
+                    <span class="timing-pill {{ item.session_lower|default:'morning' }}">
+                      {% if item.session_lower == 'morning' %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+                      {% elif item.session_lower == 'afternoon' %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/></svg>
+                      {% else %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                      {% endif %}
+                      {{ item.session|default:"Morning" }}
+                    </span>
+                    <span class="card-module-pill">Completed Session</span>
+                    <span class="card-top-tag gray-tag">Completed</span>
+                  </div>
+
+                  <h3 class="card-topic-text">{{ item.subject }}</h3>
+
+                  <!-- Clean Meta Chips Row -->
+                  <div class="card-meta-chips-row">
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span>{{ item.time|time:"h:i A" }}{% if item.end_time %} - {{ item.end_time|time:"h:i A" }}{% endif %}</span>
+                    </div>
+
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                      <span>{{ item.mode|default:"Online" }}</span>
+                    </div>
+
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                      <span>{{ item.batch.students.count|default:"0" }} Students</span>
+                    </div>
+
+                    <div class="meta-chip">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <span>{{ item.batch.course|default:"Generative AI & LLMs" }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Footer Action Row -->
+              <div class="card-footer-action-row">
+                <div class="card-footer-left">
+                  <span class="card-trainer-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Faculty: {{ item.trainer.name|default:user_name|default:"Lead Mentor" }}
+                  </span>
+                </div>
+
+                <div class="card-actions-row">
+                  <button type="button" class="btn-edit-class" title="Edit Class" onclick="openEditClassModal({{ item.id }})">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Edit
+                  </button>
+                  <button type="button" class="btn-view-details" onclick="triggerViewDetails('{{ item.batch.name|escapejs }}', '{{ item.subject|escapejs }}', '{{ item.time|time:"h:i A" }}{% if item.end_time %} - {{ item.end_time|time:"h:i A" }}{% endif %}', '{{ item.batch.students.count|default:"0" }} Students', '{{ item.mode|escapejs }}')">
+                    View Details
+                  </button>
+                  <button type="button" class="btn-delete-class" title="Delete Record" onclick="confirmDeleteClass({{ item.id }}, '{{ item.subject|escapejs }}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="empty-state-box" style="text-align: center; padding: 48px 20px; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">
+              <p style="margin: 0; font-size: 0.875rem; color: #64748b;">No past classes recorded yet.</p>
+            </div>
+          {% endfor %}
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Stacked Widgets -->
+    <div class="classes-right-col">
+
+      <!-- Widget 1: Calendar -->
+      <div class="widget-card" id="calendar">
+        <div class="widget-header-row">
+          <div class="widget-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Calendar</span>
           </div>
-          <div>
-            <div class="class-row-title">{{ cls.title }}</div>
-            <div class="class-row-module">{{ cls.module }}</div>
-            <span class="class-batch-badge-pill">{{ cls.batch }}</span>
+          <div class="calendar-nav-arrows">
+            <button type="button" class="cal-arrow-btn" onclick="prevMonth()" title="Previous Month">&lang;</button>
+            <button type="button" class="cal-arrow-btn" onclick="nextMonth()" title="Next Month">&rang;</button>
           </div>
         </div>
 
-        <div class="class-meta-details">
-          <div class="class-meta-line">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span>{{ cls.date }}</span>
+        <div class="calendar-month-title" id="calMonthTitle">September 2026</div>
+
+        <table class="calendar-grid-table">
+          <thead>
+            <tr>
+              <th>Sun</th>
+              <th>Mon</th>
+              <th>Tue</th>
+              <th>Wed</th>
+              <th>Thu</th>
+              <th>Fri</th>
+              <th>Sat</th>
+            </tr>
+          </thead>
+          <tbody id="calTableBody">
+            <!-- Dynamically populated by renderCalendar() -->
+          </tbody>
+        </table>
+
+        <div class="calendar-legend-grid">
+          <div class="legend-item">
+            <span class="legend-dot green"></span>
+            <span>Class Today</span>
           </div>
-          <div class="class-meta-line time">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>{{ cls.time }}</span>
+          <div class="legend-item">
+            <span class="legend-dot blue"></span>
+            <span>Upcoming Class</span>
           </div>
-          <div class="class-meta-line">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span>{{ cls.mode }}</span>
+          <div class="legend-item">
+            <span class="legend-dot purple"></span>
+            <span>Completed</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot pink"></span>
+            <span>Holiday</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Today's Classes -->
+      <div class="widget-card">
+        <div class="widget-header-row" style="margin-bottom: 10px;">
+          <div class="widget-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Today's Classes (<span id="todayCountBadge">{{ today_classes|length }}</span>)</span>
           </div>
         </div>
 
-        <div>
-          <span class="class-badge-status published">{{ cls.status }}</span>
-        </div>
-
-        <div class="class-row-actions">
-          <button class="btn-outline-class-sm" onclick="openClassDetailModal('{{ cls.title|escapejs }}', '{{ cls.module|escapejs }}', '{{ cls.batch|escapejs }}', '{{ cls.time|escapejs }}', '{{ cls.mode|escapejs }}', '{{ cls.meeting_link|escapejs }}', '{{ cls.objective|escapejs }}');">
-            View
+        <!-- Session Filter Tabs (All / Morning / Afternoon / Evening) -->
+        <div class="today-session-filter-bar">
+          <button type="button" class="session-filter-pill active" onclick="filterTodaySession('all', this)">All</button>
+          <button type="button" class="session-filter-pill" onclick="filterTodaySession('morning', this)">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+            Morning
           </button>
-          <button class="btn-outline-class-sm" onclick="editClassInPanel('{{ cls.title|escapejs }}', '{{ cls.batch|escapejs }}', '{{ cls.module|escapejs }}', '{{ cls.date|escapejs }}', '10:00 AM', '11:30 AM', '{{ cls.meeting_link|escapejs }}', '{{ cls.objective|escapejs }}');">
-            Edit
+          <button type="button" class="session-filter-pill" onclick="filterTodaySession('afternoon', this)">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+            Afternoon
           </button>
-          <a href="{% url 'mentor_attendance' %}" class="btn-solid-attendance-sm">
-            Take Attendance
+          <button type="button" class="session-filter-pill" onclick="filterTodaySession('evening', this)">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            Evening
+          </button>
+        </div>
+
+        <div id="todayClassesList">
+        {% for item in today_classes %}
+          <div class="today-class-card-item" data-session="{{ item.session_lower|default:'morning' }}">
+            <div class="today-card-top-row">
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span class="today-batch-badge">{{ item.batch.name|default:"General Batch" }}</span>
+                <span class="timing-pill {{ item.session_lower|default:'morning' }}">
+                  {% if item.session_lower == 'morning' %}
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+                  {% elif item.session_lower == 'afternoon' %}
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/></svg>
+                  {% else %}
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                  {% endif %}
+                  {{ item.session|default:"Morning" }}
+                </span>
+                {% if item.is_completed %}
+                  <span class="card-top-tag gray-tag" style="font-size: 0.625rem; padding: 1px 7px;">Completed</span>
+                {% elif item.is_live %}
+                  <span class="card-top-tag green-tag" style="font-size: 0.625rem; padding: 1px 7px;">Live Now</span>
+                {% else %}
+                  <span class="card-top-tag blue-tag" style="font-size: 0.625rem; padding: 1px 7px;">Scheduled</span>
+                {% endif %}
+              </div>
+              <span class="today-time-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                {{ item.time|time:"h:i A" }}
+              </span>
+            </div>
+
+            <h4 class="today-topic-title" title="{{ item.subject }}">{{ item.subject }}</h4>
+
+            <div class="today-card-footer-row">
+              <div class="today-students-meta">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>{{ item.batch.students.count|default:"0" }} Students enrolled</span>
+              </div>
+
+              {% if item.is_completed %}
+                <span style="font-size: 0.6875rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 3px 8px; border-radius: 6px;">Ended</span>
+              {% elif item.meeting_link %}
+                <a href="{{ item.meeting_link }}" target="_blank" class="btn-today-join" title="Join Live Classroom">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                  Join
+                </a>
+              {% else %}
+                <button type="button" class="btn-today-join" onclick="triggerStartClass('{{ item.batch.name|escapejs }}', '{{ item.subject|escapejs }}')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                  Start
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <div style="padding: 16px; text-align: center; color: #64748b; font-size: 0.8125rem;">
+            No classes scheduled for today.
+          </div>
+        {% endfor %}
+        </div>
+
+        <div id="todaySessionEmptyNotice" style="display: none; padding: 14px; text-align: center; color: #64748b; font-size: 0.8125rem;">
+          No classes scheduled for this session today.
+        </div>
+      </div>
+
+      <!-- Widget 3: Quick Actions -->
+      <div class="widget-card">
+        <div class="widget-header-row">
+          <div class="widget-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <span>Quick Actions</span>
+          </div>
+        </div>
+
+        <div class="quick-actions-list">
+          <!-- Create Class -->
+          <a href="javascript:void(0)" class="quick-action-tile tile-create" onclick="openAddClassModal()">
+            <div class="tile-icon-circle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div class="tile-text-col">
+              <span class="tile-title">Create Class</span>
+              <span class="tile-sub">Schedule new live online class</span>
+            </div>
+            <span class="tile-arrow-icon">&rarr;</span>
+          </a>
+
+          <!-- Upload Material -->
+          <a href="javascript:void(0)" class="quick-action-tile tile-upload" onclick="triggerUploadMaterial()">
+            <div class="tile-icon-circle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="tile-text-col">
+              <span class="tile-title">Upload Material</span>
+              <span class="tile-sub">Share syllabus notes &amp; slides</span>
+            </div>
+            <span class="tile-arrow-icon">&rarr;</span>
+          </a>
+
+          <!-- Start Live Class -->
+          <a href="javascript:void(0)" class="quick-action-tile tile-live" onclick="triggerStartClass('GenAI-Gamma', 'Live Room')">
+            <div class="tile-icon-circle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </div>
+            <div class="tile-text-col">
+              <span class="tile-title">Start Live Class</span>
+              <span class="tile-sub">Launch interactive meeting room</span>
+            </div>
+            <span class="tile-arrow-icon">&rarr;</span>
+          </a>
+
+          <!-- View Schedule -->
+          <a href="#calendar" class="quick-action-tile tile-schedule">
+            <div class="tile-icon-circle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="tile-text-col">
+              <span class="tile-title">View Schedule</span>
+              <span class="tile-sub">Browse calendar timetable</span>
+            </div>
+            <span class="tile-arrow-icon">&rarr;</span>
           </a>
         </div>
       </div>
-      {% endfor %}
-    </div>
 
-    <!-- 5. Section 2: Upcoming Classes -->
-    <div class="class-schedule-card" id="upcomingClassesSection">
-      <div class="class-schedule-header">
-        <div class="class-schedule-title-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 20px; height: 20px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <div>
-            <h2 class="class-schedule-title">Upcoming Classes</h2>
-          </div>
-        </div>
-
-        <a href="#" class="nim-link-view-all" onclick="alert('Viewing all upcoming classes');">View All</a>
-      </div>
-
-      <!-- Upcoming Items -->
-      {% for cls in upcoming_classes %}
-      <div class="class-row-item">
-        <div class="class-row-left">
-          <div class="class-video-icon-circle" style="background-color: {{ cls.icon_bg }}; color: {{ cls.icon_color }};">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          </div>
-          <div>
-            <div class="class-row-title">{{ cls.title }}</div>
-            <div class="class-row-module">{{ cls.module }}</div>
-            <span class="class-batch-badge-pill">{{ cls.batch }}</span>
-          </div>
-        </div>
-
-        <div class="class-meta-details">
-          <div class="class-meta-line">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span>{{ cls.date }}</span>
-          </div>
-          <div class="class-meta-line time">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>{{ cls.time }}</span>
-          </div>
-          <div class="class-meta-line">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span>{{ cls.mode }}</span>
-          </div>
-        </div>
-
-        <div>
-          <span class="class-badge-status scheduled">{{ cls.status }}</span>
-        </div>
-
-        <div class="class-row-actions">
-          <button class="btn-outline-class-sm" onclick="openClassDetailModal('{{ cls.title|escapejs }}', '{{ cls.module|escapejs }}', '{{ cls.batch|escapejs }}', '{{ cls.time|escapejs }}', '{{ cls.mode|escapejs }}', '{{ cls.meeting_link|escapejs }}', '{{ cls.objective|escapejs }}');">
-            View
-          </button>
-          <button class="btn-outline-class-sm" onclick="editClassInPanel('{{ cls.title|escapejs }}', '{{ cls.batch|escapejs }}', '{{ cls.module|escapejs }}', '{{ cls.date|escapejs }}', '10:00 AM', '11:30 AM', '{{ cls.meeting_link|escapejs }}', '{{ cls.objective|escapejs }}');">
-            Edit
-          </button>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-
-    <!-- 6. Section 3: Completed Classes -->
-    <div class="class-schedule-card" id="completedClassesSection">
-      <div class="class-schedule-header">
-        <div class="class-schedule-title-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 20px; height: 20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          <div>
-            <h2 class="class-schedule-title">Completed Classes</h2>
-          </div>
-        </div>
-
-        <a href="#" class="nim-link-view-all" onclick="alert('Viewing all completed classes');">View All</a>
-      </div>
-
-      <!-- Completed Item -->
-      {% for cls in completed_classes %}
-      <div class="class-row-item">
-        <div class="class-row-left">
-          <div class="class-video-icon-circle" style="background-color: {{ cls.icon_bg }}; color: {{ cls.icon_color }};">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          </div>
-          <div>
-            <div class="class-row-title">{{ cls.title }}</div>
-            <div class="class-row-module">{{ cls.module }}</div>
-            <span class="class-batch-badge-pill">{{ cls.batch }}</span>
-          </div>
-        </div>
-
-        <div class="class-meta-details">
-          <div class="class-meta-line">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span>{{ cls.date }}</span>
-          </div>
-          <div class="class-meta-line time">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>{{ cls.time }}</span>
-          </div>
-          <div class="class-meta-line">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span>{{ cls.mode }}</span>
-          </div>
-        </div>
-
-        <div>
-          <span class="class-badge-status completed">{{ cls.status }}</span>
-        </div>
-
-        <div class="class-row-actions">
-          <button class="btn-outline-class-sm" onclick="openClassDetailModal('{{ cls.title|escapejs }}', '{{ cls.module|escapejs }}', '{{ cls.batch|escapejs }}', '{{ cls.time|escapejs }}', '{{ cls.mode|escapejs }}', '{{ cls.meeting_link|escapejs }}', '{{ cls.objective|escapejs }}');">
-            View
-          </button>
-          <button class="btn-outline-class-sm" onclick="editClassInPanel('{{ cls.title|escapejs }}', '{{ cls.batch|escapejs }}', '{{ cls.module|escapejs }}', '{{ cls.date|escapejs }}', '10:00 AM', '11:30 AM', '{{ cls.meeting_link|escapejs }}', '{{ cls.objective|escapejs }}');">
-            Edit
-          </button>
-        </div>
-      </div>
-      {% endfor %}
     </div>
 
   </div>
+</div>
 
-  <!-- =========================================================================
-       RIGHT COLUMN: Create Class Form Panel Card
-       ========================================================================= -->
-  <aside class="create-class-panel" id="createClassPanel">
-    <div class="create-class-header">
+<!-- Toast Feedback -->
+<div class="classes-toast" id="classesToast">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span id="classesToastMsg">Action completed successfully!</span>
+</div>
+
+<!-- View Details Modal -->
+<div class="modal-backdrop" id="classDetailsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: #ffffff; border-radius: 16px; width: 90%; max-width: 500px; padding: 26px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative;">
+    <button type="button" onclick="closeDetailsModal()" style="position: absolute; top: 18px; right: 18px; background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; color: #64748b;">&times;</button>
+    <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0 0 16px;">Class Session Details</h3>
+    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; font-size: 0.875rem;">
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+        <span style="color: #64748b; font-weight: 600;">Batch</span>
+        <span id="modalDetailBatch" style="font-weight: 700; color: #007782;">GenAI-Gamma</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+        <span style="color: #64748b; font-weight: 600;">Topic</span>
+        <span id="modalDetailTopic" style="font-weight: 600; color: #0f172a;">Prompt Engineering - Part 1</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+        <span style="color: #64748b; font-weight: 600;">Schedule</span>
+        <span id="modalDetailTime" style="color: #334155;">04:30 PM - 05:30 PM</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+        <span style="color: #64748b; font-weight: 600;">Enrolled</span>
+        <span id="modalDetailStudents" style="color: #334155;">10 Students</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+        <span style="color: #64748b; font-weight: 600;">Meeting Mode</span>
+        <span id="modalDetailMode" style="color: #0284c7; font-weight: 600;">Online Class</span>
+      </div>
+    </div>
+    <button type="button" onclick="closeDetailsModal()" style="width: 100%; padding: 10px; background: #007782; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Close Details</button>
+  </div>
+</div>
+
+<!-- =========================================================================
+     ADD NEW CLASS MODAL (MATCHING STUDENT PAGE LIVE CARD FIELDS)
+     ========================================================================= -->
+<div class="modal-backdrop-add-class" id="addClassModal">
+  <div class="add-class-modal-box">
+    <div class="add-class-modal-header">
       <div>
-        <h2 class="create-class-title">Create Class</h2>
-        <p class="create-class-subtext">
-          Create and publish a class for your batch. Students will see it after publishing.
-        </p>
+        <h3 class="add-class-modal-title">Schedule New Class</h3>
+        <p class="add-class-modal-subtitle">Configure class details matching the live student portal card.</p>
       </div>
-      <button class="btn-close-panel" onclick="resetForm();" title="Reset Form">&times;</button>
+      <button type="button" class="btn-more-dots" onclick="closeAddClassModal()" style="font-size: 1.5rem; line-height: 1;">&times;</button>
     </div>
 
-    <form class="create-class-form" onsubmit="event.preventDefault(); alert('Class published successfully and dispatched to enrolled students!');">
-      
-      <!-- Batch -->
-      <div class="form-group-item">
-        <label class="form-label-text">Batch <span class="req">*</span></label>
-        <select class="form-input-field" id="formBatch">
-          <option selected>AI-01</option>
-          <option>AI-02</option>
-        </select>
-      </div>
-
-      <!-- Month / Module / Topic -->
-      <div class="form-group-item">
-        <label class="form-label-text">Month / Module / Topic <span class="req">*</span></label>
-        <select class="form-input-field" id="formModule">
-          <option selected>Module 1 - Python Fundamentals</option>
-          <option>Module 2 - Machine Learning</option>
-          <option>Module 3 - Generative AI</option>
-        </select>
-      </div>
-
-      <!-- Class Title -->
-      <div class="form-group-item">
-        <label class="form-label-text">Class Title <span class="req">*</span></label>
-        <input type="text" class="form-input-field" id="formTitle" value="Python Functions and Modules" required>
-      </div>
-
-      <!-- Date & Time Grid -->
-      <div class="time-date-grid-3">
-        <div class="form-group-item">
-          <label class="form-label-text">Date <span class="req">*</span></label>
-          <input type="text" class="form-input-field" id="formDate" value="22 Sep 2026" required>
+    <!-- Form Fields -->
+    <form id="addClassForm" onsubmit="event.preventDefault(); submitAddClass();">
+      <input type="hidden" id="editClassId" value="">
+      <!-- 1. Curriculum Module Dropdown -->
+      <div class="modal-form-row">
+        <div class="form-group-field">
+          <label class="form-group-label">Curriculum Module *</label>
+          <select class="form-group-select" id="inpClassModule" onchange="onModuleChange()" required>
+            <option value="">-- All Modules / Select Topic --</option>
+            {% for m in course_modules %}
+              <option value="{{ m.id }}" {% if forloop.first %}selected{% endif %}>Module {{ m.order }}: {{ m.name }}</option>
+            {% endfor %}
+          </select>
         </div>
-        <div class="form-group-item">
-          <label class="form-label-text">Start Time <span class="req">*</span></label>
-          <input type="text" class="form-input-field" id="formStartTime" value="10:00 AM" required>
-        </div>
-        <div class="form-group-item">
-          <label class="form-label-text">End Time <span class="req">*</span></label>
-          <input type="text" class="form-input-field" id="formEndTime" value="11:30 AM" required>
+
+        <!-- 2. Curriculum Topic Dropdown (Filtered by Module or Grouped) -->
+        <div class="form-group-field">
+          <label class="form-group-label">Topic / Class *</label>
+          <select class="form-group-select" id="inpClassTopic" onchange="onTopicChange()" required>
+            <option value="">-- Select Topic / Class --</option>
+          </select>
         </div>
       </div>
 
-      <!-- Trainer -->
-      <div class="form-group-item">
-        <label class="form-label-text">Trainer <span class="req">*</span></label>
-        <input type="text" class="form-input-field disabled" value="Arun Kumar (You)" readonly>
+      <!-- 3. Batch & Trainer -->
+      <div class="modal-form-row">
+        <div class="form-group-field">
+          <label class="form-group-label">Target Batch *</label>
+          <select class="form-group-select" id="inpClassBatch" onchange="syncPreview()" required>
+            {% for b in batches %}
+              <option value="{{ b.id }}" data-timing="{{ b.timing|default:'Morning' }}" {% if forloop.first %}selected{% endif %}>{{ b.name }} ({{ b.timing|default:"Morning" }})</option>
+            {% empty %}
+              <option value="">No Batch Available</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-group-label">Faculty Trainer / Mentor *</label>
+          <input type="text" class="form-group-input" id="inpClassTrainer" required
+                 value="{{ user_name|default:'Mentor' }}"
+                 placeholder="Mentor Name"
+                 oninput="syncPreview()">
+        </div>
       </div>
 
-      <!-- Mode -->
-      <div class="form-group-item">
-        <label class="form-label-text">Mode <span class="req">*</span></label>
-        <select class="form-input-field" id="formMode">
-          <option selected>Online (Google Meet)</option>
-          <option>Hybrid (In-Campus + Zoom)</option>
-          <option>Offline Campus Lab</option>
-        </select>
+      <!-- 4. Description / Deep Dive -->
+      <div class="modal-form-row full">
+        <div class="form-group-field">
+          <label class="form-group-label">Description &amp; Syllabus Overview *</label>
+          <textarea class="form-group-textarea" id="inpClassDesc" rows="2" required
+                    placeholder="Topic description and key learning objectives will automatically populate here..."
+                    oninput="syncPreview()"></textarea>
+        </div>
       </div>
 
-      <!-- Meeting Link -->
-      <div class="form-group-item">
-        <label class="form-label-text">Meeting Link <span class="req">*</span></label>
-        <input type="url" class="form-input-field" id="formLink" value="https://meet.google.com/xyz-abcd-efg" required>
+      <!-- 5. Date, Start Time, End Time & Auto Duration -->
+      <div class="modal-form-row four-col">
+        <div class="form-group-field">
+          <label class="form-group-label">Class Date *</label>
+          <input type="date" class="form-group-input" id="inpClassDate" value="{{ today|date:'Y-m-d' }}" min="{{ today|date:'Y-m-d' }}" required onchange="calculateDurationAndSync()">
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-group-label">Start Time *</label>
+          <input type="time" class="form-group-input" id="inpClassStartTime" value="10:00" required onchange="calculateDurationAndSync()">
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-group-label">End Time *</label>
+          <input type="time" class="form-group-input" id="inpClassEndTime" value="11:30" required onchange="calculateDurationAndSync()">
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-group-label">Duration</label>
+          <input type="text" class="form-group-input" id="inpClassDuration" value="90 Mins" readonly style="background: #f8fafc; color: #64748b; font-weight: 600;" placeholder="Auto-calculated">
+        </div>
       </div>
 
-      <!-- Objective -->
-      <div class="form-group-item">
-        <label class="form-label-text">Objective <span class="req">*</span></label>
-        <textarea rows="2" class="form-input-field" id="formObjective" required>Learn Python functions, parameters, return values and practical examples.</textarea>
+      <!-- 6. Delivery Mode (Online Class Only) & Meeting Link -->
+      <div class="modal-form-row">
+        <div class="form-group-field">
+          <label class="form-group-label">Class Type *</label>
+          <input type="text" class="form-group-input" id="inpClassMode" value="Online Class" readonly style="background: #f1f5f9; cursor: not-allowed; font-weight: 600; color: #007782;">
+        </div>
+
+        <div class="form-group-field">
+          <label class="form-group-label">Meeting Link / Room *</label>
+          <input type="url" class="form-group-input" id="inpClassLink" required
+                 value=""
+                 placeholder="https://meet.google.com/abc-defg-hij">
+        </div>
       </div>
 
-      <!-- Materials (Optional) -->
-      <div class="form-group-item">
-        <label class="form-label-text">Materials <span style="color: #94a3b8; font-weight: 500;">(Optional)</span></label>
-        <div class="upload-attachment-box" onclick="alert('Select slides, notes or PDF from your computer...');">
-          <svg class="upload-box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-          <div>
-            <div class="upload-box-title">Upload Materials (Slides, Notes, PDF)</div>
-            <div class="upload-box-desc">PDF, PPT, DOC (Max 10MB)</div>
+      <!-- Live Student Portal Card Preview -->
+      <div class="student-card-preview-section">
+        <div class="preview-section-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Student Page Card Preview
+        </div>
+
+        <div class="student-session-preview-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;">
+            <div style="flex: 1;">
+              <div class="prev-badge-row">
+                <span class="prev-live-badge">
+                  <span class="prev-live-dot"></span>
+                  NEXT LIVE SESSION
+                </span>
+                <span class="prev-starts-text" id="prevStartsText">Starts Today at 10:00 AM IST (in 25 mins)</span>
+              </div>
+
+              <h4 class="prev-class-title" id="prevClassTitle">NLP &amp; Transformers: Multi-Head Self-Attention Mechanisms</h4>
+              <p class="prev-class-desc" id="prevClassDesc">Week 14 deep dive: Scaled Dot-Product Attention, Query-Key-Value matrix derivations, positional embeddings, and PyTorch coding walkthrough.</p>
+
+              <div class="prev-meta-grid">
+                <span class="prev-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span>Trainer: <strong id="prevTrainer">Priya Sharma (Lead AI Mentor)</strong></span>
+                </span>
+                <span class="prev-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span id="prevTimeDur">10:00 AM – 11:30 AM (90 Mins)</span>
+                </span>
+                <span class="prev-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                  <span id="prevMode">Online (Google Meet Interactive)</span>
+                </span>
+              </div>
+
+              <div style="margin-top: 8px; font-size: 0.75rem; color: #d97706; display: flex; align-items: center; gap: 5px; font-weight: 600;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>Batch: <span id="prevBatch">AI Cohort 2026</span></span>
+              </div>
+            </div>
+
+            <!-- Join CTA Button -->
+            <div style="flex-shrink: 0; padding-top: 14px;">
+              <span style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: #2563eb; color: #ffffff; border-radius: 8px; font-size: 0.8125rem; font-weight: 700;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                Join Class Now &rarr;
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Recording (Optional) -->
-      <div class="form-group-item">
-        <label class="form-label-text">Recording <span style="color: #94a3b8; font-weight: 500;">(Optional)</span></label>
-        <div class="upload-attachment-box" onclick="alert('Upload class recording MP4...');">
-          <svg class="upload-box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-          <div>
-            <div class="upload-box-title">Upload Recording (After Class)</div>
-            <div class="upload-box-desc">MP4, Video (Max 500MB)</div>
-          </div>
-        </div>
+      <!-- Action Buttons -->
+      <div class="modal-footer-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeAddClassModal()">Cancel</button>
+        <button type="submit" class="btn-modal-submit">Publish &amp; Schedule Class</button>
       </div>
-
-      <!-- Action Buttons: Save Draft & Publish Class -->
-      <div class="form-actions-row">
-        <button type="button" class="btn-save-draft" onclick="alert('Class draft saved successfully!');">Save Draft</button>
-        <button type="submit" class="btn-publish-class">Publish Class</button>
-      </div>
-
     </form>
-  </aside>
-
-</div>
-
-<!-- Modal: Class Detail View -->
-<div class="mentor-modal-backdrop" id="classDetailModal">
-  <div class="mentor-modal-box">
-    <div style="padding: 18px 24px; border-bottom: 1px solid var(--nim-border-subtle); display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0a1b39;" id="modalViewTitle">Class Information</h3>
-      <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="document.getElementById('classDetailModal').classList.remove('active');">&times;</button>
-    </div>
-    <div style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span class="class-batch-badge-pill" id="modalViewBatch">Batch: AI-01</span>
-        <span style="font-size: 0.8125rem; color: #64748b; font-weight: 600;" id="modalViewModule">Module 1</span>
-      </div>
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
-        <div style="font-size: 0.78125rem; color: #475569;"><strong>Time:</strong> <span id="modalViewTime">10:00 AM – 11:30 AM</span></div>
-        <div style="font-size: 0.78125rem; color: #475569;"><strong>Mode:</strong> <span id="modalViewMode">Online (Google Meet)</span></div>
-        <div style="font-size: 0.78125rem; color: #475569;"><strong>Meeting Link:</strong> <a href="#" id="modalViewLink" target="_blank" style="color: #0062eb; font-weight: 700;">https://meet.google.com/xyz-abcd-efg</a></div>
-        <div style="font-size: 0.78125rem; color: #475569;"><strong>Objective:</strong> <span id="modalViewObjective">Learn Python functions, parameters, return values and practical examples.</span></div>
-      </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
-        <button type="button" class="btn-outline-class-sm" onclick="document.getElementById('classDetailModal').classList.remove('active');">Close</button>
-        <a href="https://meet.google.com/xyz-abcd-efg" target="_blank" class="btn-solid-attendance-sm" style="display: inline-flex; align-items: center; gap: 6px;">
-          <span>Join Class</span>
-        </a>
-      </div>
-    </div>
   </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-function showTab(tabName, buttonEl) {
-  document.querySelectorAll('.classes-tab-pill').forEach(btn => {
-    btn.classList.remove('active');
-    btn.classList.add('inactive');
-  });
-  buttonEl.classList.remove('inactive');
-  buttonEl.classList.add('active');
+  // Injected Admin Curriculum Modules & Topics
+  const curriculumModules = {{ modules_json|safe }};
+  // Injected Class Schedules for dynamic calendar
+  const calendarClasses = {{ calendar_classes_json|safe }};
 
-  const todaySec = document.getElementById('todayClassesSection');
-  const upSec = document.getElementById('upcomingClassesSection');
-  const compSec = document.getElementById('completedClassesSection');
+  // Calendar State
+  const TODAY_STR = "{{ today|date:'Y-m-d' }}";
+  const todayParts = TODAY_STR.split('-');
+  const TODAY_DATE = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
 
-  if (tabName === 'today') {
-    todaySec.style.display = 'block';
-    upSec.style.display = 'none';
-    compSec.style.display = 'none';
-  } else if (tabName === 'upcoming') {
-    todaySec.style.display = 'none';
-    upSec.style.display = 'block';
-    compSec.style.display = 'none';
-  } else if (tabName === 'completed') {
-    todaySec.style.display = 'none';
-    upSec.style.display = 'none';
-    compSec.style.display = 'block';
+  let currentCalYear = TODAY_DATE.getFullYear();
+  let currentCalMonth = TODAY_DATE.getMonth(); // 0-indexed
+  let selectedCalDateStr = null;
+
+  const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  function showToast(msg) {
+    const toast = document.getElementById('classesToast');
+    if (!toast) return;
+    document.getElementById('classesToastMsg').innerText = msg;
+    toast.classList.add('show');
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2800);
   }
-}
 
-function openClassDetailModal(title, module, batch, time, mode, link, objective) {
-  document.getElementById('modalViewTitle').textContent = title;
-  document.getElementById('modalViewModule').textContent = module;
-  document.getElementById('modalViewBatch').textContent = batch;
-  document.getElementById('modalViewTime').textContent = time;
-  document.getElementById('modalViewMode').textContent = mode;
-  document.getElementById('modalViewLink').textContent = link;
-  document.getElementById('modalViewLink').href = link;
-  document.getElementById('modalViewObjective').textContent = objective;
-  document.getElementById('classDetailModal').classList.add('active');
-}
+  function switchTab(tabName, btn) {
+    document.querySelectorAll('.classes-tab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
 
-function editClassInPanel(title, batch, module, date, start, end, link, objective) {
-  document.getElementById('formTitle').value = title;
-  document.getElementById('formDate').value = date;
-  document.getElementById('formStartTime').value = start;
-  document.getElementById('formEndTime').value = end;
-  document.getElementById('formLink').value = link;
-  document.getElementById('formObjective').value = objective;
-  document.getElementById('createClassPanel').scrollIntoView({behavior: 'smooth'});
-}
+    const todayWrap = document.getElementById('todayClassesWrap');
+    const upcomingWrap = document.getElementById('upcomingClassesList');
+    const pastWrap = document.getElementById('pastClassesList');
+    const titleEl = document.getElementById('classesSectionTitle');
 
-function resetForm() {
-  document.getElementById('formTitle').value = '';
-  document.getElementById('formObjective').value = '';
-}
+    // Clear calendar date filter if switching tabs manually
+    if (typeof clearDateFilter === 'function') clearDateFilter(false);
+
+    if (todayWrap) todayWrap.style.display = 'none';
+    if (upcomingWrap) upcomingWrap.style.display = 'none';
+    if (pastWrap) pastWrap.style.display = 'none';
+
+    if (tabName === 'today') {
+      if (todayWrap) todayWrap.style.display = 'flex';
+      if (titleEl) titleEl.innerText = "Today's Classes";
+      showToast("Viewing Today's Classes");
+    } else if (tabName === 'upcoming') {
+      if (upcomingWrap) upcomingWrap.style.display = 'flex';
+      if (titleEl) titleEl.innerText = 'Upcoming Classes';
+      showToast('Viewing Upcoming Classes');
+    } else if (tabName === 'past') {
+      if (pastWrap) pastWrap.style.display = 'flex';
+      if (titleEl) titleEl.innerText = 'Past Classes';
+      showToast('Viewing Past Classes');
+    }
+  }
+
+  function triggerStartClass(batch, topic, link) {
+    showToast(`Launching Live Classroom for ${batch}...`);
+    setTimeout(() => {
+      window.open(link || 'https://meet.google.com', '_blank');
+    }, 500);
+  }
+
+  function triggerViewDetails(batch, topic, time, students, mode) {
+    const elBatch = document.getElementById('modalDetailBatch');
+    const elTopic = document.getElementById('modalDetailTopic');
+    const elTime = document.getElementById('modalDetailTime');
+    const elStudents = document.getElementById('modalDetailStudents');
+    const elMode = document.getElementById('modalDetailMode');
+    if (elBatch) elBatch.innerText = batch;
+    if (elTopic) elTopic.innerText = topic;
+    if (elTime) elTime.innerText = time;
+    if (elStudents) elStudents.innerText = students;
+    if (elMode) elMode.innerText = mode || 'Online Class';
+    const m = document.getElementById('classDetailsModal');
+    if (m) m.style.display = 'flex';
+  }
+
+  function closeDetailsModal() {
+    const m = document.getElementById('classDetailsModal');
+    if (m) m.style.display = 'none';
+  }
+
+  function formatTime12H(time24) {
+    if (!time24) return '';
+    const parts = time24.split(':');
+    if (parts.length < 2) return time24;
+    let h = parseInt(parts[0], 10);
+    const m = parts[1];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${m} ${ampm}`;
+  }
+
+  function convert12to24(timeStr) {
+    if (!timeStr) return '10:00';
+    if (/^\d{2}:\d{2}$/.test(timeStr.trim())) return timeStr.trim();
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+    if (!match) return '10:00';
+    let h = parseInt(match[1], 10);
+    const m = String(match[2]).padStart(2, '0');
+    const p = match[3] ? match[3].toUpperCase() : '';
+    if (p === 'PM' && h < 12) h += 12;
+    if (p === 'AM' && h === 12) h = 0;
+    return `${String(h).padStart(2, '0')}:${m}`;
+  }
+
+  function calculateDurationAndSync() {
+    const startInp = document.getElementById('inpClassStartTime');
+    const endInp = document.getElementById('inpClassEndTime');
+    const durInp = document.getElementById('inpClassDuration');
+
+    if (startInp && endInp && durInp) {
+      const startTime = startInp.value;
+      const endTime = endInp.value;
+      if (startTime && endTime) {
+        const [sH, sM] = startTime.split(':').map(Number);
+        const [eH, eM] = endTime.split(':').map(Number);
+        const diff = (eH * 60 + eM) - (sH * 60 + sM);
+        if (diff > 0) {
+          durInp.value = `${diff} Mins`;
+        } else {
+          durInp.value = 'Invalid range';
+        }
+      }
+    }
+    syncPreview();
+  }
+
+  // Open Modal for Scheduling a New Class
+  function openAddClassModal(defaultDate = null) {
+    document.getElementById('editClassId').value = '';
+    const titleEl = document.querySelector('.add-class-modal-title');
+    if (titleEl) titleEl.innerText = 'Schedule New Class';
+    const subEl = document.querySelector('.add-class-modal-subtitle');
+    if (subEl) subEl.innerText = 'Configure class details matching the live student portal card.';
+    const submitBtn = document.querySelector('.btn-modal-submit');
+    if (submitBtn) submitBtn.innerText = 'Publish & Schedule Class';
+
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const dateInp = document.getElementById('inpClassDate');
+    if (dateInp) {
+      dateInp.min = todayStr;
+      dateInp.value = defaultDate || todayStr;
+    }
+
+    const startInp = document.getElementById('inpClassStartTime');
+    if (startInp && !startInp.value) startInp.value = '10:00';
+
+    const endInp = document.getElementById('inpClassEndTime');
+    if (endInp && !endInp.value) endInp.value = '11:30';
+
+    calculateDurationAndSync();
+
+    const m = document.getElementById('addClassModal');
+    if (m) {
+      m.classList.add('open');
+      const modSelect = document.getElementById('inpClassModule');
+      if (modSelect && !modSelect.value && modSelect.options.length > 1) {
+        modSelect.selectedIndex = 1;
+      }
+      onModuleChange();
+    }
+  }
+
+  // Open Modal for Editing an Existing Class
+  async function openEditClassModal(classId) {
+    try {
+      showToast('Loading class details...');
+      const res = await fetch(`/api/mentor/edit-class/${classId}/`);
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.error || 'Failed to load class details.');
+        return;
+      }
+
+      const cls = data.class;
+      document.getElementById('editClassId').value = cls.id;
+
+      // Update Modal Header & CTA
+      const titleEl = document.querySelector('.add-class-modal-title');
+      if (titleEl) titleEl.innerText = 'Edit Scheduled Class';
+      const subEl = document.querySelector('.add-class-modal-subtitle');
+      if (subEl) subEl.innerText = 'Update class topic, schedule timing, or meeting link.';
+      const submitBtn = document.querySelector('.btn-modal-submit');
+      if (submitBtn) submitBtn.innerText = 'Update & Save Class';
+
+      // Populate Form Fields
+      const modSelect = document.getElementById('inpClassModule');
+      if (modSelect && cls.module_id) {
+        modSelect.value = cls.module_id;
+      }
+
+      populateTopicDropdown(cls.module_id);
+
+      const topicSelect = document.getElementById('inpClassTopic');
+      if (topicSelect && cls.topic_id) {
+        topicSelect.value = cls.topic_id;
+      }
+
+      const batchSelect = document.getElementById('inpClassBatch');
+      if (batchSelect && cls.batch_id) {
+        batchSelect.value = cls.batch_id;
+      }
+
+      const trainerInp = document.getElementById('inpClassTrainer');
+      if (trainerInp && cls.trainer_name) trainerInp.value = cls.trainer_name;
+
+      const dateInp = document.getElementById('inpClassDate');
+      if (dateInp && cls.date) dateInp.value = cls.date;
+
+      const startInp = document.getElementById('inpClassStartTime');
+      if (startInp) {
+        startInp.value = cls.start_time_24 || convert12to24(cls.start_time);
+      }
+
+      const endInp = document.getElementById('inpClassEndTime');
+      if (endInp) {
+        endInp.value = cls.end_time_24 || convert12to24(cls.end_time);
+      }
+
+      const durInp = document.getElementById('inpClassDuration');
+      if (durInp && cls.duration) durInp.value = cls.duration;
+
+      const descInp = document.getElementById('inpClassDesc');
+      if (descInp && cls.description) descInp.value = cls.description;
+
+      const linkInp = document.getElementById('inpClassLink');
+      if (linkInp && cls.meeting_link) linkInp.value = cls.meeting_link;
+
+      calculateDurationAndSync();
+
+      const m = document.getElementById('addClassModal');
+      if (m) m.classList.add('open');
+
+    } catch (err) {
+      console.error(err);
+      alert('Error fetching class details.');
+    }
+  }
+
+  function closeAddClassModal() {
+    const m = document.getElementById('addClassModal');
+    if (m) m.classList.remove('open');
+  }
+
+  // Populate Topics based on Selected Module (or all if none)
+  function populateTopicDropdown(selectedModId) {
+    const topicSelect = document.getElementById('inpClassTopic');
+    if (!topicSelect) return;
+    topicSelect.innerHTML = '';
+    topicSelect.disabled = false;
+
+    if (selectedModId) {
+      const selectedMod = curriculumModules.find(m => m.id === parseInt(selectedModId));
+      if (selectedMod && selectedMod.topics && selectedMod.topics.length > 0) {
+        selectedMod.topics.forEach((t) => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.text = `${t.order}. ${t.name}`;
+          opt.dataset.name = t.name;
+          opt.dataset.moduleId = selectedMod.id;
+          opt.dataset.desc = t.description || '';
+          opt.dataset.duration = t.duration || '90 Mins';
+          topicSelect.appendChild(opt);
+        });
+      } else {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.text = '-- No topics in this module --';
+        topicSelect.appendChild(opt);
+      }
+    } else {
+      const defOpt = document.createElement('option');
+      defOpt.value = '';
+      defOpt.text = '-- Select Topic / Class --';
+      topicSelect.appendChild(defOpt);
+
+      curriculumModules.forEach((m) => {
+        if (m.topics && m.topics.length > 0) {
+          const optgroup = document.createElement('optgroup');
+          optgroup.label = m.name;
+          m.topics.forEach((t) => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.text = `${t.order}. ${t.name}`;
+            opt.dataset.name = t.name;
+            opt.dataset.moduleId = m.id;
+            opt.dataset.desc = t.description || '';
+            opt.dataset.duration = t.duration || '90 Mins';
+            optgroup.appendChild(opt);
+          });
+          topicSelect.appendChild(optgroup);
+        }
+      });
+    }
+
+    if (topicSelect.options.length > 0) {
+      topicSelect.selectedIndex = 0;
+    }
+    onTopicChange();
+  }
+
+  function onModuleChange() {
+    const modSelect = document.getElementById('inpClassModule');
+    const modId = modSelect ? modSelect.value : '';
+    populateTopicDropdown(modId);
+  }
+
+  function onTopicChange() {
+    const topicSelect = document.getElementById('inpClassTopic');
+    const modSelect = document.getElementById('inpClassModule');
+    const descInp = document.getElementById('inpClassDesc');
+    const durInp = document.getElementById('inpClassDuration');
+
+    if (topicSelect && topicSelect.selectedIndex >= 0) {
+      const opt = topicSelect.options[topicSelect.selectedIndex];
+      if (opt && opt.value) {
+        if (opt.dataset && opt.dataset.desc && descInp) descInp.value = opt.dataset.desc;
+        if (opt.dataset && opt.dataset.duration && durInp) durInp.value = opt.dataset.duration;
+        if (opt.dataset && opt.dataset.moduleId && modSelect && modSelect.value !== String(opt.dataset.moduleId)) {
+          modSelect.value = opt.dataset.moduleId;
+        }
+      }
+    }
+    calculateDurationAndSync();
+  }
+
+  function syncPreview() {
+    const topicSelect = document.getElementById('inpClassTopic');
+    const descInp = document.getElementById('inpClassDesc');
+    const batchSelect = document.getElementById('inpClassBatch');
+    const trainerInp = document.getElementById('inpClassTrainer');
+    const startInp = document.getElementById('inpClassStartTime');
+    const endInp = document.getElementById('inpClassEndTime');
+    const durInp = document.getElementById('inpClassDuration');
+
+    let title = 'Select Module & Topic above';
+    if (topicSelect && topicSelect.selectedIndex >= 0 && topicSelect.options[topicSelect.selectedIndex].value) {
+      const opt = topicSelect.options[topicSelect.selectedIndex];
+      title = opt.dataset.name || opt.text;
+    }
+
+    const desc = descInp && descInp.value.trim() ? descInp.value.trim() : 'Class syllabus overview will appear here...';
+    let batch = 'Select a Batch';
+    if (batchSelect && batchSelect.options && batchSelect.selectedIndex >= 0 && batchSelect.options[batchSelect.selectedIndex].value) {
+      batch = batchSelect.options[batchSelect.selectedIndex].text;
+    }
+    const trainer = trainerInp && trainerInp.value.trim() ? trainerInp.value.trim() : 'Mentor';
+    const sTime = startInp && startInp.value ? formatTime12H(startInp.value) : '10:00 AM';
+    const eTime = endInp && endInp.value ? formatTime12H(endInp.value) : '11:30 AM';
+    const time = `${sTime} – ${eTime}`;
+    const dur = durInp && durInp.value.trim() ? durInp.value.trim() : '90 Mins';
+
+    const pTitle = document.getElementById('prevClassTitle');
+    const pDesc = document.getElementById('prevClassDesc');
+    const pBatch = document.getElementById('prevBatch');
+    const pTrainer = document.getElementById('prevTrainer');
+    const pTimeDur = document.getElementById('prevTimeDur');
+    const pMode = document.getElementById('prevMode');
+
+    if (pTitle) pTitle.innerText = title;
+    if (pDesc) pDesc.innerText = desc;
+    if (pBatch) pBatch.innerText = batch;
+    if (pTrainer) pTrainer.innerText = trainer;
+    if (pTimeDur) pTimeDur.innerText = `${time} (${dur})`;
+    if (pMode) pMode.innerText = 'Online Class';
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue || '';
+  }
+
+  async function submitAddClass() {
+    const editClassId = document.getElementById('editClassId').value;
+    const modSelect = document.getElementById('inpClassModule');
+    const topicSelect = document.getElementById('inpClassTopic');
+    const moduleId = modSelect ? modSelect.value : '';
+    const topicId = topicSelect ? topicSelect.value : '';
+
+    if (!topicId) {
+      alert('Please select a Topic / Class.');
+      return;
+    }
+
+    const topicOpt = topicSelect.options[topicSelect.selectedIndex];
+    const topicName = topicOpt ? (topicOpt.dataset.name || topicOpt.text) : '';
+    const resolvedModId = moduleId || (topicOpt ? topicOpt.dataset.moduleId : '');
+
+    const batchSelect = document.getElementById('inpClassBatch');
+    const batchId = batchSelect ? batchSelect.value : '';
+    const batchName = batchSelect && batchSelect.options && batchSelect.selectedIndex >= 0 ? batchSelect.options[batchSelect.selectedIndex].text : 'General Batch';
+
+    const classDate = document.getElementById('inpClassDate') ? document.getElementById('inpClassDate').value : '';
+    const startTime = document.getElementById('inpClassStartTime') ? document.getElementById('inpClassStartTime').value : '';
+    const endTime = document.getElementById('inpClassEndTime') ? document.getElementById('inpClassEndTime').value : '';
+    const duration = document.getElementById('inpClassDuration') ? document.getElementById('inpClassDuration').value.trim() : '90 Mins';
+    const description = document.getElementById('inpClassDesc') ? document.getElementById('inpClassDesc').value.trim() : '';
+    const link = document.getElementById('inpClassLink') ? document.getElementById('inpClassLink').value.trim() : '';
+
+    // FRONTEND VALIDATION
+    if (!classDate) {
+      alert('Please select a Class Date.');
+      return;
+    }
+    if (!startTime) {
+      alert('Please select a Start Time.');
+      return;
+    }
+    if (!endTime) {
+      alert('Please select an End Time.');
+      return;
+    }
+
+    // 1. Past date check
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (classDate < todayStr) {
+      alert('Cannot schedule a class for a past date.');
+      return;
+    }
+
+    // 2. Today + Start time check
+    if (classDate === todayStr) {
+      const curHH = String(now.getHours()).padStart(2, '0');
+      const curMM = String(now.getMinutes()).padStart(2, '0');
+      const curTimeStr = `${curHH}:${curMM}`;
+      if (startTime < curTimeStr) {
+        alert("Start Time cannot be in the past for today's classes.");
+        return;
+      }
+    }
+
+    // 3. Start time < End time
+    if (startTime >= endTime) {
+      alert('Start Time must be before End Time.');
+      return;
+    }
+
+    const payload = {
+      module_id: resolvedModId,
+      topic_id: topicId,
+      subject: topicName,
+      batch_id: batchId,
+      date: classDate,
+      start_time: startTime,
+      end_time: endTime,
+      duration: duration,
+      description: description,
+      mode: 'Online',
+      meeting_link: link
+    };
+
+    const targetUrl = editClassId ? `/api/mentor/edit-class/${editClassId}/` : '/api/mentor/add-class/';
+
+    try {
+      const res = await fetch(targetUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeAddClassModal();
+        const actionWord = editClassId ? 'Updated' : 'Scheduled';
+        showToast(`Successfully ${actionWord} "${topicName}" for ${batchName}!`);
+        setTimeout(() => {
+          window.location.reload();
+        }, 600);
+      } else {
+        alert(data.error || 'Failed to save class.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error connecting to server while saving class.');
+    }
+  }
+
+  async function confirmDeleteClass(classId, subject) {
+    if (!confirm(`Are you sure you want to delete this scheduled class?\n"${subject}"`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/mentor/delete-class/${classId}/`, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        const card = document.getElementById(`class-card-${classId}`);
+        if (card) {
+          card.style.transition = 'all 0.3s ease';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.95)';
+          setTimeout(() => card.remove(), 300);
+        }
+        const kpiTotal = document.getElementById('kpiTotal');
+        if (kpiTotal) kpiTotal.innerText = Math.max(0, parseInt(kpiTotal.innerText || 1) - 1);
+        const kpiUpcoming = document.getElementById('kpiUpcoming');
+        if (kpiUpcoming) kpiUpcoming.innerText = Math.max(0, parseInt(kpiUpcoming.innerText || 1) - 1);
+        const upcomingBadge = document.getElementById('upcomingBadgeCount');
+        if (upcomingBadge) upcomingBadge.innerText = Math.max(0, parseInt(upcomingBadge.innerText || 1) - 1);
+        showToast(`Class "${subject}" removed.`);
+      } else {
+        alert(data.message || 'Failed to delete class.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error connecting to server while deleting class.');
+    }
+  }
+
+  // =========================================================================
+  // DYNAMIC INTERACTIVE CALENDAR ENGINE
+  // =========================================================================
+  function renderCalendar(year, month) {
+    const monthTitle = document.getElementById('calMonthTitle');
+    const tableBody = document.getElementById('calTableBody');
+    if (!monthTitle || !tableBody) return;
+
+    monthTitle.innerText = `${MONTH_NAMES[month]} ${year}`;
+    tableBody.innerHTML = '';
+
+    // First day of month (0 = Sun, 1 = Mon, ...)
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    // Number of days in current month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // Number of days in prev month
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    // Map scheduled classes for fast lookup by YYYY-MM-DD
+    const classesByDate = {};
+    calendarClasses.forEach(c => {
+      if (c.date) {
+        if (!classesByDate[c.date]) classesByDate[c.date] = [];
+        classesByDate[c.date].push(c);
+      }
+    });
+
+    let dateCounter = 1;
+    let nextMonthDay = 1;
+
+    // Typically 5 to 6 weeks
+    for (let row = 0; row < 6; row++) {
+      const tr = document.createElement('tr');
+      let hasCurrentMonthDayInRow = false;
+
+      for (let col = 0; col < 7; col++) {
+        const td = document.createElement('td');
+
+        if (row === 0 && col < firstDayIndex) {
+          // Dimmed days from previous month
+          const prevDay = daysInPrevMonth - (firstDayIndex - col - 1);
+          td.className = 'dimmed';
+          td.innerText = prevDay;
+        } else if (dateCounter > daysInMonth) {
+          // Dimmed days into next month
+          td.className = 'dimmed';
+          td.innerText = nextMonthDay++;
+        } else {
+          hasCurrentMonthDayInRow = true;
+          const currentDayNum = dateCounter;
+          const mm = String(month + 1).padStart(2, '0');
+          const dd = String(currentDayNum).padStart(2, '0');
+          const dateStr = `${year}-${mm}-${dd}`;
+
+          const isToday = (dateStr === TODAY_STR);
+          const isSelected = (dateStr === selectedCalDateStr);
+
+          // Span circle for day number
+          const span = document.createElement('span');
+          span.className = 'cal-day-cell';
+          span.innerText = currentDayNum;
+
+          if (isToday) span.classList.add('is-today');
+          if (isSelected) span.classList.add('active-selected');
+
+          span.onclick = () => selectCalendarDate(year, month, currentDayNum, dateStr);
+
+          td.appendChild(span);
+
+          // Check if there are classes on this date
+          const dateClasses = classesByDate[dateStr] || [];
+          if (dateClasses.length > 0) {
+            const dot = document.createElement('div');
+            dot.className = 'cal-dot-mark';
+            if (isToday) {
+              dot.classList.add('green'); // Class Today
+            } else if (dateStr > TODAY_STR) {
+              dot.classList.add('blue');  // Upcoming Class
+            } else {
+              dot.classList.add('purple'); // Completed Class
+            }
+            td.appendChild(dot);
+          }
+
+          dateCounter++;
+        }
+        tr.appendChild(td);
+      }
+
+      if (hasCurrentMonthDayInRow || row < 5) {
+        tableBody.appendChild(tr);
+      }
+      if (dateCounter > daysInMonth && row >= 4) {
+        break;
+      }
+    }
+  }
+
+  function prevMonth() {
+    currentCalMonth--;
+    if (currentCalMonth < 0) {
+      currentCalMonth = 11;
+      currentCalYear--;
+    }
+    renderCalendar(currentCalYear, currentCalMonth);
+    showToast(`Viewing ${MONTH_NAMES[currentCalMonth]} ${currentCalYear}`);
+  }
+
+  function nextMonth() {
+    currentCalMonth++;
+    if (currentCalMonth > 11) {
+      currentCalMonth = 0;
+      currentCalYear++;
+    }
+    renderCalendar(currentCalYear, currentCalMonth);
+    showToast(`Viewing ${MONTH_NAMES[currentCalMonth]} ${currentCalYear}`);
+  }
+
+  // Handle clicking a date on the Calendar
+  function selectCalendarDate(year, month, day, dateStr) {
+    selectedCalDateStr = dateStr;
+    renderCalendar(year, month);
+
+    const filterBanner = document.getElementById('calendarFilterBanner');
+    const filterDisplay = document.getElementById('filterDateDisplay');
+    const filterBadge = document.getElementById('filterCountBadge');
+    const noClassesBox = document.getElementById('noDateClassesBox');
+    const noDateDisplay = document.getElementById('noDateDisplay');
+    const upcomingWrap = document.getElementById('upcomingClassesList');
+    const pastWrap = document.getElementById('pastClassesList');
+
+    // Format human date
+    const dObj = new Date(year, month, day);
+    const dayName = dObj.toLocaleDateString('en-US', { weekday: 'short' });
+    const monthShort = MONTH_NAMES[month].substring(0, 3);
+    const formatted = `${dayName}, ${day} ${monthShort} ${year}`;
+
+    if (filterDisplay) filterDisplay.innerText = formatted;
+    if (noDateDisplay) noDateDisplay.innerText = formatted;
+
+    // Filter cards
+    const allCards = document.querySelectorAll('.class-schedule-card');
+    let matchCount = 0;
+
+    allCards.forEach(card => {
+      const cardDate = card.getAttribute('data-date');
+      if (cardDate === dateStr) {
+        card.style.display = 'flex';
+        matchCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    if (filterBadge) filterBadge.innerText = `${matchCount} Class${matchCount === 1 ? '' : 'es'}`;
+    if (filterBanner) filterBanner.style.display = 'flex';
+
+    if (matchCount === 0) {
+      if (noClassesBox) noClassesBox.style.display = 'block';
+    } else {
+      if (noClassesBox) noClassesBox.style.display = 'none';
+    }
+
+    // Scroll smoothly to class list
+    const titleEl = document.getElementById('classesSectionTitle');
+    if (titleEl) {
+      titleEl.innerText = `Classes for ${formatted}`;
+      titleEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    showToast(`Filtered: ${matchCount} class(es) on ${formatted}`);
+  }
+
+  function clearDateFilter(showToastNotice = true) {
+    selectedCalDateStr = null;
+    renderCalendar(currentCalYear, currentCalMonth);
+
+    const filterBanner = document.getElementById('calendarFilterBanner');
+    const noClassesBox = document.getElementById('noDateClassesBox');
+    if (filterBanner) filterBanner.style.display = 'none';
+    if (noClassesBox) noClassesBox.style.display = 'none';
+
+    // Restore cards according to active tab
+    const isUpcomingActive = document.querySelector('.classes-tab-btn.active')?.innerText.includes('Upcoming');
+    const upcomingWrap = document.getElementById('upcomingClassesList');
+    const pastWrap = document.getElementById('pastClassesList');
+    const titleEl = document.getElementById('classesSectionTitle');
+
+    if (isUpcomingActive) {
+      if (upcomingWrap) {
+        upcomingWrap.style.display = 'flex';
+        upcomingWrap.querySelectorAll('.class-schedule-card').forEach(c => c.style.display = 'flex');
+      }
+      if (pastWrap) pastWrap.style.display = 'none';
+      if (titleEl) titleEl.innerText = 'Upcoming Classes';
+    } else {
+      if (upcomingWrap) upcomingWrap.style.display = 'none';
+      if (pastWrap) {
+        pastWrap.style.display = 'flex';
+        pastWrap.querySelectorAll('.class-schedule-card').forEach(c => c.style.display = 'flex');
+      }
+      if (titleEl) titleEl.innerText = 'Past Classes';
+    }
+
+    if (showToastNotice) {
+      showToast('Calendar filter reset. Showing all classes.');
+    }
+  }
+
+  function scheduleClassForSelectedDate() {
+    openAddClassModal(selectedCalDateStr);
+  }
+
+  // Close modal on Escape
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeAddClassModal();
+      closeDetailsModal();
+    }
+  });
+
+  // Close modal on outside click
+  window.addEventListener('click', function(e) {
+    const modalAdd = document.getElementById('addClassModal');
+    if (e.target === modalAdd) {
+      closeAddClassModal();
+    }
+    const modalDetails = document.getElementById('classDetailsModal');
+    if (e.target === modalDetails) {
+      closeDetailsModal();
+    }
+  });
+
+  function triggerCreateClass() {
+    openAddClassModal();
+  }
+
+  function triggerUploadMaterial() {
+    showToast('Opening Material Uploader dialog...');
+  }
+
+  // Initial trigger on load
+  document.addEventListener('DOMContentLoaded', function() {
+    onModuleChange();
+    renderCalendar(currentCalYear, currentCalMonth);
+  });
+
+// Filter Today's Classes by Session (Morning, Afternoon, Evening)
+  function filterTodaySession(session, btn) {
+    document.querySelectorAll('.session-filter-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const cards = document.querySelectorAll('#todayClassesList .today-class-card-item');
+    let visibleCount = 0;
+    cards.forEach(card => {
+      const cardSession = (card.getAttribute('data-session') || '').toLowerCase();
+      if (session === 'all' || cardSession === session.toLowerCase()) {
+        card.style.display = '';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    const emptyNotice = document.getElementById('todaySessionEmptyNotice');
+    if (emptyNotice) {
+      emptyNotice.style.display = (cards.length > 0 && visibleCount === 0) ? 'block' : 'none';
+    }
+  }
 </script>
-
 {% endblock %}

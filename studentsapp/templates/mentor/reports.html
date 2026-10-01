@@ -2,6 +2,47 @@
 
 {% block title %}Monthly Performance & Academic Reports - NIM Academy{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* MENTOR REPORTS PAGE CSS */
+  .mentor-welcome-card { background: #ffffff; border-radius: 12px; padding: 24px 32px; color: #0a1b39; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0; }
+  .mentor-page-heading { font-size: 1.65rem; font-weight: 800; margin: 0 0 8px 0; color: #0a1b39; }
+  .mentor-page-subline { font-size: 0.9rem; color: #475569; margin: 0; max-width: 800px; line-height: 1.5; }
+  .btn-nim-primary { background: #0f172a; color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease; text-decoration: none; }
+  .btn-nim-primary:hover { background: #1e293b; }
+  .btn-nim-secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
+  .btn-nim-secondary:hover { background: #e2e8f0; }
+  .btn-table-sm.primary { background: #ebf5ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-decoration: none; cursor: pointer; }
+  .btn-table-sm.primary:hover { background: #dbeafe; }
+  .btn-table-sm.danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .btn-table-sm.danger:hover { background: #fee2e2; }
+  .btn-table-sm { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .mentor-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px; }
+  .mentor-stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .mentor-icon-box { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .mentor-icon-blue { background: #eff6ff; color: #2563eb; }
+  .mentor-icon-amber { background: #fffbeb; color: #d97706; }
+  .mentor-icon-green { background: #f0fdf4; color: #16a34a; }
+  .mentor-icon-emerald { background: #ecfdf5; color: #059669; }
+  .mentor-icon-rose { background: #fff1f2; color: #e11d48; }
+  .mentor-stat-value { font-size: 1.5rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
+  .mentor-stat-label { font-size: 0.8125rem; color: #64748b; font-weight: 500; }
+  .mentor-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .mentor-card-header { padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
+  .mentor-card-title { font-size: 1.125rem; font-weight: 800; color: #0f172a; margin: 0; }
+  .badge-pill { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; }
+  .badge-blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+  .badge-amber { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .badge-green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .badge-rose { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+  .badge-slate { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+  .mentor-table { width: 100%; border-collapse: collapse; }
+  .mentor-table th { background: #f8fafc; padding: 12px 24px; text-align: left; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+  .mentor-table td { padding: 16px 24px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.875rem; }
+  .mentor-table tr:hover td { background: #f8fafc; }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Page Header -->
 <div class="mentor-welcome-card">

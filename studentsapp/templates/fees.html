@@ -68,10 +68,10 @@
         </div>
 
         <div class="page-actions-group">
-          <button class="btn-secondary-action" onclick="alert('Exporting Master Financial Ledger (CSV)...');">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-            <span>Export Financial Ledger</span>
-          </button>
+          <button class="btn-secondary-action" onclick="exportLedger()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              <span>Export Financial Ledger</span>
+            </button>
           <button class="btn-primary-add" onclick="document.getElementById('recordPaymentModal').classList.add('active');">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Record Payment</span>
@@ -86,20 +86,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.total }}</span>
-            <span class="kpi-stat-label">Total Assessed Fees</span>
-            <span class="kpi-trend-row"><span class="trend-blue">18 Active Batches</span></span>
-          </div>
-        </div>
-
-        <div class="kpi-stat-card">
-          <div class="kpi-icon-box kpi-icon-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          </div>
-          <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.pending }}</span>
+            <span class="kpi-stat-number">{{ kpi.total_paid_sum }}</span>
             <span class="kpi-stat-label">Total Paid & Collected</span>
-            <span class="kpi-trend-row"><span class="trend-green">↑ 82.9%</span> Realized</span>
+            <span class="kpi-trend-row"><span class="trend-blue">{{ kpi.paid_count }} Receipts</span></span>
           </div>
         </div>
 
@@ -108,20 +97,20 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.overdue }}</span>
-            <span class="kpi-stat-label">Current Due (Next 30 Days)</span>
-            <span class="kpi-trend-row"><span class="trend-amber">84 Installments</span></span>
+            <span class="kpi-stat-number">{{ kpi.total_pending_sum }}</span>
+            <span class="kpi-stat-label">Current Due (Pending)</span>
+            <span class="kpi-trend-row"><span class="trend-amber">{{ kpi.pending_count }} Installments</span></span>
           </div>
         </div>
 
         <div class="kpi-stat-card">
-          <div class="kpi-icon-box kpi-icon-rose">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+          <div class="kpi-icon-box kpi-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.avg }}</span>
-            <span class="kpi-stat-label">Balance Overdue</span>
-            <span class="kpi-trend-row"><span class="trend-red" style="color: #ef4444; font-weight: 700;">14 Pending Alerts</span></span>
+            <span class="kpi-stat-number">{{ kpi.total_count }}</span>
+            <span class="kpi-stat-label">Total Ledger Entries</span>
+            <span class="kpi-trend-row"><span class="trend-green">{{ kpi.active_batches_count }} Active Batches</span></span>
           </div>
         </div>
       </div>
@@ -131,54 +120,40 @@
         <div class="filter-controls-row">
           <div class="filter-search-box">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" class="filter-search-input" id="feeSearchInput" placeholder="Search by student name, ID, batch, or receipt number...">
+            <input type="text" class="filter-search-input" id="feeSearchInput" placeholder="Search by student name or batch..." value="{{ current_q }}">
           </div>
 
           <div class="filter-dropdowns-group">
-            <select class="filter-select" id="batchFeeSelect">
-              <option value="">All Batches</option>
-              <option value="AI-09">Batch AI-09 (GenAI)</option>
-              <option value="AI-10">Batch AI-10 (Weekend)</option>
-              <option value="CLOUD-04">Batch CLOUD-04</option>
-              <option value="FS-12">Batch FS-12</option>
-              <option value="DATA-06">Batch DATA-06</option>
-            </select>
-
-            <select class="filter-select" id="planFeeSelect">
-              <option value="">All Plans</option>
-              <option value="Placement Included">Placement Included (₹90k)</option>
-              <option value="Without Placement">Without Placement (₹60k)</option>
-            </select>
-
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.75rem; color: var(--admin-text-muted); font-weight: 600; text-transform: uppercase;">From</span>
+              <input type="date" class="filter-select" id="startDateSelect" value="{{ current_start_date }}">
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.75rem; color: var(--admin-text-muted); font-weight: 600; text-transform: uppercase;">To</span>
+              <input type="date" class="filter-select" id="endDateSelect" value="{{ current_end_date }}">
+            </div>
             <select class="filter-select" id="statusFeeSelect">
-              <option value="">Status: All</option>
-              <option value="Paid in Full">Paid in Full</option>
-              <option value="Partially Paid">Partially Paid</option>
-              <option value="Due Soon">Due Soon</option>
-              <option value="Overdue">Overdue</option>
+              <option value="" {% if current_status == '' %}selected{% endif %}>Status: All</option>
+              <option value="Paid" {% if current_status == 'Paid' %}selected{% endif %}>Paid</option>
+              <option value="Pending" {% if current_status == 'Pending' %}selected{% endif %}>Pending</option>
             </select>
-
-            <button class="btn-filter-reset" onclick="resetFeeFilters()">Reset</button>
+            <button class="btn-filter-reset" onclick="window.location.href='/fees/';">Reset</button>
           </div>
         </div>
 
         <!-- Category Pill Tabs -->
         <div class="filter-tabs-row">
-          <button class="pill-tab-btn active" onclick="filterByTab(this, 'all')">
+          <button class="pill-tab-btn {% if not current_status %}active{% endif %}" onclick="filterByTab(this, '')">
             <span>All Accounts</span>
-            <span class="pill-tab-count">428</span>
+            <span class="pill-tab-count">{{ kpi.total_count }}</span>
           </button>
-          <button class="pill-tab-btn" onclick="filterByTab(this, 'Paid in Full')">
+          <button class="pill-tab-btn {% if current_status == 'Paid' %}active{% endif %}" onclick="filterByTab(this, 'Paid')">
             <span>Paid in Full</span>
-            <span class="pill-tab-count">290</span>
+            <span class="pill-tab-count">{{ kpi.paid_count }}</span>
           </button>
-          <button class="pill-tab-btn" onclick="filterByTab(this, 'Due Soon')">
-            <span>Due Soon</span>
-            <span class="pill-tab-count">84</span>
-          </button>
-          <button class="pill-tab-btn" onclick="filterByTab(this, 'Overdue')">
-            <span>Overdue Invoices</span>
-            <span class="pill-tab-count">14</span>
+          <button class="pill-tab-btn {% if current_status == 'Pending' %}active{% endif %}" onclick="filterByTab(this, 'Pending')">
+            <span>Pending Dues</span>
+            <span class="pill-tab-count">{{ kpi.pending_count }}</span>
           </button>
         </div>
       </div>
@@ -188,15 +163,8 @@
         <div class="table-card-header">
           <div class="table-header-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-            <span>Student Fee Accounts & Payment Ledger</span>
-            <span class="table-records-count">428 Students</span>
-          </div>
-
-          <div style="display: flex; gap: 8px;">
-            <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="alert('Sending bulk payment reminder to 14 overdue students...');">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-              <span>Send Overdue Reminders</span>
-            </button>
+            <span>Payment Ledger</span>
+            <span class="table-records-count">{{ payments.paginator.count|default:"0" }} Entries</span>
           </div>
         </div>
 
@@ -204,15 +172,16 @@
           <table class="admin-data-table" id="feesTable">
             <thead>
               <tr>
-                <th style="width: 260px;">Student & Registration ID</th>
-                <th>Batch & Enrolled Plan</th>
-                <th>Total Fee</th>
-                <th>Paid Amount</th>
-                <th>Current Due & Date</th>
-                <th>Balance Remaining</th>
-                <th>Payment Status</th>
-                <th>Recent Receipt</th>
-                <th style="text-align: right; width: 130px;">Actions</th>
+                <th style="width: 240px;">Student & ID</th>
+                <th>Batch / Cohort</th>
+                <th>Amount</th>
+                <th>Balance Due</th>
+                <th>Method</th>
+                <th>Transaction ID</th>
+                <th>Payment Date</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                
               </tr>
             </thead>
             <tbody>
@@ -228,44 +197,38 @@
                   </div>
                 </td>
                 <td>
-                  <span class="font-mono-code">Batch AI-09</span>
-                  <div style="font-size: 0.71875rem; color: var(--admin-text-muted); margin-top: 2px;">Placement Included</div>
+                  <span class="font-mono-code">{{ payment.student.batch.name|default:"Unassigned" }}</span>
                 </td>
                 <td>
                   <span style="font-weight: 700; color: var(--admin-text-main);">₹{{ payment.amount }}</span>
                 </td>
                 <td>
-                  <span style="font-weight: 700; color: #059669;">₹{{ payment.amount }}</span>
-                  <div style="font-size: 0.71875rem; color: var(--admin-text-muted);">Paid Amount</div>
+                  <span style="font-weight: 700; color: #d97706;">₹{{ payment.balance_due|default:"0.00" }}</span>
                 </td>
                 <td>
-                  <div style="font-weight: 700; color: #d97706;">₹0</div>
-                  <div style="font-size: 0.71875rem; color: #d97706; font-weight: 600;"></div>
+                  <span style="color: var(--admin-text-muted);">{{ payment.payment_method|default:"-" }}</span>
                 </td>
                 <td>
-                  <span style="font-weight: 700; color: var(--admin-text-main);">₹0</span>
+                  <span class="font-mono-code" style="font-size: 0.75rem;">{{ payment.transaction_id|default:"-" }}</span>
                 </td>
                 <td>
-                  <span class="status-badge badge-{{ payment.status|lower|default:'pending' }}">
-                    <span class="badge-dot"></span> {{ payment.status }}
-                  </span>
+                  <div style="font-size: 0.875rem; color: var(--admin-text-muted);">{{ payment.payment_date|date:"d M Y" }}</div>
                 </td>
                 <td>
-                  <span class="font-mono-code">REC-XXXX</span>
-                  <div style="font-size: 0.71875rem; color: var(--admin-text-muted);">{{ payment.payment_date|date:"d M Y" }}</div>
+                  <div style="font-size: 0.875rem; color: #d97706;">{{ payment.due_date|date:"d M Y"|default:"-" }}</div>
                 </td>
                 <td>
-                  <div class="table-actions-cell" style="justify-content: flex-end;">
-                    <button class="btn-action-icon btn-action-view" title="View Receipt">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x1="13" x2="8" y2="13"/><line x1="16" x1="17" x2="8" y2="17"/></svg>
-                    </button>
-                    <button class="btn-action-pill" onclick="openPaymentForStudent('{{ payment.student.name|escapejs }}', '{{ payment.student.student_id|escapejs }}', 'Batch AI-09', {{ payment.amount }})">Collect</button>
-                  </div>
+                  {% if payment.status == 'Paid' %}
+                  <span class="badge-status-active">Paid</span>
+                  {% else %}
+                  <span class="badge-status-onboarding">Pending</span>
+                  {% endif %}
                 </td>
+                
               </tr>
               {% empty %}
               <tr>
-                <td colspan="9" style="text-align: center; padding: 20px;">No fee payments found.</td>
+                <td colspan="9" style="text-align: center; padding: 20px; color: #94a3b8;">No fee payments found.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -274,15 +237,30 @@
 
         <!-- Table Pagination -->
         <div class="pagination-row">
-          <div>Showing <strong>1 - 6</strong> of <strong>428</strong> student accounts</div>
+          <div>Showing <strong>{{ payments.start_index|default:"0" }} - {{ payments.end_index|default:"0" }}</strong> of <strong>{{ payments.paginator.count|default:"0" }}</strong> entries</div>
           <div class="pagination-controls">
+            {% if payments.has_previous %}
+            <button class="btn-page-nav" onclick="goToPage({{ payments.previous_page_number }})">Previous</button>
+            {% else %}
             <button class="btn-page-nav" disabled>Previous</button>
-            <button class="btn-page-nav active">1</button>
-            <button class="btn-page-nav">2</button>
-            <button class="btn-page-nav">3</button>
-            <button class="btn-page-nav">Next</button>
+            {% endif %}
+
+            {% for i in payments.paginator.page_range %}
+              {% if payments.number == i %}
+                <button class="btn-page-nav active">{{ i }}</button>
+              {% else %}
+                <button class="btn-page-nav" onclick="goToPage({{ i }})">{{ i }}</button>
+              {% endif %}
+            {% endfor %}
+
+            {% if payments.has_next %}
+            <button class="btn-page-nav" onclick="goToPage({{ payments.next_page_number }})">Next</button>
+            {% else %}
+            <button class="btn-page-nav" disabled>Next</button>
+            {% endif %}
           </div>
         </div>
+          
 
       </div>
 
@@ -390,53 +368,104 @@
     document.getElementById('recordPaymentModal').classList.add('active');
   }
 
-  // Live filter function for Fees table
-  function filterFeesTable() {
-    const query = document.getElementById('feeSearchInput').value.toLowerCase().trim();
-    const batch = document.getElementById('batchFeeSelect').value.toLowerCase();
-    const plan = document.getElementById('planFeeSelect').value.toLowerCase();
-    const status = document.getElementById('statusFeeSelect').value.toLowerCase();
+  async function fetchAndSwap(url) {
+    try {
+      const tbody = document.querySelector('#feesTable tbody');
+      if (tbody) tbody.style.opacity = '0.4';
+      
+      window.history.pushState({}, '', url);
+      const response = await fetch(url);
+      const htmlText = await response.text();
+      const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+      
+      const newTbody = doc.querySelector('#feesTable tbody');
+      if (newTbody && tbody) tbody.innerHTML = newTbody.innerHTML;
+      
+      const currentPagination = document.querySelector('.pagination-row');
+      const newPagination = doc.querySelector('.pagination-row');
+      if (currentPagination && newPagination) currentPagination.innerHTML = newPagination.innerHTML;
+      
+      const currentTabs = document.querySelector('.filter-tabs-row');
+      const newTabs = doc.querySelector('.filter-tabs-row');
+      if (currentTabs && newTabs) currentTabs.innerHTML = newTabs.innerHTML;
 
-    const rows = document.querySelectorAll('#feesTable tbody tr');
-    rows.forEach(row => {
-      const text = row.innerText.toLowerCase();
-      const rowBatch = (row.getAttribute('data-batch') || '').toLowerCase();
-      const rowPlan = (row.getAttribute('data-plan') || '').toLowerCase();
-      const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
-
-      const matchText = !query || text.includes(query);
-      const matchBatch = !batch || rowBatch.includes(batch);
-      const matchPlan = !plan || rowPlan.includes(plan);
-      const matchStatus = !status || rowStatus === status;
-
-      if (matchText && matchBatch && matchPlan && matchStatus) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
+      const currentDropdowns = document.querySelector('.filter-dropdowns-group');
+      const newDropdowns = doc.querySelector('.filter-dropdowns-group');
+      if (currentDropdowns && newDropdowns) {
+        currentDropdowns.innerHTML = newDropdowns.innerHTML;
+        const statusFilter = document.getElementById('statusFeeSelect');
+        if (statusFilter) statusFilter.addEventListener('change', function() { updateFilters({status: this.value}); });
+        const startFilter = document.getElementById('startDateSelect');
+        if (startFilter) startFilter.addEventListener('change', function() { updateFilters({start_date: this.value}); });
+        const endFilter = document.getElementById('endDateSelect');
+        if (endFilter) endFilter.addEventListener('change', function() { updateFilters({end_date: this.value}); });
       }
+
+      const currentKpis = document.querySelector('.kpi-cards-grid');
+      const newKpis = doc.querySelector('.kpi-cards-grid');
+      if (currentKpis && newKpis) currentKpis.innerHTML = newKpis.innerHTML;
+      
+      if (tbody) tbody.style.opacity = '1';
+    } catch (err) {
+      console.error(err);
+      window.location.href = url;
+    }
+  }
+
+  function exportLedger() {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.delete('page');
+    window.location.href = '/api/export-fees/?' + urlParams.toString();
+  }
+
+  function updateFilters(params) {
+    const urlParams = new URLSearchParams(window.location.search);
+    for (const [key, value] of Object.entries(params)) {
+      if (value) urlParams.set(key, value);
+      else urlParams.delete(key);
+    }
+    urlParams.delete('page');
+    fetchAndSwap('?' + urlParams.toString());
+  }
+
+  function filterByTab(btn, status) {
+    document.querySelectorAll('.pill-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updateFilters({status: status});
+  }
+
+  function goToPage(page) {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('page', page);
+    fetchAndSwap('?' + urlParams.toString());
+  }
+
+  const searchInput = document.getElementById('feeSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') updateFilters({q: this.value});
     });
   }
 
-  document.getElementById('feeSearchInput').addEventListener('input', filterFeesTable);
-  document.getElementById('batchFeeSelect').addEventListener('change', filterFeesTable);
-  document.getElementById('planFeeSelect').addEventListener('change', filterFeesTable);
-  document.getElementById('statusFeeSelect').addEventListener('change', filterFeesTable);
-
-  function resetFeeFilters() {
-    document.getElementById('feeSearchInput').value = '';
-    document.getElementById('batchFeeSelect').value = '';
-    document.getElementById('planFeeSelect').value = '';
-    document.getElementById('statusFeeSelect').value = '';
-    document.querySelectorAll('.pill-tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector('.pill-tab-btn:first-child').classList.add('active');
-    filterFeesTable();
+  const statusFilter = document.getElementById('statusFeeSelect');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', function() {
+      updateFilters({status: this.value});
+    });
   }
 
-  function filterByTab(btn, statusFilter) {
-    document.querySelectorAll('.pill-tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('statusFeeSelect').value = (statusFilter === 'all') ? '' : statusFilter;
-    filterFeesTable();
+  const startFilter = document.getElementById('startDateSelect');
+  if (startFilter) {
+    startFilter.addEventListener('change', function() {
+      updateFilters({start_date: this.value});
+    });
+  }
+
+  const endFilter = document.getElementById('endDateSelect');
+  if (endFilter) {
+    endFilter.addEventListener('change', function() {
+      updateFilters({end_date: this.value});
+    });
   }
 
   // Close modal when clicking on overlay background

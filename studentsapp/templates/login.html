@@ -1008,7 +1008,15 @@
       <!-- =====================================================================
            LOGIN FORM (EMAIL, PASSWORD, REMEMBER ME, FORGOT, SUBMIT)
            ===================================================================== -->
-      <form id="staffLoginForm" onsubmit="handleStaffLogin(event)">
+      <form id="staffLoginForm" method="POST" action="{% url 'login_page' %}">
+          {% csrf_token %}
+          <input type="hidden" name="role" id="selectedRoleInput" value="admin">
+          
+          {% if error %}
+          <div style="background: #fef2f2; color: #ef4444; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 14px; font-weight: 600; border: 1px solid #fca5a5;">
+            {{ error }}
+          </div>
+          {% endif %}
         
         <!-- Field 1: Email / Username -->
         <div class="input-group">
@@ -1019,12 +1027,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </span>
-            <input
-              type="text"
-              id="staffUsernameInput"
+            <input type="text" name="username" id="staffUsernameInput"
               class="form-input"
               placeholder="e.g. admin@nim.edu or username"
-              value="admin@nim.edu"
+              
               required
             >
           </div>
@@ -1041,12 +1047,10 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </span>
-            <input
-              type="password"
-              id="staffPasswordInput"
+            <input type="password" name="password" id="staffPasswordInput"
               class="form-input"
               placeholder="••••••••••••"
-              value="Admin@2026"
+              
               required
             >
             <button
@@ -1179,6 +1183,15 @@
       defaultEmail: 'manoj.accounts@nim.edu',
       defaultPwd: 'Accounts@2026',
       redirectUrl: "{% url 'dashboard' %}?role=accountant"
+    },
+    'parent': {
+      title: 'Parent',
+      badge: 'Parent Selected',
+      context: 'Logging in as: <strong>Parent/Guardian</strong> • Track Student Progress, Attendance & Fees',
+      btnText: 'Login as Parent',
+      defaultEmail: 'parent@example.com',
+      defaultPwd: 'ParentPassword',
+      redirectUrl: "{% url 'students' %}" // Temporarily using students page or dashboard
     }
   };
 
@@ -1192,6 +1205,7 @@
     if (role === 'admin') document.getElementById('roleCardAdmin').classList.add('active');
     if (role === 'mentor') document.getElementById('roleCardMentor').classList.add('active');
     if (role === 'accountant') document.getElementById('roleCardAccountant').classList.add('active');
+    if (role === 'parent') document.getElementById('roleCardParent').classList.add('active');
 
     // Update role badges & context description
     document.getElementById('activeRoleNameBadge').textContent = cfg.badge;

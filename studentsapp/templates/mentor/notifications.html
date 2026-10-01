@@ -1,171 +1,854 @@
 {% extends 'mentor/base.html' %}
 
-{% block title %}Notifications & Alerts - NIM Academy{% endblock %}
+{% block title %}Messages & Notifications - NIM Academy{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* MENTOR NOTIFICATIONS PAGE CSS */
+  .mentor-welcome-card {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: 12px;
+    padding: 24px 32px;
+    color: #ffffff;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  .mentor-page-heading { font-size: 1.5rem; font-weight: 700; margin: 0 0 8px 0; }
+  .mentor-page-subline { font-size: 0.875rem; color: #94a3b8; margin: 0; max-width: 650px; line-height: 1.5; }
+  
+  /* Buttons */
+  .btn-nim-primary {
+    background: #007782;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+  .btn-nim-primary:hover { background: #00636d; }
+  .btn-nim-secondary {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+  .btn-nim-secondary:hover { background: #e2e8f0; }
+
+  /* KPI Stat Cards */
+  .mentor-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .mentor-stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .mentor-icon-box { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; shrink: 0; }
+  .mentor-icon-blue { background: #eff6ff; color: #2563eb; }
+  .mentor-icon-amber { background: #fffbeb; color: #d97706; }
+  .mentor-icon-green { background: #f0fdf4; color: #16a34a; }
+  .mentor-icon-purple { background: #f3e8ff; color: #9333ea; }
+  .mentor-stat-value { font-size: 1.375rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
+  .mentor-stat-label { font-size: 0.8125rem; color: #64748b; font-weight: 500; }
+
+  /* Badges */
+  .badge-pill { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+  .badge-blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+  .badge-amber { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .badge-green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .badge-purple { background: #f3e8ff; color: #9333ea; border: 1px solid #e9d5ff; }
+  .badge-slate { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+  .badge-rose { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+
+  /* Small Buttons */
+  .btn-table-sm { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .btn-table-sm.primary { background: #ebf5ff; color: #2563eb; border-color: #bfdbfe; }
+  .btn-table-sm.primary:hover { background: #dbeafe; }
+  .btn-table-sm.secondary { background: #f8fafc; color: #475569; border-color: #cbd5e1; }
+  .btn-table-sm.secondary:hover { background: #e2e8f0; }
+  .btn-table-sm.danger { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+  .btn-table-sm.danger:hover { background: #fee2e2; }
+
+  /* Cards & Notifications */
+  .notif-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .notif-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+  }
+  .notif-unread {
+    background: #f0f7ff !important;
+    border-left-width: 4px !important;
+  }
+
+  /* Modals */
+  .mentor-modal-backdrop {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .mentor-modal-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .mentor-modal-box {
+    background: #ffffff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 580px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .mentor-modal-backdrop.active .mentor-modal-box {
+    transform: scale(1);
+  }
+  .modal-header-bar {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border-radius: 16px 16px 0 0;
+  }
+  .modal-body-pad { padding: 24px; }
+  .modal-footer-bar {
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: #f8fafc;
+    border-radius: 0 0 16px 16px;
+  }
+
+  /* Form Elements */
+  .form-group-custom { margin-bottom: 18px; }
+  .form-group-custom label { display: block; font-size: 0.8125rem; font-weight: 600; color: #334155; margin-bottom: 6px; }
+  .form-input-custom, .form-select-custom, .form-textarea-custom {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #0f172a;
+    background-color: #ffffff;
+    transition: border-color 0.15s;
+    font-family: inherit;
+  }
+  .form-input-custom:focus, .form-select-custom:focus, .form-textarea-custom:focus {
+    outline: none;
+    border-color: #007782;
+    box-shadow: 0 0 0 3px rgba(0, 119, 130, 0.1);
+  }
+
+  /* Radio Segment Control */
+  .segment-control {
+    display: flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 10px;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+  .segment-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  .segment-btn.active {
+    background: #ffffff;
+    color: #007782;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- Page Header -->
+<!-- Welcome & Action Header -->
 <div class="mentor-welcome-card">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
     <div>
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-        <span class="badge-pill badge-blue">Faculty Alerts Feed</span>
-        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Faculty Mentor: Dr. Rajiv Sen</span>
+        <span class="badge-pill badge-blue">Notifications &amp; Activity Center</span>
+        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Faculty Mentor: {{ user_name }}</span>
       </div>
-      <h1 class="mentor-page-heading">Notifications &amp; Activity Dispatch</h1>
+      <h1 class="mentor-page-heading">Faculty Communications Hub</h1>
       <p class="mentor-page-subline">
-        Real-time alerts for upcoming classes, student submissions, attendance drops, and assessment releases.
+        Send announcements to assigned student cohorts or individual students, inspect incoming student questions, and receive official updates from Academy Admin.
       </p>
     </div>
 
-    <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <button class="btn-nim-primary" onclick="openSendMsgModal();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+        <span>Send Message</span>
+      </button>
+
       <button class="btn-nim-secondary" onclick="markAllNotificationsRead();">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
         <span>Mark All as Read</span>
       </button>
     </div>
   </div>
 </div>
 
-<!-- Category Filter Tabs -->
-<div style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px;" id="notifFilterTabs">
-  <button class="btn-table-sm primary notif-tab" onclick="filterCategory('all', this);">
-    All ({{ notifications|length }})
-  </button>
-  <button class="btn-table-sm notif-tab" onclick="filterCategory('classes', this);">
-    Classes
-  </button>
-  <button class="btn-table-sm notif-tab" onclick="filterCategory('assignments', this);">
-    Tasks &amp; Labs
-  </button>
-  <button class="btn-table-sm notif-tab" onclick="filterCategory('evaluations', this);">
-    Evaluations
-  </button>
-  <button class="btn-table-sm notif-tab" onclick="filterCategory('care', this);">
-    Care Alerts
-  </button>
-  <button class="btn-table-sm notif-tab" onclick="filterCategory('placement', this);">
-    Placement
-  </button>
-  <button class="btn-table-sm notif-tab" onclick="filterCategory('announcements', this);">
-    Academy
-  </button>
-  <button class="btn-table-sm notif-tab" onclick="filterCategory('unread', this);" style="margin-left: auto;">
-    Unread Only
-  </button>
+<!-- KPI Summary Cards -->
+<div class="mentor-kpi-grid">
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px;">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value" id="kpiTotal">{{ notifications|length }}</div>
+      <div class="mentor-stat-label">Total Dispatch Logs</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-amber">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px;">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value" id="kpiQuestions">
+        {% with questions_count=0 %}
+          {% for n in notifications %}{% if n.direction == 'question' %}{% endif %}{% endfor %}
+          {{ notifications|length }}
+        {% endwith %}
+      </div>
+      <div class="mentor-stat-label">Student Questions</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px;">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value" id="kpiSent">
+        {{ my_batches|length }} Cohorts
+      </div>
+      <div class="mentor-stat-label">Assigned Batches</div>
+    </div>
+  </div>
+
+  <div class="mentor-stat-card">
+    <div class="mentor-icon-box mentor-icon-purple">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px;">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+      </svg>
+    </div>
+    <div>
+      <div class="mentor-stat-value">{{ my_students|length }}</div>
+      <div class="mentor-stat-label">Assigned Students</div>
+    </div>
+  </div>
 </div>
 
-<!-- Notification Items Feed -->
-<div style="display: flex; flex-direction: column; gap: 12px;" id="notifListContainer">
-  {% for n in notifications %}
-  <div class="mentor-card notif-card" data-category="{{ n.category }}" data-read="{% if n.is_read %}read{% else %}unread{% endif %}" style="padding: 18px 20px; transition: all 0.2s; border-left: 4px solid {% if n.priority == 'urgent' %}#e11d48{% elif n.priority == 'high' %}#f59e0b{% else %}#0062eb{% endif %}; {% if not n.is_read %}background: #f0f7ff;{% endif %}">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
-      <div style="display: flex; gap: 14px; align-items: flex-start;">
-        <div style="width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; shrink-0;
-          {% if n.priority == 'urgent' %}background: #ffe4e6; color: #e11d48;
-          {% elif n.priority == 'high' %}background: #fef3c7; color: #d97706;
-          {% else %}background: #eff6ff; color: #0062eb;{% endif %}">
-          {% if n.category == 'classes' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          {% elif n.category == 'assignments' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          {% elif n.category == 'care' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          {% elif n.category == 'evaluations' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          {% elif n.category == 'placement' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+<!-- Filters & Search Toolbar -->
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+  <!-- Filter Tabs -->
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="notifFilterTabs">
+    <button class="btn-table-sm primary notif-tab" onclick="filterNotifs('all', this);">
+      All ({{ notifications|length }})
+    </button>
+    <button class="btn-table-sm secondary notif-tab" onclick="filterNotifs('question', this);">
+      Student Questions
+    </button>
+    <button class="btn-table-sm secondary notif-tab" onclick="filterNotifs('sent', this);">
+      Sent Messages
+    </button>
+    <button class="btn-table-sm secondary notif-tab" onclick="filterNotifs('admin', this);">
+      Admin Notices
+    </button>
+    <button class="btn-table-sm secondary notif-tab" onclick="filterNotifs('unread', this);">
+      Unread Only
+    </button>
+  </div>
+
+  <!-- Search Input -->
+  <div style="position: relative; width: 280px;">
+    <input type="text" id="notifSearchInput" class="form-input-custom" placeholder="Search by student, title or text..." onkeyup="filterNotifsBySearch();" style="padding-left: 36px; padding-top: 8px; padding-bottom: 8px; font-size: 0.8125rem;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #94a3b8;">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Notification Items List -->
+<div id="notifContainer">
+  {% if notifications %}
+    {% for n in notifications %}
+    <div class="notif-card {% if not n.is_read %}notif-unread{% endif %}" 
+         data-id="{{ n.id }}"
+         data-direction="{% if n.direction %}{{ n.direction }}{% elif n.sender_mentor %}sent{% elif n.sender_student %}question{% else %}admin{% endif %}"
+         data-read="{% if n.is_read %}read{% else %}unread{% endif %}"
+         data-search="{{ n.title|lower }} {{ n.message|lower }} {% if n.sender_student %}{{ n.sender_student.name|lower }}{% endif %} {% if n.target_student %}{{ n.target_student.name|lower }}{% endif %} {{ n.target_group|lower }}"
+         style="border-left: 4px solid {% if n.direction == 'question' %}#2563eb{% elif n.direction == 'sent' %}#16a34a{% elif n.priority == 'urgent' %}#e11d48{% else %}#f59e0b{% endif %};">
+      
+      <div style="display: flex; gap: 16px; align-items: flex-start;">
+        <!-- Direction Icon -->
+        <div style="width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; shrink: 0;
+          {% if n.direction == 'question' %}background: #eff6ff; color: #2563eb;
+          {% elif n.direction == 'sent' %}background: #f0fdf4; color: #16a34a;
+          {% elif n.priority == 'urgent' %}background: #fff1f2; color: #e11d48;
+          {% else %}background: #fffbeb; color: #d97706;{% endif %}">
+          {% if n.direction == 'question' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          {% elif n.direction == 'sent' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
           {% else %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
           {% endif %}
         </div>
 
         <div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
-            {% if n.priority == 'urgent' %}
-              <span class="badge-pill badge-rose" style="font-size: 0.6875rem;">● Urgent</span>
-            {% elif n.priority == 'high' %}
-              <span class="badge-pill badge-amber" style="font-size: 0.6875rem;">● High Priority</span>
+          <!-- Badges & Meta -->
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+            {% if n.direction == 'question' %}
+              <span class="badge-pill badge-blue">● Student Question</span>
+            {% elif n.direction == 'sent' %}
+              <span class="badge-pill badge-green">● Sent Message</span>
+            {% else %}
+              <span class="badge-pill badge-amber">● Admin Notice</span>
             {% endif %}
-            <span class="badge-pill badge-slate" style="font-size: 0.6875rem; text-transform: uppercase;">{{ n.category }}</span>
-            <span style="font-size: 0.72rem; color: #64748b;">{{ n.timestamp }}</span>
+
             {% if not n.is_read %}
-              <span class="badge-pill badge-blue" style="font-size: 0.625rem;">New</span>
+              <span class="badge-pill badge-rose" style="font-size: 0.6875rem;">New</span>
             {% endif %}
+
+            <span style="font-size: 0.75rem; color: #64748b; font-weight: 500;">
+              {{ n.timestamp|date:"M d, Y • h:i A" }}
+            </span>
           </div>
-          <h4 style="margin: 0 0 4px; font-size: 0.9375rem; font-weight: 800; color: #0a1b39;">{{ n.title }}</h4>
-          <p style="margin: 0; font-size: 0.8125rem; color: #475569; line-height: 1.45;">{{ n.message }}</p>
+
+          <!-- Title -->
+          <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">
+            {{ n.title }}
+          </h3>
+
+          <!-- Subtitle Meta (From/To) -->
+          <p style="font-size: 0.8125rem; font-weight: 600; color: #475569; margin: 0 0 6px 0;">
+            {% if n.direction == 'question' %}
+              From: <span style="color: #007782;">{{ n.sender_student.name }}</span> 
+              {% if n.sender_student.batch %}({{ n.sender_student.batch.name }}){% endif %}
+            {% elif n.direction == 'sent' %}
+              To: <span style="color: #16a34a;">
+                {% if n.target_student %}{{ n.target_student.name }}{% else %}{{ n.target_group }}{% endif %}
+              </span>
+            {% else %}
+              From: <span style="color: #d97706;">Academy Admin</span> 
+              {% if n.target_group %}(Target: {{ n.target_group }}){% endif %}
+            {% endif %}
+          </p>
+
+          <!-- Snippet Message -->
+          <p style="font-size: 0.875rem; color: #334155; margin: 0; line-height: 1.5; word-break: break-word;">
+            {{ n.message }}
+          </p>
         </div>
       </div>
 
-      <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
-        <a href="{{ n.action_url }}" class="btn-table-sm primary" style="text-decoration: none; white-space: nowrap;">
-          {{ n.action_label }}
-        </a>
-        <button class="btn-table-sm" onclick="toggleRead(this);" title="Toggle read state" style="white-space: nowrap;">
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 8px; align-items: center; shrink: 0;">
+        <button class="btn-table-sm primary" onclick="openNotifDetail('{{ n.id }}', '{{ n.title|escapejs }}', '{{ n.message|escapejs }}', '{{ n.timestamp|date:"M d, Y • h:i A" }}', '{% if n.direction == "question" %}From: {{ n.sender_student.name|escapejs }}{% elif n.direction == "sent" %}To: {% if n.target_student %}{{ n.target_student.name|escapejs }}{% else %}{{ n.target_group|escapejs }}{% endif %}{% else %}From: Academy Admin{% endif %}', '{% if n.direction %}{{ n.direction }}{% elif n.sender_mentor %}sent{% else %}admin{% endif %}');">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span>View</span>
+        </button>
+
+        <button class="btn-table-sm secondary" onclick="toggleReadState('{{ n.id }}', this);">
           {% if n.is_read %}Mark Unread{% else %}Mark Read{% endif %}
+        </button>
+
+        <button class="btn-table-sm danger" onclick="deleteNotif('{{ n.id }}', this);" title="Delete Notification">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
         </button>
       </div>
     </div>
-  </div>
-  {% endfor %}
+    {% endfor %}
+  {% else %}
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 48px 24px; text-align: center; color: #64748b;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 48px; height: 48px; color: #94a3b8; margin-bottom: 12px;">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">No Notifications Found</h3>
+      <p style="font-size: 0.875rem; margin: 0;">You have no active message notifications or dispatch logs at this time.</p>
+    </div>
+  {% endif %}
 </div>
 
+
+<!-- MODAL 1: SEND MESSAGE TO STUDENTS / BATCHES -->
+<div class="mentor-modal-backdrop" id="sendMsgModal">
+  <div class="mentor-modal-box">
+    <div class="modal-header-bar">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 8px; background: #e6f7f4; color: #007782; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </div>
+        <div>
+          <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin: 0;">Send Notification Message</h3>
+          <span style="font-size: 0.75rem; color: #64748b;">Dispatch message to assigned cohorts or individual student</span>
+        </div>
+      </div>
+      <button onclick="closeSendMsgModal();" style="background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer;">&times;</button>
+    </div>
+
+    <form id="sendMsgForm" onsubmit="handleSendMsgSubmit(event);">
+      <div class="modal-body-pad">
+        <!-- Recipient Type Selector -->
+        <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: #334155; margin-bottom: 8px;">
+          Send Target / Recipient Type:
+        </label>
+        <div class="segment-control">
+          <button type="button" class="segment-btn active" id="segBatchBtn" onclick="setSendTarget('batch');">
+            Batch-wise Message
+          </button>
+          <button type="button" class="segment-btn" id="segStudentBtn" onclick="setSendTarget('student');">
+            Individual Student
+          </button>
+        </div>
+
+        <!-- Hidden input for type -->
+        <input type="hidden" id="sendTypeInput" value="batch">
+
+        <!-- Batch Select -->
+        <div class="form-group-custom" id="batchSelectGroup">
+          <label for="batchSelectInput">Select Cohort / Batch *</label>
+          <select id="batchSelectInput" class="form-select-custom" onchange="loadStudentsForBatch(this.value);">
+            <option value="">-- Choose Assigned Batch --</option>
+            {% for b in my_batches %}
+              <option value="{{ b.id }}">{{ b.name }} ({{ b.course }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Individual Student Select (Hidden by default) -->
+        <div class="form-group-custom" id="studentSelectGroup" style="display: none;">
+          <label for="studentSelectInput">Select Student *</label>
+          <select id="studentSelectInput" class="form-select-custom">
+            <option value="">-- Choose Student --</option>
+            {% for s in my_students %}
+              <option value="{{ s.id }}" data-batch-id="{{ s.batch.id }}">{{ s.name }} ({{ s.student_id }} - {{ s.batch.name }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Title Input -->
+        <div class="form-group-custom">
+          <label for="msgTitleInput">Subject / Notification Title *</label>
+          <input type="text" id="msgTitleInput" class="form-input-custom" placeholder="e.g. Schedule Change / Assignment Reminder" required>
+        </div>
+
+        <!-- Content Textarea -->
+        <div class="form-group-custom" style="margin-bottom: 0;">
+          <label for="msgContentInput">Message Body *</label>
+          <textarea id="msgContentInput" class="form-textarea-custom" rows="4" placeholder="Enter full notification text here..." required></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-nim-secondary" onclick="closeSendMsgModal();">Cancel</button>
+        <button type="submit" class="btn-nim-primary" id="btnSubmitSend">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          <span>Send Message</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- MODAL 2: READ MESSAGE DETAIL -->
+<div class="mentor-modal-backdrop" id="readMsgModal">
+  <div class="mentor-modal-box">
+    <div class="modal-header-bar">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span id="readMsgBadge" class="badge-pill badge-blue">● Notification Detail</span>
+        <span id="readMsgDate" style="font-size: 0.75rem; color: #64748b;"></span>
+      </div>
+      <button onclick="closeReadMsgModal();" style="background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer;">&times;</button>
+    </div>
+
+    <div class="modal-body-pad">
+      <h2 id="readMsgTitle" style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0 0 8px 0;"></h2>
+      <p id="readMsgFrom" style="font-size: 0.875rem; font-weight: 600; color: #007782; margin: 0 0 16px 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;"></p>
+      
+      <div id="readMsgBody" style="font-size: 0.9375rem; color: #334155; line-height: 1.6; white-space: pre-wrap; background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0;"></div>
+    </div>
+
+    <div class="modal-footer-bar">
+      <button class="btn-nim-secondary" onclick="closeReadMsgModal();">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- JAVASCRIPT CONTROLLERS -->
 <script>
-function filterCategory(category, buttonEl) {
-  // Update tab active state
-  document.querySelectorAll('.notif-tab').forEach(btn => {
-    btn.classList.remove('primary');
-  });
-  buttonEl.classList.add('primary');
+  let activeFilter = 'all';
 
-  // Filter notification cards
-  const cards = document.querySelectorAll('.notif-card');
-  cards.forEach(card => {
-    const cardCat = card.getAttribute('data-category');
-    const cardRead = card.getAttribute('data-read');
+  // 1. Filter Category Tabs
+  function filterNotifs(category, btnEl) {
+    activeFilter = category;
+    document.querySelectorAll('.notif-tab').forEach(btn => {
+      btn.classList.remove('primary');
+      btn.classList.add('secondary');
+    });
+    btnEl.classList.remove('secondary');
+    btnEl.classList.add('primary');
 
-    if (category === 'all') {
-      card.style.display = 'block';
-    } else if (category === 'unread') {
-      card.style.display = cardRead === 'unread' ? 'block' : 'none';
-    } else {
-      card.style.display = cardCat === category ? 'block' : 'none';
-    }
-  });
-}
-
-function toggleRead(buttonEl) {
-  const card = buttonEl.closest('.notif-card');
-  const currentStatus = card.getAttribute('data-read');
-  if (currentStatus === 'unread') {
-    card.setAttribute('data-read', 'read');
-    card.style.background = '#ffffff';
-    buttonEl.textContent = 'Mark Unread';
-    const newBadge = card.querySelector('.badge-blue');
-    if (newBadge && newBadge.textContent === 'New') {
-      newBadge.remove();
-    }
-  } else {
-    card.setAttribute('data-read', 'unread');
-    card.style.background = '#f0f7ff';
-    buttonEl.textContent = 'Mark Read';
+    filterNotifsList();
   }
-}
 
-function markAllNotificationsRead() {
-  const cards = document.querySelectorAll('.notif-card');
-  cards.forEach(card => {
-    card.setAttribute('data-read', 'read');
-    card.style.background = '#ffffff';
-    const toggleBtn = card.querySelectorAll('button')[0];
-    if (toggleBtn) toggleBtn.textContent = 'Mark Unread';
-    const newBadge = card.querySelector('.badge-blue');
-    if (newBadge && newBadge.textContent === 'New') {
-      newBadge.remove();
+  // 2. Real-time Text Search Filter
+  function filterNotifsBySearch() {
+    filterNotifsList();
+  }
+
+  function filterNotifsList() {
+    const searchVal = (document.getElementById('notifSearchInput').value || '').toLowerCase().trim();
+    const cards = document.querySelectorAll('.notif-card');
+
+    cards.forEach(card => {
+      const dir = card.getAttribute('data-direction');
+      const readState = card.getAttribute('data-read');
+      const searchText = card.getAttribute('data-search') || '';
+
+      let matchesCat = true;
+      if (activeFilter === 'question') matchesCat = (dir === 'question');
+      else if (activeFilter === 'sent') matchesCat = (dir === 'sent');
+      else if (activeFilter === 'admin') matchesCat = (dir === 'admin');
+      else if (activeFilter === 'unread') matchesCat = (readState === 'unread');
+
+      let matchesSearch = true;
+      if (searchVal) {
+        matchesSearch = searchText.includes(searchVal);
+      }
+
+      if (matchesCat && matchesSearch) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  // 3. Open Send Message Modal
+  function openSendMsgModal() {
+    document.getElementById('sendMsgForm').reset();
+    setSendTarget('batch');
+    document.getElementById('sendMsgModal').classList.add('active');
+  }
+
+  function closeSendMsgModal() {
+    document.getElementById('sendMsgModal').classList.remove('active');
+  }
+
+  // 4. Toggle Recipient Target (Batch vs Student)
+  function setSendTarget(type) {
+    document.getElementById('sendTypeInput').value = type;
+    if (type === 'batch') {
+      document.getElementById('segBatchBtn').classList.add('active');
+      document.getElementById('segStudentBtn').classList.remove('active');
+      document.getElementById('batchSelectGroup').style.display = 'block';
+      document.getElementById('studentSelectGroup').style.display = 'none';
+      document.getElementById('batchSelectInput').required = true;
+      document.getElementById('studentSelectInput').required = false;
+    } else {
+      document.getElementById('segStudentBtn').classList.add('active');
+      document.getElementById('segBatchBtn').classList.remove('active');
+      document.getElementById('batchSelectGroup').style.display = 'block';
+      document.getElementById('studentSelectGroup').style.display = 'block';
+      document.getElementById('batchSelectInput').required = false;
+      document.getElementById('studentSelectInput').required = true;
     }
-  });
-  alert('All notifications marked as read.');
-}
+  }
+
+  // 5. Filter Student Options by Selected Batch
+  function loadStudentsForBatch(batchId) {
+    const studentSelect = document.getElementById('studentSelectInput');
+    const options = studentSelect.querySelectorAll('option');
+
+    options.forEach(opt => {
+      if (!opt.value) return;
+      const bId = opt.getAttribute('data-batch-id');
+      if (!batchId || bId === batchId) {
+        opt.style.display = 'block';
+      } else {
+        opt.style.display = 'none';
+      }
+    });
+    studentSelect.value = '';
+  }
+
+  // 6. Submit Notification Message via API
+  async function handleSendMsgSubmit(e) {
+    e.preventDefault();
+    const sendType = document.getElementById('sendTypeInput').value;
+    const batchId = document.getElementById('batchSelectInput').value;
+    const studentId = document.getElementById('studentSelectInput').value;
+    const title = document.getElementById('msgTitleInput').value.trim();
+    const message = document.getElementById('msgContentInput').value.trim();
+
+    if (!title || !message) {
+      alert('Please fill out the title and message fields.');
+      return;
+    }
+
+    if (sendType === 'batch' && !batchId) {
+      alert('Please select a batch.');
+      return;
+    }
+    if (sendType === 'student' && !studentId) {
+      alert('Please select a student.');
+      return;
+    }
+
+    const btnSubmit = document.getElementById('btnSubmitSend');
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `<span>Sending...</span>`;
+
+    try {
+      const res = await fetch('/api/mentor/send-batch-notification/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          send_type: sendType,
+          batch_id: batchId,
+          student_id: studentId,
+          title: title,
+          message: message
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert(`Message dispatched successfully! (${data.count || 1} notification created)`);
+        closeSendMsgModal();
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Failed to send message.'));
+      }
+    } catch (err) {
+      alert('Network error while sending notification: ' + err);
+    } finally {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Send Message</span>`;
+    }
+  }
+
+  // 7. Toggle Read State (API integration)
+  async function toggleReadState(notifId, btnEl) {
+    const card = btnEl.closest('.notif-card');
+    const currentRead = card.getAttribute('data-read');
+
+    try {
+      const res = await fetch(`/api/mentor/mark-notification-read/${notifId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (currentRead === 'unread') {
+          card.setAttribute('data-read', 'read');
+          card.classList.remove('notif-unread');
+          btnEl.textContent = 'Mark Unread';
+          const newBadge = card.querySelector('.badge-rose');
+          if (newBadge && newBadge.textContent === 'New') newBadge.remove();
+        } else {
+          card.setAttribute('data-read', 'unread');
+          card.classList.add('notif-unread');
+          btnEl.textContent = 'Mark Read';
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // 8. Delete Notification
+  async function deleteNotif(notifId, btnEl) {
+    if (!confirm('Are you sure you want to delete this notification log?')) return;
+    const card = btnEl.closest('.notif-card');
+
+    try {
+      const res = await fetch(`/api/mentor/delete-notification/${notifId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+          card.remove();
+          filterNotifsList();
+        }, 200);
+      } else {
+        alert('Could not delete notification: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error deleting notification: ' + err);
+    }
+  }
+
+  // 9. Mark All Notifications as Read
+  function markAllNotificationsRead() {
+    const cards = document.querySelectorAll('.notif-card[data-read="unread"]');
+    cards.forEach(async (card) => {
+      const id = card.getAttribute('data-id');
+      const toggleBtn = card.querySelectorAll('button')[1];
+      if (id) {
+        fetch(`/api/mentor/mark-notification-read/${id}/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        });
+      }
+      card.setAttribute('data-read', 'read');
+      card.classList.remove('notif-unread');
+      if (toggleBtn) toggleBtn.textContent = 'Mark Unread';
+      const newBadge = card.querySelector('.badge-rose');
+      if (newBadge && newBadge.textContent === 'New') newBadge.remove();
+    });
+    alert('All visible notifications marked as read.');
+  }
+
+  // 10. Open Detail Modal
+  function openNotifDetail(id, title, message, dateStr, fromStr, direction) {
+    document.getElementById('readMsgTitle').textContent = title;
+    document.getElementById('readMsgBody').textContent = message;
+    document.getElementById('readMsgDate').textContent = dateStr;
+    document.getElementById('readMsgFrom').textContent = fromStr;
+
+    const badge = document.getElementById('readMsgBadge');
+    if (direction === 'question') {
+      badge.className = 'badge-pill badge-blue';
+      badge.textContent = '● Student Question';
+    } else if (direction === 'sent') {
+      badge.className = 'badge-pill badge-green';
+      badge.textContent = '● Sent Message';
+    } else {
+      badge.className = 'badge-pill badge-amber';
+      badge.textContent = '● Admin Notice';
+    }
+
+    document.getElementById('readMsgModal').classList.add('active');
+
+    // Mark as read in backend
+    fetch(`/api/mentor/mark-notification-read/${id}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+  }
+
+  function closeReadMsgModal() {
+    document.getElementById('readMsgModal').classList.remove('active');
+  }
+
+  // Utility to get CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 </script>
 {% endblock %}
-

@@ -195,8 +195,8 @@
         <div class="table-card-header">
           <div class="table-header-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><line x1="18" x1="20" x2="18" y2="10"/><line x1="12" x1="20" x2="12" y2="4"/><line x1="6" x1="20" x2="6" y2="14"/></svg>
-            <span id="reportTableHeading">Cohort Performance & Comprehensive Analytics Matrix</span>
-            <span class="table-records-count">6 Active Cohorts</span>
+            <span id="reportTableHeading">Student Performance & Analytics Matrix</span>
+            <span class="table-records-count">{{ kpi.active_students }} Active Students</span>
           </div>
 
           <div style="display: flex; gap: 8px;">
@@ -212,50 +212,80 @@
         </div>
 
         <div class="table-scroll-container">
-          <table class="admin-data-table" id="reportsTable">
-            <thead>
-              <tr>
-                <th style="width: 250px;">Activity Type</th>
-                <th>Description</th>
-                <th>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for activity in activities %}
-              <tr>
-                <td>
-                  <div class="entity-cell">
-                    <div class="entity-avatar" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">ACT</div>
-                    <div class="entity-info">
-                      <span class="entity-name">{{ activity.activity_type }}</span>
+            <table class="admin-data-table" id="reportsTable">
+              <thead>
+                <tr>
+                  <th style="width: 250px;">Student & ID</th>
+                  <th>Batch / Cohort</th>
+                  <th>Status</th>
+                  <th>Enrollment Date</th>
+                  <th style="text-align: right; width: 130px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for student in students %}
+                <tr>
+                  <td>
+                    <div class="entity-cell">
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">{{ student.name|slice:":1"|upper }}</div>
+                      <div class="entity-info">
+                        <span class="entity-name">{{ student.name }}</span>
+                        <span class="entity-sub">{{ student.student_id }}</span>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <span style="font-weight: 700; color: var(--admin-text-main);">{{ activity.description }}</span>
-                </td>
-                <td>
-                  <span style="font-weight: 700; color: var(--admin-text-main);">{{ activity.timestamp }}</span>
-                </td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="3" style="text-align: center; padding: 20px;">No activities found.</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+                  </td>
+                  <td>
+                    <span class="font-mono-code">{{ student.batch.name|default:"Unassigned" }}</span>
+                  </td>
+                  <td>
+                    <span class="badge-status-active">{{ student.status }}</span>
+                  </td>
+                  <td>
+                    <span style="color: var(--admin-text-muted); font-size: 0.875rem;">{{ student.join_date|date:"d M Y" }}</span>
+                  </td>
+                  <td style="text-align: right;">
+                    <div class="table-actions-cell" style="justify-content: flex-end;">
+                      <button title="View Full Report" onclick="alert('Viewing comprehensive performance report for {{ student.name|escapejs }}...');" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#eff6ff'; this.style.color='#3b82f6'; this.style.borderColor='#bfdbfe';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b'; this.style.borderColor='#e2e8f0';">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5" style="text-align: center; padding: 20px; color: #94a3b8;">No student reports found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
 
         <!-- Table Pagination -->
         <div class="pagination-row">
-          <div>Showing <strong>1 - 5</strong> of <strong>6</strong> cohorts</div>
-          <div class="pagination-controls">
-            <button class="btn-page-nav" disabled>Previous</button>
-            <button class="btn-page-nav active">1</button>
-            <button class="btn-page-nav">Next</button>
+            <div>Showing <strong>{{ students.start_index|default:"0" }} - {{ students.end_index|default:"0" }}</strong> of <strong>{{ students.paginator.count|default:"0" }}</strong> students</div>
+            <div class="pagination-controls">
+              {% if students.has_previous %}
+              <button class="btn-page-nav" onclick="goToPage({{ students.previous_page_number }})">Previous</button>
+              {% else %}
+              <button class="btn-page-nav" disabled>Previous</button>
+              {% endif %}
+
+              {% for i in students.paginator.page_range %}
+                {% if students.number == i %}
+                  <button class="btn-page-nav active">{{ i }}</button>
+                {% else %}
+                  <button class="btn-page-nav" onclick="goToPage({{ i }})">{{ i }}</button>
+                {% endif %}
+              {% endfor %}
+
+              {% if students.has_next %}
+              <button class="btn-page-nav" onclick="goToPage({{ students.next_page_number }})">Next</button>
+              {% else %}
+              <button class="btn-page-nav" disabled>Next</button>
+              {% endif %}
+            </div>
           </div>
-        </div>
+          
 
       </div>
 
@@ -355,7 +385,7 @@
 
     const heading = document.getElementById('reportTableHeading');
     const titles = {
-      'all': 'Cohort Performance & Comprehensive Analytics Matrix',
+      'all': 'Student Performance & Analytics Matrix',
       'attendance': 'Attendance Records & Biometric Lecture Logs',
       'academic': 'Academic Curriculum Mastery & Grade Distributions',
       'progress': 'Student Progress, Lab Submissions & Placement Readiness',
@@ -399,7 +429,7 @@
     document.getElementById('statusReportSelect').value = '';
     document.querySelectorAll('.pill-tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector('.pill-tab-btn:first-child').classList.add('active');
-    document.getElementById('reportTableHeading').textContent = 'Cohort Performance & Comprehensive Analytics Matrix';
+    document.getElementById('reportTableHeading').textContent = 'Student Performance & Analytics Matrix';
     filterReportsTable();
   }
 
@@ -411,6 +441,23 @@
   });
 </script>
 
+<script>
+    function updateFilters(params) {
+      const urlParams = new URLSearchParams(window.location.search);
+      for (const [key, value] of Object.entries(params)) {
+        if (value) urlParams.set(key, value);
+        else urlParams.delete(key);
+      }
+      urlParams.delete('page');
+      window.location.search = urlParams.toString();
+    }
+
+    function goToPage(page) {
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('page', page);
+      window.location.search = urlParams.toString();
+    }
+  </script>
 </body>
 </html>
 

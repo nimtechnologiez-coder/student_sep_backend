@@ -81,117 +81,97 @@
 
       <!-- 4 KPI Summary Cards -->
       <div class="kpi-cards-grid">
-        <div class="kpi-stat-card">
-          <div class="kpi-icon-box kpi-icon-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <div class="kpi-stat-card">
+            <div class="kpi-icon-box kpi-icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </div>
+            <div class="kpi-details-col">
+              <span class="kpi-stat-number">{{ kpi.total }}</span>
+              <span class="kpi-stat-label">Total Broadcasts</span>
+              <span class="kpi-trend-row"><span class="trend-green">Fall Term 2026</span></span>
+            </div>
           </div>
-          <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.unread }}</span>
-            <span class="kpi-stat-label">Total Broadcasts</span>
-            <span class="kpi-trend-row"><span class="trend-green">Fall Term 2026</span></span>
+
+          <div class="kpi-stat-card">
+            <div class="kpi-icon-box kpi-icon-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <div class="kpi-details-col">
+              <span class="kpi-stat-number">98%</span>
+              <span class="kpi-stat-label">Overall Read Rate</span>
+              <span class="kpi-trend-row"><span class="trend-green">↑ High engagement</span></span>
+            </div>
+          </div>
+
+          <div class="kpi-stat-card">
+            <div class="kpi-icon-box kpi-icon-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+            </div>
+            <div class="kpi-details-col">
+              <span class="kpi-stat-number">{{ kpi.unread }}</span>
+              <span class="kpi-stat-label">Unread Broadcasts</span>
+              <span class="kpi-trend-row"><span class="trend-amber">Needs attention</span></span>
+            </div>
           </div>
         </div>
 
-        <div class="kpi-stat-card">
-          <div class="kpi-icon-box kpi-icon-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-          </div>
-          <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.alerts }}</span>
-            <span class="kpi-stat-label">Overall Read Rate</span>
-            <span class="kpi-trend-row"><span class="trend-green">↑ High engagement</span></span>
-          </div>
-        </div>
-
-        <div class="kpi-stat-card">
-          <div class="kpi-icon-box kpi-icon-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
-          </div>
-          <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.mentions }}</span>
-            <span class="kpi-stat-label">Unread Inquiries</span>
-            <span class="kpi-trend-row"><span class="trend-amber">Needs admin reply</span></span>
-          </div>
-        </div>
-
-        <div class="kpi-stat-card">
-          <div class="kpi-icon-box kpi-icon-purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-          </div>
-          <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.total }}</span>
-            <span class="kpi-stat-label">Active Channels</span>
-            <span class="kpi-trend-row"><span class="trend-blue">In-App • Email • SMS</span></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters & Category Tabs Card -->
+        <!-- Filters & Category Tabs Card -->
       <div class="filter-controls-card">
         <div class="filter-controls-row">
-          <div class="filter-search-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" class="filter-search-input" id="notifSearchInput" placeholder="Search by announcement title, message, or recipient...">
+            <div class="filter-search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" class="filter-search-input" id="notifSearchInput" placeholder="Search by announcement title, message, or recipient..." value="{{ current_q }}">
+            </div>
+
+            <div class="filter-dropdowns-group">
+              <select class="filter-select" id="notifCategorySelect">
+                <option value="" {% if current_category == '' %}selected{% endif %}>All Categories</option>
+                <option value="System" {% if current_category == 'System' %}selected{% endif %}>System Updates</option>
+                <option value="Fee Alert" {% if current_category == 'Fee Alert' %}selected{% endif %}>Fee Alerts</option>
+                <option value="Assessments" {% if current_category == 'Assessments' %}selected{% endif %}>Assessments</option>
+              </select>
+
+              <select class="filter-select" id="notifTargetSelect">
+                <option value="" {% if current_target == '' %}selected{% endif %}>Target: All</option>
+                <option value="All Students" {% if current_target == 'All Students' %}selected{% endif %}>All Students</option>
+                <option value="Batch Students" {% if current_target == 'Batch Students' %}selected{% endif %}>Batch Students</option>
+                <option value="Mentors" {% if current_target == 'Mentors' %}selected{% endif %}>Mentors</option>
+                <option value="Accountants" {% if current_target == 'Accountants' %}selected{% endif %}>Accountants</option>
+                <option value="Parents" {% if current_target == 'Parents' %}selected{% endif %}>Parents</option>
+              </select>
+
+              <select class="filter-select" id="notifStatusSelect">
+                <option value="" {% if current_status == '' %}selected{% endif %}>Status: All</option>
+                <option value="unread" {% if current_status == 'unread' %}selected{% endif %}>Unread</option>
+                <option value="read" {% if current_status == 'read' %}selected{% endif %}>Read</option>
+              </select>
+              <button class="btn-filter-reset" onclick="window.location.href='/notifications/';">Reset</button>
+            </div>
           </div>
 
-          <div class="filter-dropdowns-group">
-            <select class="filter-select" id="categorySelect">
-              <option value="">All Categories</option>
-              <option value="Fees & Payments">Fees & Payments</option>
-              <option value="Class Schedule">Class Schedule</option>
-              <option value="Academic">Academic</option>
-              <option value="Assessment">Assessment</option>
-              <option value="System Alert">System Alert</option>
-            </select>
-
-            <select class="filter-select" id="recipientSelect">
-              <option value="">All Recipients</option>
-              <option value="Batch AI-09">Batch AI-09</option>
-              <option value="Batch CLOUD-04">Batch CLOUD-04</option>
-              <option value="Batch AI-10">Batch AI-10</option>
-              <option value="All Students">All Students</option>
-              <option value="Parents">Parents</option>
-              <option value="Mentors">Mentors</option>
-            </select>
-
-            <select class="filter-select" id="statusSelectNotif">
-              <option value="">Status: All</option>
-              <option value="Read">Read</option>
-              <option value="Unread">Unread</option>
-              <option value="Scheduled">Scheduled</option>
-            </select>
-
-            <button class="btn-filter-reset" onclick="resetNotifFilters()">Reset</button>
+          <!-- Category Pill Tabs -->
+          <div class="filter-tabs-row">
+            <button class="pill-tab-btn {% if not current_category %}active{% endif %}" onclick="filterByTab(this, '')">
+              <span>All Broadcasts</span>
+              <span class="pill-tab-count">{{ kpi.total }}</span>
+            </button>
+            <button class="pill-tab-btn {% if current_status == 'unread' %}active{% endif %}" onclick="updateFilters({status: 'unread'})">
+              <span>Unread</span>
+              <span class="pill-tab-count">{{ kpi.unread }}</span>
+            </button>
+            <button class="pill-tab-btn {% if current_category == 'Fee Alert' %}active{% endif %}" onclick="filterByTab(this, 'Fee Alert')">
+              <span>Fee Alerts</span>
+              <span class="pill-tab-count">{{ kpi.fee_alerts }}</span>
+            </button>
+            <button class="pill-tab-btn {% if current_category == 'Assessments' %}active{% endif %}" onclick="filterByTab(this, 'Assessments')">
+              <span>Assessments</span>
+              <span class="pill-tab-count">{{ kpi.assessments }}</span>
+            </button>
+            <button class="pill-tab-btn {% if current_category == 'System' %}active{% endif %}" onclick="filterByTab(this, 'System')">
+              <span>System</span>
+              <span class="pill-tab-count">{{ kpi.system }}</span>
+            </button>
           </div>
-        </div>
-
-        <!-- Category Pill Tabs -->
-        <div class="filter-tabs-row">
-          <button class="pill-tab-btn active" onclick="filterByTab(this, 'all')">
-            <span>All Broadcasts</span>
-            <span class="pill-tab-count">142</span>
-          </button>
-          <button class="pill-tab-btn" onclick="filterByTab(this, 'Unread')">
-            <span>Unread (5)</span>
-            <span class="pill-tab-count">5</span>
-          </button>
-          <button class="pill-tab-btn" onclick="filterByTab(this, 'Fees & Payments')">
-            <span>Fee Alerts</span>
-            <span class="pill-tab-count">28</span>
-          </button>
-          <button class="pill-tab-btn" onclick="filterByTab(this, 'Class Schedule')">
-            <span>Class Timetable</span>
-            <span class="pill-tab-count">44</span>
-          </button>
-          <button class="pill-tab-btn" onclick="filterByTab(this, 'Assessment')">
-            <span>Assessments</span>
-            <span class="pill-tab-count">36</span>
-          </button>
-          <button class="pill-tab-btn" onclick="filterByTab(this, 'System Alert')">
-            <span>System</span>
-            <span class="pill-tab-count">12</span>
-          </button>
-        </div>
       </div>
 
       <!-- Notifications Table Card -->
@@ -200,7 +180,7 @@
           <div class="table-header-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
             <span>Broadcast Feed & Dispatch Ledger</span>
-            <span class="table-records-count">142 Broadcasts</span>
+            <span class="table-records-count">{{ kpi.total|default:"0" }} Broadcasts</span>
           </div>
 
           <div style="display: flex; gap: 8px;">
@@ -212,103 +192,237 @@
         </div>
 
         <div class="table-scroll-container">
-          <table class="admin-data-table" id="notifTable">
-            <thead>
-              <tr>
-                <th style="width: 320px;">Notification Subject & Message</th>
-                <th>Category</th>
-                <th>Target Recipient Group</th>
-                <th>Channels</th>
-                <th>Dispatched Date</th>
-                <th>Read Telemetry</th>
-                <th>Status</th>
-                <th style="text-align: right; width: 120px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              
-              {% for notification in notifications %}
-              <tr data-status="{% if notification.is_read %}Read{% else %}Unread{% endif %}">
-                <td>
-                  <div class="entity-cell">
-                    <div class="entity-avatar" style="background: linear-gradient(135deg, #d97706, #b45309);">N</div>
-                    <div class="entity-info">
-                      <span class="entity-name">{{ notification.title }}</span>
-                      <span class="entity-sub">{{ notification.message }}</span>
+          <table class="admin-data-table" id="notifsTable">
+              <thead>
+                <tr>
+                  <th style="width: 280px;">Notification Subject & Message</th>
+                  <th>Category</th>
+                  <th>Target Department / Group</th>
+                  <th>Channels</th>
+                  <th>Dispatched Date</th>
+                  <th style="width: 140px;">Read Telemetry</th>
+                  <th>Status</th>
+                  <th style="text-align: right; width: 120px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for notification in notifications %}
+                <tr>
+                  <td>
+                    <div class="entity-cell">
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #d97706, #b45309);">{{ notification.title|slice:":1"|upper }}</div>
+                      <div class="entity-info">
+                        <span class="entity-name">{{ notification.title }}</span>
+                        <span class="entity-sub">{{ notification.message|truncatechars:50 }}</span>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <span class="status-badge badge-due-soon">
-                    <span class="badge-dot"></span> General
-                  </span>
-                </td>
-                <td>
-                  <span class="font-mono-code">All Students</span>
-                  <div style="font-size: 0.71875rem; color: var(--admin-text-muted); margin-top: 2px;">System</div>
-                </td>
-                <td>
-                  <div style="display: flex; gap: 4px;">
-                    <span style="font-size: 0.6875rem; background: #eff6ff; color: #2563eb; padding: 2px 6px; border-radius: 4px; font-weight: 700;">In-App</span>
-                  </div>
-                </td>
-                <td>
-                  <div style="font-weight: 600; color: var(--admin-text-main);">{{ notification.timestamp|date:"d M Y" }}</div>
-                  <div style="font-size: 0.71875rem; color: var(--admin-text-muted);">{{ notification.timestamp|time:"H:i" }}</div>
-                </td>
-                <td>
-                  <div class="progress-inline">
-                    <div class="progress-bar-bg">
-                      <div class="progress-bar-fill" style="width: 100%; background-color: #2563eb;"></div>
+                  </td>
+                  <td>
+                    <span class="status-pill status-active" style="background: #fffbeb; color: #b45309;">
+                      <span class="badge-dot" style="background: #d97706;"></span> {{ notification.category }}
+                    </span>
+                  </td>
+                  <td>
+                    <span style="font-weight: 600; color: var(--admin-blue);">{{ notification.target_group }}</span>
+                  </td>
+                  <td>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6; background: #eff6ff; padding: 2px 6px; border-radius: 4px;">In-App</span>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; color: var(--admin-text-main);">{{ notification.timestamp|date:"d M Y" }}</div>
+                    <div style="font-size: 0.75rem; color: var(--admin-text-muted);">{{ notification.timestamp|time:"H:i" }}</div>
+                  </td>
+                  <td>
+                    <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 4px;">
+                      <div style="width: {% if notification.is_read %}100%{% else %}15%{% endif %}; height: 100%; background: #3b82f6;"></div>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <span class="status-badge {% if notification.is_read %}badge-active{% else %}badge-due-soon{% endif %}">
-                    <span class="badge-dot"></span> {% if notification.is_read %}Read{% else %}Unread{% endif %}
-                  </span>
-                </td>
-                <td>
-                  <div class="table-actions-cell" style="justify-content: flex-end;">
-                    <button class="btn-action-icon btn-action-view" title="View Message Details" onclick="alert('Viewing full message contents and audit log.');">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </button>
-                    <button class="btn-action-icon" title="Resend Unread" onclick="alert('Resent SMS bump to 8 pending students.');">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="8" style="text-align: center; padding: 20px;">No notifications found.</td>
-              </tr>
-              {% endfor %}
+                  </td>
+                  <td>
+                    {% if notification.is_read %}
+                    <span class="status-pill status-active">Read</span>
+                    {% else %}
+                    <span class="status-pill" style="background: #fef2f2; color: #ef4444;"><span class="badge-dot" style="background: #ef4444;"></span> Unread</span>
+                    {% endif %}
+                  </td>
+                  <td style="text-align: right;">
+                    <div class="table-actions-cell" style="justify-content: flex-end;">
+                      <button title="View Broadcast" onclick="alert('Viewing message: {{ notification.title|escapejs }}
 
-            </tbody>
-          </table>
+{{ notification.message|escapejs }}')" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; margin-right: 4px; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#eff6ff'; this.style.color='#3b82f6';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                      <button title="Edit Broadcast" onclick="openEditModal(\'{{ notification.id }}\', \'{{ notification.title|escapejs }}\', \'{{ notification.message|escapejs }}\', \'{{ notification.category|escapejs }}\', \'{{ notification.target_group|escapejs }}\')" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#fef3c7'; this.style.color='#d97706';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">No broadcasts found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
         </div>
 
         <!-- Table Pagination -->
-        <div class="pagination-row">
-          <div>Showing <strong>1 - 5</strong> of <strong>142</strong> broadcasts</div>
-          <div class="pagination-controls">
-            <button class="btn-page-nav" disabled>Previous</button>
-            <button class="btn-page-nav active">1</button>
-            <button class="btn-page-nav">2</button>
-            <button class="btn-page-nav">3</button>
-            <button class="btn-page-nav">Next</button>
+          <div class="pagination-row">
+            <div>Showing <strong>{{ notifications.start_index|default:"0" }} - {{ notifications.end_index|default:"0" }}</strong> of <strong>{{ notifications.paginator.count|default:"0" }}</strong> broadcasts</div>
+            <div class="pagination-controls">
+              {% if notifications.has_previous %}
+              <button class="btn-page-nav" onclick="goToPage({{ notifications.previous_page_number }})">Previous</button>
+              {% else %}
+              <button class="btn-page-nav" disabled>Previous</button>
+              {% endif %}
+
+              {% for i in notifications.paginator.page_range %}
+                {% if notifications.number == i %}
+                  <button class="btn-page-nav active">{{ i }}</button>
+                {% else %}
+                  <button class="btn-page-nav" onclick="goToPage({{ i }})">{{ i }}</button>
+                {% endif %}
+              {% endfor %}
+
+              {% if notifications.has_next %}
+              <button class="btn-page-nav" onclick="goToPage({{ notifications.next_page_number }})">Next</button>
+              {% else %}
+              <button class="btn-page-nav" disabled>Next</button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Requests Section -->
+        <div class="table-card" style="margin-top: 24px;">
+          <div class="table-card-header">
+            <div class="table-header-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span>Student Complaints & Support Requests</span>
+            </div>
+          </div>
+
+          <div class="table-scroll-container">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th style="width: 250px;">Student Name</th>
+                  <th>Category & Subject</th>
+                  <th>Priority</th>
+                  <th>Date Submitted</th>
+                  <th>Status</th>
+                  <th style="text-align: right; width: 120px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for req in student_requests %}
+                <tr>
+                  <td>
+                    <div class="entity-cell">
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">{{ req.student.name|slice:":1"|upper }}</div>
+                      <div class="entity-info">
+                        <span class="entity-name">{{ req.student.name }}</span>
+                        <span class="entity-sub">{{ req.student.student_id }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; color: var(--admin-text-main);">{{ req.subject }}</div>
+                    <div style="font-size: 0.75rem; color: var(--admin-text-muted);">{{ req.category }}</div>
+                  </td>
+                  <td>
+                    {% if req.priority == 'High' or req.priority == 'Urgent' %}
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #ef4444; background: #fef2f2; padding: 2px 6px; border-radius: 4px;">{{ req.priority }}</span>
+                    {% else %}
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6; background: #eff6ff; padding: 2px 6px; border-radius: 4px;">{{ req.priority }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; color: var(--admin-text-main);">{{ req.created_at|date:"d M Y" }}</div>
+                    <div style="font-size: 0.75rem; color: var(--admin-text-muted);">{{ req.created_at|time:"H:i" }}</div>
+                  </td>
+                  <td>
+                    {% if req.status == 'Resolved' %}
+                    <span class="status-pill status-active">Resolved</span>
+                    {% elif req.status == 'In Progress' %}
+                    <span class="status-pill" style="background: #fef3c7; color: #d97706;"><span class="badge-dot" style="background: #d97706;"></span> In Progress</span>
+                    {% else %}
+                    <span class="status-pill" style="background: #fef2f2; color: #ef4444;"><span class="badge-dot" style="background: #ef4444;"></span> Open</span>
+                    {% endif %}
+                  </td>
+                  <td style="text-align: right;">
+                    <div class="table-actions-cell" style="justify-content: flex-end;">
+                      <button title="Reply & Resolve" onclick="openReplyModal('{{ req.id }}', '{{ req.student.name|escapejs }}', '{{ req.subject|escapejs }}', '{{ req.description|escapejs }}', '{{ req.status }}')" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; margin-right: 4px; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#eff6ff'; this.style.color='#3b82f6';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No student requests found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
         </div>
 
       </div>
-
-    </div>
-
-  </main>
+    </main>
 </div>
 
-<!-- New Broadcast Modal -->
+<!-- Reply Modal -->
+  <div class="modal-overlay" id="replyModal">
+    <div class="modal-box">
+      <div class="modal-header-bar">
+        <div class="modal-title-text">Reply to Student Request</div>
+        <button class="btn-close-modal" onclick="document.getElementById('replyModal').classList.remove('active');">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form method="POST" action="{% url 'notifications' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action_type" value="reply">
+        <input type="hidden" name="request_id" id="modalReplyId">
+        
+        <div class="modal-body-content">
+          <div style="background: #f8fafc; padding: 12px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+            <div style="font-weight: 600; font-size: 0.8125rem; color: #475569; margin-bottom: 4px;" id="replyStudentName">Student Name</div>
+            <div style="font-weight: 700; color: #0f172a; margin-bottom: 8px;" id="replySubject">Subject</div>
+            <div style="font-size: 0.8125rem; color: #475569; line-height: 1.5;" id="replyMessage">Message description goes here...</div>
+          </div>
+
+          <div class="form-grid-2col">
+            <div class="form-group-field">
+              <label class="form-label-title">Update Status *</label>
+              <select class="form-select-box" name="status" id="modalReplyStatus" required>
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Admin Reply Message *</label>
+            <textarea class="form-textarea" name="reply_message" placeholder="Type your reply to the student here..." required style="height: 100px;"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" onclick="document.getElementById('replyModal').classList.remove('active');">Cancel</button>
+          <button type="submit" class="btn-primary-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Send Reply</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- New Broadcast Modal -->
 <div class="modal-overlay" id="broadcastModal">
   <div class="modal-box">
     <div class="modal-header-bar">
@@ -318,17 +432,19 @@
       </button>
     </div>
 
-    <form onsubmit="event.preventDefault(); alert('Broadcast dispatched across selected channels!'); document.getElementById('broadcastModal').classList.remove('active');">
+    <form method="POST" action="{% url 'notifications' %}">
+      {% csrf_token %}
+      <input type="hidden" name="notif_id" id="modalNotifId">
       <div class="modal-body-content">
         <div class="form-group-field">
           <label class="form-label-title">Broadcast Subject / Headline *</label>
-          <input type="text" class="form-input-text" placeholder="e.g. Schedule Update: Tomorrow's Architecture Lab" required>
+          <input type="text" name="title" class="form-input-text" id="modalNotifTitle" placeholder="e.g. Schedule Update: Tomorrow's Architecture Lab" required>
         </div>
 
         <div class="form-grid-2col">
           <div class="form-group-field">
             <label class="form-label-title">Category *</label>
-            <select class="form-select-box" required>
+            <select class="form-select-box" name="category" id="modalNotifCategory" required>
               <option value="">Select Category</option>
               <option value="Fees & Payments">Fees & Payments</option>
               <option value="Class Schedule">Class Schedule</option>
@@ -351,15 +467,12 @@
         <div class="form-grid-2col">
           <div class="form-group-field">
             <label class="form-label-title">Target Audience *</label>
-            <select class="form-select-box" required>
-              <option value="all_students">All Students (428)</option>
-              <option value="AI-09">Batch AI-09 (GenAI)</option>
-              <option value="CLOUD-04">Batch CLOUD-04</option>
-              <option value="AI-10">Batch AI-10</option>
-              <option value="FS-12">Batch FS-12</option>
-              <option value="DATA-06">Batch DATA-06</option>
-              <option value="mentors">All Faculty & Mentors</option>
-              <option value="parents">Registered Parents</option>
+            <select class="form-select-box" name="target_group" id="modalNotifAudience" required>
+              <option value="All Students">All Students</option>
+              <option value="Batch Students">Batch Students</option>
+              <option value="Mentors">Mentors</option>
+              <option value="Accountants">Accountants</option>
+              <option value="Parents">Parents</option>
             </select>
           </div>
 
@@ -369,24 +482,11 @@
           </div>
         </div>
 
-        <div class="form-group-field">
-          <label class="form-label-title">Dispatch Channels</label>
-          <div style="display: flex; gap: 16px; margin-top: 4px;">
-            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78125rem; font-weight: 600; cursor: pointer;">
-              <input type="checkbox" checked style="accent-color: var(--admin-blue);"> In-App Banner
-            </label>
-            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78125rem; font-weight: 600; cursor: pointer;">
-              <input type="checkbox" checked style="accent-color: var(--admin-blue);"> Email Alert
-            </label>
-            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78125rem; font-weight: 600; cursor: pointer;">
-              <input type="checkbox" style="accent-color: var(--admin-blue);"> SMS Text
-            </label>
-          </div>
-        </div>
+        
 
         <div class="form-group-field">
           <label class="form-label-title">Broadcast Message Body *</label>
-          <textarea class="form-textarea" placeholder="Compose message text..." required style="height: 90px;"></textarea>
+          <textarea class="form-textarea" name="message" id="modalNotifMessage" placeholder="Compose message text..." required style="height: 90px;"></textarea>
         </div>
       </div>
 
@@ -402,73 +502,171 @@
 </div>
 
 <script>
-  // Live filter function for Notifications table
-  function filterNotifTable() {
-    const query = document.getElementById('notifSearchInput').value.toLowerCase().trim();
-    const category = document.getElementById('categorySelect').value.toLowerCase();
-    const recipient = document.getElementById('recipientSelect').value.toLowerCase();
-    const status = document.getElementById('statusSelectNotif').value.toLowerCase();
+    function openNewModal() {
+      document.getElementById('modalNotifId').value = '';
+      document.getElementById('modalNotifTitle').value = '';
+      document.getElementById('modalNotifMessage').value = '';
+      document.getElementById('modalNotifCategory').selectedIndex = 0;
+      document.getElementById('modalNotifAudience').selectedIndex = 0;
+      document.getElementById('broadcastModal').classList.add('active');
+    }
 
-    const rows = document.querySelectorAll('#notifTable tbody tr');
-    rows.forEach(row => {
-      const text = row.innerText.toLowerCase();
-      const rowCat = (row.getAttribute('data-category') || '').toLowerCase();
-      const rowRecip = (row.getAttribute('data-recipient') || '').toLowerCase();
-      const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
+    function openReplyModal(id, studentName, subject, message, status) {
+      document.getElementById('modalReplyId').value = id;
+      document.getElementById('replyStudentName').textContent = "From: " + studentName;
+      document.getElementById('replySubject').textContent = subject;
+      document.getElementById('replyMessage').textContent = message;
+      
+      const statusSelect = document.getElementById('modalReplyStatus');
+      if (statusSelect) {
+        for (let i = 0; i < statusSelect.options.length; i++) {
+          if (statusSelect.options[i].value === status) {
+            statusSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+      
+      document.getElementById('replyModal').classList.add('active');
+    }
 
-      const matchText = !query || text.includes(query);
-      const matchCat = !category || rowCat.includes(category);
-      const matchRecip = !recipient || rowRecip.includes(recipient);
-      const matchStatus = !status || rowStatus.includes(status);
+    function openEditModal(id, title, message, category, audience) {
+      document.getElementById('modalNotifId').value = id;
+      document.getElementById('modalNotifTitle').value = title;
+      
+      const msgField = document.getElementById('modalNotifMessage');
+      if (msgField) msgField.value = message;
+      
+      const catSelect = document.getElementById('modalNotifCategory');
+      if (catSelect) {
+        for (let i = 0; i < catSelect.options.length; i++) {
+          if (catSelect.options[i].text === category || catSelect.options[i].value === category) {
+            catSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
 
-      if (matchText && matchCat && matchRecip && matchStatus) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
+      const audSelect = document.getElementById('modalNotifAudience');
+      if (audSelect) {
+        for (let i = 0; i < audSelect.options.length; i++) {
+          if (audSelect.options[i].text === audience || audSelect.options[i].value === audience) {
+            audSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+
+      document.getElementById('broadcastModal').classList.add('active');
+    }
+
+    async function fetchAndSwap(url) {
+      try {
+        const tbody = document.querySelector('#notifsTable tbody');
+        if (tbody) tbody.style.opacity = '0.4';
+        
+        window.history.pushState({}, '', url);
+        const response = await fetch(url);
+        const htmlText = await response.text();
+        const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+        
+        const newTbody = doc.querySelector('#notifsTable tbody');
+        if (newTbody && tbody) tbody.innerHTML = newTbody.innerHTML;
+        
+        const currentPagination = document.querySelector('.pagination-row');
+        const newPagination = doc.querySelector('.pagination-row');
+        if (currentPagination && newPagination) currentPagination.innerHTML = newPagination.innerHTML;
+        
+        const currentTabs = document.querySelector('.filter-tabs-row');
+        const newTabs = doc.querySelector('.filter-tabs-row');
+        if (currentTabs && newTabs) currentTabs.innerHTML = newTabs.innerHTML;
+
+        const currentDropdowns = document.querySelector('.filter-dropdowns-group');
+        const newDropdowns = doc.querySelector('.filter-dropdowns-group');
+        if (currentDropdowns && newDropdowns) {
+          currentDropdowns.innerHTML = newDropdowns.innerHTML;
+          // Re-attach listeners to the new dropdowns
+          const categoryFilter = document.getElementById('notifCategorySelect');
+          if (categoryFilter) categoryFilter.addEventListener('change', function() { updateFilters({category: this.value}); });
+          const targetFilter = document.getElementById('notifTargetSelect');
+          if (targetFilter) targetFilter.addEventListener('change', function() { updateFilters({target: this.value}); });
+          const statusFilter = document.getElementById('notifStatusSelect');
+          if (statusFilter) statusFilter.addEventListener('change', function() { updateFilters({status: this.value}); });
+        }
+
+        const currentKpis = document.querySelector('.kpi-cards-grid');
+        const newKpis = doc.querySelector('.kpi-cards-grid');
+        if (currentKpis && newKpis) currentKpis.innerHTML = newKpis.innerHTML;
+        
+        if (tbody) tbody.style.opacity = '1';
+      } catch (err) {
+        console.error(err);
+        window.location.href = url;
+      }
+    }
+
+    function updateFilters(params) {
+      const urlParams = new URLSearchParams(window.location.search);
+      for (const [key, value] of Object.entries(params)) {
+        if (value) urlParams.set(key, value);
+        else urlParams.delete(key);
+      }
+      urlParams.delete('page');
+      fetchAndSwap('?' + urlParams.toString());
+    }
+
+    function filterByTab(btn, category) {
+      document.querySelectorAll('.pill-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateFilters({category: category});
+    }
+
+    function goToPage(page) {
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('page', page);
+      fetchAndSwap('?' + urlParams.toString());
+    }
+
+    const searchInput = document.getElementById('notifSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') updateFilters({q: this.value});
+      });
+    }
+
+    const categoryFilter = document.getElementById('notifCategorySelect');
+    if (categoryFilter) {
+      categoryFilter.addEventListener('change', function() {
+        updateFilters({category: this.value});
+      });
+    }
+
+    const targetFilter = document.getElementById('notifTargetSelect');
+    if (targetFilter) {
+      targetFilter.addEventListener('change', function() {
+        updateFilters({target: this.value});
+      });
+    }
+
+    const statusFilter = document.getElementById('notifStatusSelect');
+    if (statusFilter) {
+      statusFilter.addEventListener('change', function() {
+        updateFilters({status: this.value});
+      });
+    }
+
+    // Close modal when clicking on overlay background
+    document.getElementById('broadcastModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('active');
       }
     });
-  }
-
-  document.getElementById('notifSearchInput').addEventListener('input', filterNotifTable);
-  document.getElementById('categorySelect').addEventListener('change', filterNotifTable);
-  document.getElementById('recipientSelect').addEventListener('change', filterNotifTable);
-  document.getElementById('statusSelectNotif').addEventListener('change', filterNotifTable);
-
-  function resetNotifFilters() {
-    document.getElementById('notifSearchInput').value = '';
-    document.getElementById('categorySelect').value = '';
-    document.getElementById('recipientSelect').value = '';
-    document.getElementById('statusSelectNotif').value = '';
-    document.querySelectorAll('.pill-tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector('.pill-tab-btn:first-child').classList.add('active');
-    filterNotifTable();
-  }
-
-  function filterByTab(btn, filterVal) {
-    document.querySelectorAll('.pill-tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    if (filterVal === 'all') {
-      document.getElementById('statusSelectNotif').value = '';
-      document.getElementById('categorySelect').value = '';
-    } else if (filterVal === 'Unread') {
-      document.getElementById('statusSelectNotif').value = 'Unread';
-      document.getElementById('categorySelect').value = '';
-    } else {
-      document.getElementById('categorySelect').value = filterVal;
-      document.getElementById('statusSelectNotif').value = '';
-    }
-    filterNotifTable();
-  }
-
-  // Close modal when clicking on overlay background
-  document.getElementById('broadcastModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-      this.classList.remove('active');
-    }
-  });
-</script>
-
+    document.getElementById('replyModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('active');
+      }
+    });
+  </script>
 </body>
 </html>
 

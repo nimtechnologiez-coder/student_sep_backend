@@ -573,11 +573,21 @@ body {
   height: 100%;
 }
 
-/* Bottom Lists */
 .admissions-list, .classes-list, .activities-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+}
+
+.empty-state-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
 }
 
 .admission-item-row, .class-item-row, .activity-item-row {

@@ -2,6 +2,48 @@
 
 {% block title %}Tasks & Assignments - NIM Academy{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* MENTOR TASKS PAGE CSS */
+  .mentor-welcome-card { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 12px; padding: 24px 32px; color: #ffffff; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+  .mentor-page-heading { font-size: 1.5rem; font-weight: 700; margin: 0 0 8px 0; }
+  .mentor-page-subline { font-size: 0.875rem; color: #94a3b8; margin: 0; max-width: 600px; line-height: 1.5; }
+  .btn-nim-primary { background: #2563eb; color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease; text-decoration: none; }
+  .btn-nim-primary:hover { background: #1d4ed8; }
+  .btn-nim-secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
+  .btn-nim-secondary:hover { background: #e2e8f0; }
+  .btn-table-sm.primary { background: #ebf5ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-decoration: none; cursor: pointer; }
+  .btn-table-sm.primary:hover { background: #dbeafe; }
+  .btn-table-sm.danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .btn-table-sm.danger:hover { background: #fee2e2; }
+  .mentor-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px; }
+  .mentor-stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .mentor-icon-box { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .mentor-icon-blue { background: #eff6ff; color: #2563eb; }
+  .mentor-icon-amber { background: #fffbeb; color: #d97706; }
+  .mentor-icon-green { background: #f0fdf4; color: #16a34a; }
+  .mentor-icon-rose { background: #fff1f2; color: #e11d48; }
+  .mentor-stat-value { font-size: 1.5rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
+  .mentor-stat-label { font-size: 0.8125rem; color: #64748b; font-weight: 500; }
+  .mentor-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .mentor-card-header { padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
+  .mentor-card-title { font-size: 1.125rem; font-weight: 700; color: #0f172a; margin: 0; }
+  .badge-pill { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; }
+  .badge-blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+  .badge-amber { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .badge-green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .badge-slate { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+  .mentor-table { width: 100%; border-collapse: collapse; }
+  .mentor-table th { background: #f8fafc; padding: 12px 24px; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+  .mentor-table td { padding: 16px 24px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.875rem; }
+  .mentor-table tr:hover td { background: #f8fafc; }
+  .mentor-modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .mentor-modal-backdrop.active { opacity: 1; pointer-events: auto; }
+  .mentor-modal-box { background: #ffffff; border-radius: 16px; width: 100%; max-width: 600px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); transform: scale(0.95); transition: transform 0.2s; max-height: 90vh; overflow-y: auto; }
+  .mentor-modal-backdrop.active .mentor-modal-box { transform: scale(1); }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Page Header -->
 <div class="mentor-welcome-card">
@@ -115,9 +157,18 @@
           </td>
           <td style="text-align: right;">
             <div style="display: flex; gap: 6px; justify-content: flex-end;">
-              <a href="{% url 'mentor_task_detail' t.id %}" class="btn-table-sm primary">
-                Evaluate Submissions
-              </a>
+              <a href="{% url 'mentor_task_detail' t.id %}" class="btn-table-sm primary">Evaluate Submissions</a>
+              <button class="btn-table-sm primary" style="background:#f1f5f9; color:#475569; border-color:#cbd5e1;" 
+                data-id="{{t.id}}" 
+                data-title="{{t.title}}" 
+                data-batch="{{t.batch_id}}" 
+                data-date="{{t.due_date|date:'Y-m-d'}}" 
+                data-desc="{{t.description}}" 
+                data-cat="{{t.category}}" 
+                data-mod="{{t.module_code}}" 
+                data-marks="{{t.max_marks}}"
+                onclick="openEditTask(this)">Edit</button>
+              <button class="btn-table-sm danger" onclick="deleteTask('{{t.id}}')">Delete</button>
             </div>
           </td>
         </tr>
@@ -127,6 +178,30 @@
   </div>
 </div>
 
+<script>
+function deleteTask(taskId) {
+  if (confirm("Are you sure you want to delete this task?")) {
+    fetch(`/api/mentor/delete-task/${taskId}/`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      });
+  }
+}
+function openEditTask(btn) {
+  document.getElementById('editTaskId').value = btn.getAttribute('data-id');
+  document.getElementById('editTaskTitle').value = btn.getAttribute('data-title');
+  document.getElementById('editTaskBatchId').value = btn.getAttribute('data-batch');
+  document.getElementById('editTaskDueDate').value = btn.getAttribute('data-date');
+  document.getElementById('editTaskDescription').value = btn.getAttribute('data-desc');
+  document.getElementById('editTaskModal').classList.add('active');
+}
+</script>
+
 <!-- Modal: Create Task -->
 <div class="mentor-modal-backdrop" id="createTaskModal">
   <div class="mentor-modal-box">
@@ -134,38 +209,127 @@
       <h3 style="margin: 0; font-size: 1.0625rem; font-weight: 800; color: #0a1b39;">Create New Course Task</h3>
       <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="document.getElementById('createTaskModal').classList.remove('active');">&times;</button>
     </div>
-    <form onsubmit="event.preventDefault(); alert('Task successfully created and published to students!'); document.getElementById('createTaskModal').classList.remove('active');" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
-      <div>
-        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Task Title</label>
-        <input type="text" class="form-field-input" placeholder="e.g. Fine-Tuning Llama-3 using QLoRA" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <form id="createTaskFormFull" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
         <div>
-          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Category</label>
-          <select class="form-field-select" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
-            <option>Coding Lab</option>
-            <option>Mini Project</option>
-            <option>Capstone Project</option>
-          </select>
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Task Title</label>
+          <input type="text" id="taskTitle" class="form-field-input" placeholder="e.g. Fine-Tuning Llama-3 using QLoRA" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Target Batch</label>
+            <select id="taskBatchId" class="form-field-select" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+              <option value="" disabled selected>Select Batch</option>
+              {% for b in my_batches %}
+              <option value="{{ b.id }}">Batch: {{ b.name }} ({{ b.timing }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Due Date</label>
+            <input type="date" id="taskDueDate" class="form-field-input" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+          </div>
         </div>
         <div>
-          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Maximum Marks</label>
-          <input type="number" class="form-field-input" value="100" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Objective &amp; Instructions</label>
+          <textarea id="taskDescription" class="form-field-textarea" rows="3" placeholder="Define the problem statement and rubric criteria..." style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
         </div>
-      </div>
-      <div>
-        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Due Date</label>
-        <input type="date" class="form-field-input" value="2026-10-05" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
-      </div>
-      <div>
-        <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Objective &amp; Instructions</label>
-        <textarea class="form-field-textarea" rows="3" placeholder="Define the problem statement and rubric criteria..." style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
-      </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button type="button" class="btn-nim-secondary" onclick="document.getElementById('createTaskModal').classList.remove('active');">Cancel</button>
-        <button type="submit" class="btn-nim-primary">Publish Task</button>
-      </div>
-    </form>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn-nim-secondary" onclick="document.getElementById('createTaskModal').classList.remove('active');">Cancel</button>
+          <button type="submit" class="btn-nim-primary">Publish Task</button>
+        </div>
+      </form>
+      <script>
+        document.getElementById('createTaskFormFull')?.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const payload = {
+            title: document.getElementById('taskTitle').value,
+            batch_id: document.getElementById('taskBatchId').value,
+            due_date: document.getElementById('taskDueDate').value,
+            description: document.getElementById('taskDescription').value
+          };
+          
+          fetch('/api/mentor/add-task/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Task published successfully! It will now appear on the Student Dashboard.');
+              window.location.reload();
+            } else {
+              alert('Error: ' + data.error);
+            }
+          });
+        });
+      </script>
+  </div>
+</div>
+
+<!-- Modal: Edit Task -->
+<div class="mentor-modal-backdrop" id="editTaskModal">
+  <div class="mentor-modal-box">
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--nim-border); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.0625rem; font-weight: 800; color: #0a1b39;">Edit Course Task</h3>
+      <button style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b;" onclick="document.getElementById('editTaskModal').classList.remove('active');">&times;</button>
+    </div>
+    <form id="editTaskFormFull" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+        <input type="hidden" id="editTaskId">
+        <div>
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Task Title</label>
+          <input type="text" id="editTaskTitle" class="form-field-input" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Target Batch</label>
+            <select id="editTaskBatchId" class="form-field-select" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+              <option value="" disabled>Select Batch</option>
+              {% for b in my_batches %}
+              <option value="{{ b.id }}">Batch: {{ b.name }} ({{ b.timing }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Due Date</label>
+            <input type="date" id="editTaskDueDate" class="form-field-input" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 0.78125rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Objective &amp; Instructions</label>
+          <textarea id="editTaskDescription" class="form-field-textarea" rows="3" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn-nim-secondary" onclick="document.getElementById('editTaskModal').classList.remove('active');">Cancel</button>
+          <button type="submit" class="btn-nim-primary">Save Changes</button>
+        </div>
+      </form>
+      <script>
+        document.getElementById('editTaskFormFull')?.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const taskId = document.getElementById('editTaskId').value;
+          const payload = {
+            title: document.getElementById('editTaskTitle').value,
+            batch_id: document.getElementById('editTaskBatchId').value,
+            due_date: document.getElementById('editTaskDueDate').value,
+            description: document.getElementById('editTaskDescription').value
+          };
+          
+          fetch(`/api/mentor/edit-task/${taskId}/`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              window.location.reload();
+            } else {
+              alert('Error: ' + data.error);
+            }
+          });
+        });
+      </script>
   </div>
 </div>
 {% endblock %}

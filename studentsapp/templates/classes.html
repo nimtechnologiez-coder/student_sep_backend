@@ -36,7 +36,7 @@
       <div class="header-right-meta">
         <div class="header-date-display">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          <span>Mon, 24 Sep 2026</span>
+          <span>{% now "D, d M Y" %}</span>
         </div>
 
         <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
@@ -66,17 +66,6 @@
           <h1 class="main-page-title">Classes & Schedule</h1>
           <p class="main-page-subtitle">Track lecture timetables, trainer delivery, lab compute modes, and live attendance.</p>
         </div>
-
-        <div class="page-actions-group">
-          <button class="btn-secondary-action" onclick="alert('Downloading daily timetable sheet...');">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            <span>Today's Timetable</span>
-          </button>
-          <button class="btn-primary-add" onclick="document.getElementById('addClassModal').classList.add('active');">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Schedule Class</span>
-          </button>
-        </div>
       </div>
 
       <!-- 4 KPI Summary Cards -->
@@ -86,9 +75,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.total }}</span>
+            <span class="kpi-stat-number">{{ kpi.todays }}</span>
             <span class="kpi-stat-label">Today's Sessions</span>
-            <span class="kpi-trend-row"><span class="trend-green">1 Live Now</span> • 5 Scheduled</span>
+            <span class="kpi-trend-row"><span class="trend-green">{{ kpi.live }} Live Now</span> • {{ kpi.upcoming }} Upcoming</span>
           </div>
         </div>
 
@@ -97,9 +86,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.online }}</span>
-            <span class="kpi-stat-label">Avg Attendance</span>
-            <span class="kpi-trend-row"><span class="trend-green">↑ 1.4%</span> vs last week</span>
+            <span class="kpi-stat-number">{{ kpi.live }}</span>
+            <span class="kpi-stat-label">Live Now</span>
+            <span class="kpi-trend-row"><span class="trend-green">Active Broadcasts</span></span>
           </div>
         </div>
 
@@ -108,9 +97,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.offline }}</span>
-            <span class="kpi-stat-label">Total Monthly Sessions</span>
-            <span class="kpi-trend-row"><span class="trend-blue">All 18 Batches</span></span>
+            <span class="kpi-stat-number">{{ kpi.upcoming }}</span>
+            <span class="kpi-stat-label">Upcoming Sessions</span>
+            <span class="kpi-trend-row"><span class="trend-blue">Scheduled</span></span>
           </div>
         </div>
 
@@ -119,52 +108,66 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.trainers }}</span>
-            <span class="kpi-stat-label">Recordings Uploaded</span>
-            <span class="kpi-trend-row"><span class="trend-green">92.8%</span> Archive rate</span>
+            <span class="kpi-stat-number">{{ kpi.past }}</span>
+            <span class="kpi-stat-label">Past / Finished</span>
+            <span class="kpi-trend-row"><span class="trend-green">Completed</span></span>
           </div>
         </div>
       </div>
 
       <!-- Filters & Search Bar Card -->
       <div class="filter-controls-card">
-        <div class="filter-controls-row">
-          <div class="filter-search-box">
+        <div class="filter-controls-row" style="flex-wrap: wrap; gap: 12px;">
+          <div class="filter-search-box" style="flex: 1; min-width: 200px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" class="filter-search-input" id="classSearchInput" placeholder="Search by lecture topic, trainer or batch...">
+            <input type="text" class="filter-search-input" id="classSearchInput" placeholder="Search by topic, trainer or batch..." onkeyup="filterClassesTable();">
           </div>
 
-          <div class="filter-dropdowns-group">
-            <select class="filter-select">
+          <div class="filter-dropdowns-group" style="flex-wrap: wrap; gap: 8px;">
+            <select class="filter-select" id="batchFilter" onchange="filterClassesTable();">
               <option value="">All Batches</option>
-              <option value="ai01">BATCH-2026-AI01 (GenAI)</option>
-              <option value="py04">BATCH-2026-PY04 (Python)</option>
-              <option value="de02">BATCH-2026-DE02 (Data Eng)</option>
+              {% for b in batches %}
+                <option value="{{ b.id }}">{{ b.name }}</option>
+              {% endfor %}
             </select>
 
-            <select class="filter-select">
-              <option value="">All Modes</option>
-              <option value="online">Online (Zoom/Meet)</option>
-              <option value="offline">Offline (Campus Lab)</option>
-              <option value="hybrid">Hybrid</option>
+            <select class="filter-select" id="mentorFilter" onchange="filterClassesTable();">
+              <option value="">All Mentors</option>
+              {% for tr in trainers_list %}
+                <option value="{{ tr.name|lower }}">{{ tr.name }}</option>
+              {% endfor %}
             </select>
 
-            <select class="filter-select">
+            <select class="filter-select" id="slotFilter" onchange="filterClassesTable();">
+              <option value="">All Slots</option>
+              <option value="morning">Morning</option>
+              <option value="afternoon">Afternoon</option>
+              <option value="evening">Evening</option>
+            </select>
+
+            <select class="filter-select" id="statusFilter" onchange="filterClassesTable();">
               <option value="">Status: All</option>
-              <option value="live">Live Now</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="completed">Completed</option>
+              <option value="live now">Live Now</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="past">Past</option>
             </select>
 
-            <button class="btn-filter-reset" onclick="document.getElementById('classSearchInput').value='';">Reset</button>
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px;">
+              <span style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">From</span>
+              <input type="date" id="startDateFilter" onchange="filterClassesTable();" style="border: none; background: transparent; font-size: 0.75rem; color: #0f172a; outline: none; font-family: inherit; cursor: pointer;">
+              <span style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-left: 4px;">To</span>
+              <input type="date" id="endDateFilter" onchange="filterClassesTable();" style="border: none; background: transparent; font-size: 0.75rem; color: #0f172a; outline: none; font-family: inherit; cursor: pointer;">
+            </div>
+
+            <button class="btn-filter-reset" onclick="resetFilters();">Reset</button>
           </div>
         </div>
 
-        <div class="filter-tabs-row">
-          <button class="pill-tab-btn active">All Classes <span class="pill-tab-count">84</span></button>
-          <button class="pill-tab-btn">Today's Schedule <span class="pill-tab-count">6</span></button>
-          <button class="pill-tab-btn">Upcoming <span class="pill-tab-count">24</span></button>
-          <button class="pill-tab-btn">Completed <span class="pill-tab-count">54</span></button>
+        <div class="filter-tabs-row" id="classesFilterTabs">
+          <button class="pill-tab-btn active" onclick="setTabFilter('all', this);">All Classes <span class="pill-tab-count">{{ kpi.total }}</span></button>
+          <button class="pill-tab-btn" onclick="setTabFilter('today', this);">Today's Schedule <span class="pill-tab-count">{{ kpi.todays }}</span></button>
+          <button class="pill-tab-btn" onclick="setTabFilter('upcoming', this);">Upcoming <span class="pill-tab-count">{{ kpi.upcoming }}</span></button>
+          <button class="pill-tab-btn" onclick="setTabFilter('past', this);">Past / Finished <span class="pill-tab-count">{{ kpi.past }}</span></button>
         </div>
       </div>
 
@@ -173,78 +176,121 @@
         <div class="table-card-header">
           <div class="table-header-title">
             <span>Session Timetable & Log</span>
-            <span class="table-records-count">84 Lectures</span>
+            <span class="table-records-count" id="tableRecordsCount">{{ classes|length }} Lectures</span>
           </div>
-          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Updated 5 mins ago</span>
         </div>
 
         <div class="table-scroll-container">
-          <table class="admin-data-table">
+          <style>
+            #classesTable {
+              width: 100%;
+              border-collapse: collapse;
+              table-layout: auto;
+            }
+            #classesTable th,
+            #classesTable td {
+              padding: 12px 14px;
+              vertical-align: middle;
+              box-sizing: border-box;
+            }
+            #classesTable tbody tr {
+              height: 64px;
+              border-bottom: 1px solid var(--admin-card-border-subtle, #e2e8f0);
+            }
+            #classesTable tbody tr:hover {
+              background-color: #f8fafc;
+            }
+          </style>
+          <table class="admin-data-table" id="classesTable">
             <thead>
               <tr>
-                <th>Schedule Date & Time</th>
-                <th>Topic & Subject</th>
-                <th>Trainer</th>
-                <th>Batch</th>
-                <th>Mode & Platform</th>
-                <th>Attendance</th>
-                <th>Status</th>
-                <th style="text-align: right;">Actions</th>
+                <th style="min-width: 155px; white-space: nowrap; text-align: left;">Schedule Date & Time</th>
+                <th style="min-width: 180px; text-align: left;">Topic & Subject</th>
+                <th style="min-width: 150px; text-align: left;">Trainer</th>
+                <th style="min-width: 130px; text-align: left;">Batch</th>
+                <th style="min-width: 130px; text-align: left;">Mode & Platform</th>
+                <th style="min-width: 110px; white-space: nowrap; text-align: left;">Status</th>
+                <th style="min-width: 125px; white-space: nowrap; text-align: left;">Attendance</th>
               </tr>
             </thead>
             <tbody>
               {% for class_item in classes %}
-              <tr>
-                <td>
-                  <div style="font-weight: 700; color: #0f172a;">{{ class_item.date }}</div>
-                  <div style="font-size: 0.71875rem; color: #64748b;">{{ class_item.time }}</div>
-                </td>
-                <td>
-                  <div class="entity-info">
-                    <span class="entity-name">{{ class_item.subject }}</span>
-                    <span class="entity-sub">Module 3 • LangChain, Pinecone & Hybrid Retrieval</span>
+              <tr class="class-table-row" 
+                  data-status="{{ class_item.session_status|lower }}"
+                  data-mode="{{ class_item.mode|lower }}"
+                  data-slot="{{ class_item.time_slot|lower }}"
+                  data-batch="{% if class_item.batch %}{{ class_item.batch.id }}{% endif %}"
+                  data-trainer="{% if class_item.trainer %}{{ class_item.trainer.name|lower }}{% elif class_item.batch and class_item.batch.trainer %}{{ class_item.batch.trainer.name|lower }}{% endif %}"
+                  data-date="{{ class_item.date|date:'Y-m-d' }}"
+                  data-search="{{ class_item.subject|lower }} {% if class_item.trainer %}{{ class_item.trainer.name|lower }}{% elif class_item.batch and class_item.batch.trainer %}{{ class_item.batch.trainer.name|lower }}{% endif %} {% if class_item.batch %}{{ class_item.batch.name|lower }}{% endif %}">
+                <td style="white-space: nowrap; vertical-align: middle;">
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.8125rem;">{{ class_item.date|date:"d M Y" }}</div>
+                  <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 2px;">
+                    {{ class_item.time|time:"h:i A" }}{% if class_item.end_time %} – {{ class_item.end_time|time:"h:i A" }}{% endif %}
                   </div>
                 </td>
-                <td>
+                <td style="vertical-align: middle;">
+                  <div class="entity-info">
+                    <span class="entity-name" style="font-weight: 600; color: #0f172a;">{{ class_item.subject }}</span>
+                    <span class="entity-sub" style="font-size: 0.75rem; color: #64748b;">{% if class_item.description %}{{ class_item.description }}{% else %}Module Lecture Session{% endif %}</span>
+                  </div>
+                </td>
+                <td style="vertical-align: middle;">
                   <div class="entity-cell">
-                    <div class="entity-avatar" style="background-color: #2563eb;">RS</div>
+                    <div class="entity-avatar" style="background-color: #007782; width: 32px; height: 32px; min-width: 32px;">
+                      {% if class_item.trainer %}{{ class_item.trainer.name|slice:":2"|upper }}{% elif class_item.batch and class_item.batch.trainer %}{{ class_item.batch.trainer.name|slice:":2"|upper }}{% else %}MN{% endif %}
+                    </div>
                     <div class="entity-info">
-                      <span class="entity-name">{{ class_item.trainer.name }}</span>
-                      <span class="entity-sub">AI Architect</span>
+                      <span class="entity-name" style="font-weight: 600; color: #0f172a;">{% if class_item.trainer %}{{ class_item.trainer.name }}{% elif class_item.batch and class_item.batch.trainer %}{{ class_item.batch.trainer.name }}{% else %}Faculty Mentor{% endif %}</span>
+                      <span class="entity-sub" style="font-size: 0.75rem; color: #64748b;">Faculty Mentor</span>
                     </div>
                   </div>
                 </td>
-                <td>
-                  <span class="font-mono-code">{{ class_item.batch.name }}</span>
+                <td style="vertical-align: middle; white-space: nowrap;">
+                  <span class="font-mono-code" style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; color: #334155;">{% if class_item.batch %}{{ class_item.batch.name }}{% else %}General Batch{% endif %}</span>
                 </td>
-                <td>
-                  <div style="font-weight: 600; color: #1e293b;">{{ class_item.mode }}</div>
-                  <div style="font-size: 0.71875rem; color: #2563eb;">Zoom #8412 0914</div>
-                </td>
-                <td>
-                  <span class="status-badge badge-active">
-                    <span class="badge-dot"></span> 26 / 28 (93%)
-                  </span>
-                </td>
-                <td>
-                  <span class="status-badge badge-live-pulse">
-                    <span class="badge-dot"></span> Live Now
-                  </span>
-                </td>
-                <td style="text-align: right;">
-                  <div class="table-actions-cell" style="justify-content: flex-end;">
-                    <a href="#" class="btn-action-pill" style="background-color: #fee2e2; color: #dc2626; border-color: #fca5a5;">
-                      Join Live
-                    </a>
-                    <button class="btn-action-icon" title="Session Roster">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </button>
+                <td style="vertical-align: middle;">
+                  <div style="font-weight: 600; color: #1e293b; font-size: 0.8125rem;">{{ class_item.mode|default:"Online" }}</div>
+                  <div style="font-size: 0.75rem; color: #2563eb;">
+                    {% if class_item.meeting_link %}
+                      <a href="{{ class_item.meeting_link }}" target="_blank" style="color: #2563eb; font-weight: 600; text-decoration: none;">Meeting Link &rarr;</a>
+                    {% else %}
+                      Online Portal
+                    {% endif %}
                   </div>
+                </td>
+                <td style="vertical-align: middle; white-space: nowrap;">
+                  {% if class_item.session_status == 'Live Now' %}
+                    <span class="status-badge badge-live-pulse">
+                      <span class="badge-dot"></span> Live Now
+                    </span>
+                  {% elif class_item.session_status == 'Upcoming' %}
+                    <span class="status-badge badge-upcoming">
+                      <span class="badge-dot"></span> Upcoming
+                    </span>
+                  {% else %}
+                    <span class="status-badge" style="background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;">
+                      <span class="badge-dot" style="background-color: #94a3b8;"></span> Past
+                    </span>
+                  {% endif %}
+                </td>
+                <td style="vertical-align: middle; white-space: nowrap;">
+                  {% if class_item.has_attendance %}
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #10b981;"></span>
+                      <span style="font-weight: 700; color: #047857; font-size: 0.8125rem;">
+                        {{ class_item.present_count }} Present{% if class_item.absent_count %} / {{ class_item.absent_count }} Absent{% endif %}{% if class_item.leave_count %} / {{ class_item.leave_count }} Leave{% endif %}
+                      </span>
+                      <span style="font-size: 0.75rem; color: #64748b;">({{ class_item.attendance_pct }}%)</span>
+                    </div>
+                  {% else %}
+                    <span style="font-size: 0.8125rem; color: #94a3b8; font-weight: 500;">Not Marked</span>
+                  {% endif %}
                 </td>
               </tr>
               {% empty %}
               <tr>
-                <td colspan="8" style="text-align: center; padding: 20px;">No classes scheduled.</td>
+                <td colspan="7" style="text-align: center; padding: 24px; color: #64748b; font-weight: 600;">No classes scheduled.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -253,13 +299,11 @@
 
         <!-- Pagination -->
         <div class="pagination-row">
-          <span>Showing 1 to 4 of 84 classes</span>
-          <div class="pagination-controls">
+          <span id="paginationInfoText">Showing 1 to {{ classes|length }} of {{ classes|length }} classes</span>
+          <div class="pagination-controls" id="paginationControls">
             <button class="btn-page-nav" disabled>Previous</button>
             <button class="btn-page-nav active">1</button>
-            <button class="btn-page-nav">2</button>
-            <button class="btn-page-nav">3</button>
-            <button class="btn-page-nav">Next</button>
+            <button class="btn-page-nav" disabled>Next</button>
           </div>
         </div>
       </div>
@@ -338,6 +382,142 @@
     </form>
   </div>
 </div>
+
+<script>
+let currentPage = 1;
+const pageSize = 10;
+let activeTabFilter = 'all';
+
+function setTabFilter(tab, element) {
+  activeTabFilter = tab;
+  currentPage = 1;
+  const buttons = document.querySelectorAll('#classesFilterTabs .pill-tab-btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  if (element) {
+    element.classList.add('active');
+  }
+  filterClassesTable();
+}
+
+function resetFilters() {
+  document.getElementById('classSearchInput').value = '';
+  document.getElementById('batchFilter').value = '';
+  document.getElementById('mentorFilter').value = '';
+  document.getElementById('slotFilter').value = '';
+  document.getElementById('statusFilter').value = '';
+  document.getElementById('startDateFilter').value = '';
+  document.getElementById('endDateFilter').value = '';
+  activeTabFilter = 'all';
+  currentPage = 1;
+  const buttons = document.querySelectorAll('#classesFilterTabs .pill-tab-btn');
+  buttons.forEach((btn, idx) => {
+    if (idx === 0) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+  filterClassesTable();
+}
+
+function goToPage(page) {
+  currentPage = page;
+  filterClassesTable();
+}
+
+function filterClassesTable() {
+  const searchVal = (document.getElementById('classSearchInput').value || '').toLowerCase().trim();
+  const batchVal = document.getElementById('batchFilter').value;
+  const mentorVal = document.getElementById('mentorFilter').value;
+  const slotVal = (document.getElementById('slotFilter').value || '').toLowerCase();
+  const statusVal = (document.getElementById('statusFilter').value || '').toLowerCase();
+  const startDateVal = document.getElementById('startDateFilter').value;
+  const endDateVal = document.getElementById('endDateFilter').value;
+  const todayDateStr = "{% now 'Y-m-d' %}";
+
+  const allRows = Array.from(document.querySelectorAll('#classesTable tbody tr.class-table-row'));
+  
+  const matchedRows = allRows.filter(row => {
+    const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
+    const rowSlot = (row.getAttribute('data-slot') || '').toLowerCase();
+    const rowBatch = row.getAttribute('data-batch') || '';
+    const rowTrainer = row.getAttribute('data-trainer') || '';
+    const rowDate = row.getAttribute('data-date') || '';
+    const rowSearch = (row.getAttribute('data-search') || '').toLowerCase();
+
+    let matchesTab = true;
+    if (activeTabFilter === 'today') {
+      matchesTab = (rowDate === todayDateStr);
+    } else if (activeTabFilter === 'upcoming') {
+      matchesTab = (rowStatus === 'upcoming');
+    } else if (activeTabFilter === 'past') {
+      matchesTab = (rowStatus === 'past');
+    }
+
+    const matchesSearch = !searchVal || rowSearch.includes(searchVal);
+    const matchesBatch = !batchVal || (rowBatch === batchVal);
+    const matchesMentor = !mentorVal || (rowTrainer === mentorVal);
+    const matchesSlot = !slotVal || rowSlot.includes(slotVal);
+    const matchesStatus = !statusVal || (rowStatus === statusVal);
+
+    let matchesDateRange = true;
+    if (startDateVal && rowDate < startDateVal) matchesDateRange = false;
+    if (endDateVal && rowDate > endDateVal) matchesDateRange = false;
+
+    return matchesTab && matchesSearch && matchesBatch && matchesMentor && matchesSlot && matchesStatus && matchesDateRange;
+  });
+
+  const totalRecords = matchedRows.length;
+  const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const startIdx = totalRecords === 0 ? 0 : (currentPage - 1) * pageSize;
+  const endIdx = Math.min(startIdx + pageSize, totalRecords);
+
+  allRows.forEach(row => row.style.display = 'none');
+
+  for (let i = startIdx; i < endIdx; i++) {
+    if (matchedRows[i]) {
+      matchedRows[i].style.display = '';
+    }
+  }
+
+  const countElem = document.getElementById('tableRecordsCount');
+  if (countElem) {
+    countElem.textContent = totalRecords + ' Lectures';
+  }
+
+  const infoElem = document.getElementById('paginationInfoText');
+  if (infoElem) {
+    if (totalRecords === 0) {
+      infoElem.textContent = 'Showing 0 of 0 classes';
+    } else {
+      infoElem.textContent = `Showing ${startIdx + 1} to ${endIdx} of ${totalRecords} classes`;
+    }
+  }
+
+  const controlsElem = document.getElementById('paginationControls');
+  if (controlsElem) {
+    let html = '';
+    
+    const prevDisabled = currentPage === 1 ? 'disabled' : '';
+    html += `<button class="btn-page-nav" ${prevDisabled} onclick="goToPage(${currentPage - 1})">Previous</button>`;
+
+    for (let p = 1; p <= totalPages; p++) {
+      const activeClass = p === currentPage ? 'active' : '';
+      html += `<button class="btn-page-nav ${activeClass}" onclick="goToPage(${p})">${p}</button>`;
+    }
+
+    const nextDisabled = (currentPage === totalPages || totalRecords === 0) ? 'disabled' : '';
+    html += `<button class="btn-page-nav" ${nextDisabled} onclick="goToPage(${currentPage + 1})">Next</button>`;
+
+    controlsElem.innerHTML = html;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  filterClassesTable();
+});
+</script>
 
 </body>
 </html>

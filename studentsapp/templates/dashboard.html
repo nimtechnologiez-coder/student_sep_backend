@@ -259,7 +259,7 @@
                 </div>
               </div>
               {% empty %}
-              <div style="padding: 24px; text-align: center; color: var(--text-muted);">
+              <div class="empty-state-container">
                 <p>No Recent Registrations available.</p>
               </div>
               {% endfor %}
@@ -286,7 +286,7 @@
                 <span class="class-mode-badge {% if class_item.mode == 'Online' %}badge-online{% else %}badge-offline{% endif %}">{{ class_item.mode }}</span>
               </div>
               {% empty %}
-              <div style="padding: 24px; text-align: center; color: var(--text-muted);">
+              <div class="empty-state-container">
                 <p>No classes scheduled for today.</p>
               </div>
               {% endfor %}
@@ -316,7 +316,7 @@
                 <span class="activity-time-ago">{{ activity.timestamp|timesince }} ago</span>
               </div>
               {% empty %}
-              <div style="padding: 24px; text-align: center; color: var(--text-muted);">
+              <div class="empty-state-container">
                 <p>No recent activities found.</p>
               </div>
               {% endfor %}
