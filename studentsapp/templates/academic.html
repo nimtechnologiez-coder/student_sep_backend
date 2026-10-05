@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -58,7 +59,8 @@
     .dashboard-main {
       flex: 1;
       min-width: 0;
-      margin-left: 250px; /* Offset for fixed sidebar */
+      margin-left: 250px;
+      /* Offset for fixed sidebar */
       background-color: #f8fafc;
       display: flex;
       flex-direction: column;
@@ -298,6 +300,187 @@
       letter-spacing: 0.03em;
     }
 
+    /* =========================================================================
+       PHASE / MONTH ACCORDION & CARDS
+       ========================================================================= */
+    .phases-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      width: 100%;
+    }
+
+    .phase-card {
+      background: #ffffff;
+      border: 1px solid var(--admin-slate-200);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: all 0.15s ease;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .phase-card:hover {
+      border-color: #cbd5e1;
+    }
+
+    .phase-card.expanded {
+      border-color: #93c5fd;
+      box-shadow: 0 4px 14px -3px rgba(37, 99, 235, 0.09);
+    }
+
+    .phase-card-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      cursor: pointer;
+      user-select: none;
+      background: #ffffff;
+      border-bottom: 1px solid transparent;
+      transition: background 0.15s ease;
+      flex-wrap: wrap;
+    }
+
+    .phase-card.expanded .phase-card-header {
+      background: #f8fafc;
+      border-bottom-color: var(--admin-slate-200);
+    }
+
+    .phase-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .phase-chevron {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--admin-slate-100);
+      color: var(--admin-slate-500);
+      transition: transform 0.2s ease, background 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .phase-card.expanded .phase-chevron {
+      transform: rotate(90deg);
+      background: #dbeafe;
+      color: var(--admin-blue);
+    }
+
+    .phase-order-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      background: #eff6ff;
+      color: var(--admin-blue);
+      border: 1px solid #bfdbfe;
+      flex-shrink: 0;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .phase-title-col {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .phase-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .phase-name-title {
+      font-size: 1.0625rem;
+      font-weight: 800;
+      color: var(--admin-slate-900);
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .phase-desc-sub {
+      font-size: 0.8125rem;
+      color: var(--admin-slate-500);
+      margin: 0;
+      line-height: 1.35;
+    }
+
+    .phase-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .phase-stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      background: var(--admin-slate-100);
+      border-radius: 6px;
+      font-size: 0.71875rem;
+      font-weight: 600;
+      color: var(--admin-slate-700);
+      white-space: nowrap;
+    }
+
+    .btn-add-module-in-phase {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: #eff6ff;
+      color: var(--admin-blue);
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-add-module-in-phase:hover {
+      background: var(--admin-blue);
+      color: #ffffff;
+      border-color: var(--admin-blue);
+    }
+
+    .phase-card-body {
+      display: none;
+      padding: 16px 20px 20px;
+      background: #ffffff;
+      width: 100%;
+    }
+
+    .phase-card.expanded .phase-card-body {
+      display: block;
+      animation: fadeIn 0.15s ease-out;
+    }
+
+    .phase-modules-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     /* Modules Accordion Container */
     .modules-accordion-wrap {
       display: flex;
@@ -497,8 +680,15 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-3px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(-3px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* Topics Table */
@@ -707,8 +897,15 @@
     }
 
     @keyframes modalScale {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .modal-head {
@@ -759,7 +956,9 @@
       color: var(--admin-slate-700);
     }
 
-    .modal-input, .modal-textarea, .modal-select {
+    .modal-input,
+    .modal-textarea,
+    .modal-select {
       width: 100%;
       padding: 8px 11px;
       border: 1px solid var(--admin-slate-300);
@@ -771,7 +970,9 @@
       transition: all 0.15s ease;
     }
 
-    .modal-input:focus, .modal-textarea:focus, .modal-select:focus {
+    .modal-input:focus,
+    .modal-textarea:focus,
+    .modal-select:focus {
       outline: none;
       border-color: var(--admin-blue);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
@@ -866,918 +1067,1361 @@
     }
   </style>
 </head>
+
 <body>
 
-<div class="dashboard-wrapper">
-  
-  <!-- Sidebar Component with active_page='curriculum' -->
-  {% include 'sidebar.html' with active_page='curriculum' %}
+  <div class="dashboard-wrapper">
 
-  <!-- Main Content Workspace -->
-  <main class="dashboard-main">
-    
-    <!-- Top Header Bar -->
-    <header class="main-header">
-      <div class="header-search-wrap">
-        <span class="search-icon-svg">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        </span>
-        <input type="text" class="header-search-input" id="searchCurriculumInput" placeholder="Search modules or topics..." oninput="filterCurriculum()">
-      </div>
+    <!-- Sidebar Component with active_page='curriculum' -->
+    {% include 'sidebar.html' with active_page='curriculum' %}
 
-      <div class="header-right-meta">
-        <div class="header-date-display">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          <span>Mon, 24 Sep 2026</span>
-        </div>
+    <!-- Main Content Workspace -->
+    <main class="dashboard-main">
 
-        <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="header-notif-badge">3</span>
-        </a>
-
-        <div class="header-user-profile" title="Admin Account">
-          <div class="user-avatar-circle" style="background-color: #0f172a; color: #ffffff; font-weight: 700;">SN</div>
-          <div class="user-text-info">
-            <span class="user-name-title">Sneha N</span>
-            <span class="user-role-sub">Admin</span>
-          </div>
-          <span class="user-dropdown-arrow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </span>
-        </div>
-      </div>
-    </header>
-
-    <!-- Admin Workspace Content -->
-    <div class="admin-workspace">
-
-      <!-- Breadcrumbs -->
-      <div class="curr-breadcrumbs">
-        <a href="{% url 'dashboard' %}">Admin</a>
-        <span>&rarr;</span>
-        <span>Curriculum</span>
-        <span>&rarr;</span>
-        <span style="color: var(--admin-slate-900); font-weight: 600;">Generative AI &amp; LLMs</span>
-      </div>
-
-      <!-- Page Title & Top Actions -->
-      <div class="curr-header-row">
-        <div class="curr-header-titles">
-          <h1>Curriculum Management</h1>
-          <p>Define modules and learning topics for <strong>Generative AI &amp; LLMs</strong>. Common curriculum for all batches.</p>
-        </div>
-
-        <div class="curr-header-actions">
-          <button type="button" class="btn-toggle-all" onclick="toggleAllModules()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
-            <span id="btnToggleAllText">Collapse All</span>
-          </button>
-          <button type="button" class="btn-primary-add-mod" onclick="openAddModuleModal()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Module</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Single Common Course Overview Card (Clean, modern white card) -->
-      <div class="course-overview-card">
-        <div class="course-card-left">
-          <div class="course-badge-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2a8 8 0 0 0-8 8c0 3.3 2 6.2 5 7.4V20a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2.6c3-1.2 5-4.1 5-7.4a8 8 0 0 0-8-8z"/>
-              <path d="M9.5 9h5"/>
-              <path d="M9.5 13h5"/>
+      <!-- Top Header Bar -->
+      <header class="main-header">
+        <div class="header-search-wrap">
+          <span class="search-icon-svg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
             </svg>
+          </span>
+          <input type="text" class="header-search-input" id="searchCurriculumInput"
+            placeholder="Search modules or topics..." oninput="filterCurriculum()">
+        </div>
+
+        <div class="header-right-meta">
+          <div class="header-date-display">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="18" height="18" x="3" y="4" rx="2" />
+              <line x1="16" x1="16" y1="2" y2="6" />
+              <line x1="8" x2="8" y1="2" y2="6" />
+              <line x1="3" x2="21" y1="10" y2="10" />
+            </svg>
+            <span>Mon, 24 Sep 2026</span>
           </div>
-          <div class="course-card-info">
-            <div class="course-tag-row">
-              <span class="course-common-pill">
-                <span class="dot"></span>
-                Common Curriculum &bull; All Batches
-              </span>
+
+          <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+            <span class="header-notif-badge">3</span>
+          </a>
+
+          <div class="header-user-profile" title="Admin Account">
+            <div class="user-avatar-circle" style="background-color: #0f172a; color: #ffffff; font-weight: 700;">SN
             </div>
-            <h2 class="course-card-title">Course: Generative AI &amp; LLMs</h2>
-            <p class="course-card-desc">
-              Hierarchy: <strong>Course &rarr; Module &rarr; Topics</strong>. All topics are structured for <strong>Online Class</strong> delivery. Mentors select topics from this curriculum when scheduling live sessions for specific batches.
-            </p>
+            <div class="user-text-info">
+              <span class="user-name-title">Sneha N</span>
+              <span class="user-role-sub">Admin</span>
+            </div>
+            <span class="user-dropdown-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Admin Workspace Content -->
+      <div class="admin-workspace">
+
+        <!-- Breadcrumbs -->
+        <div class="curr-breadcrumbs">
+          <a href="{% url 'dashboard' %}">Admin</a>
+          <span>&rarr;</span>
+          <span>Curriculum</span>
+          <span>&rarr;</span>
+          <span style="color: var(--admin-slate-900); font-weight: 600;">Generative AI &amp; LLMs</span>
+        </div>
+
+        <!-- Page Title & Top Actions -->
+        <div class="curr-header-row">
+          <div class="curr-header-titles">
+            <h1>Curriculum Management</h1>
+            <p>Define program phases, modules, and learning topics for <strong>Generative AI &amp; LLMs</strong>. Common curriculum for all batches.</p>
+          </div>
+
+          <div class="curr-header-actions">
+            <button type="button" class="btn-toggle-all" onclick="toggleAllPhases()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="7 13 12 18 17 13" />
+                <polyline points="7 6 12 11 17 6" />
+              </svg>
+              <span id="btnToggleAllText">Collapse All</span>
+            </button>
+            <button type="button" class="btn-primary-add-mod" onclick="openAddPhaseModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              <span>+ Add Phase / Month</span>
+            </button>
           </div>
         </div>
 
-        <div class="course-metrics-row">
-          <div class="stat-metric-chip">
-            <span class="stat-metric-num" id="statModuleCount">6</span>
-            <span class="stat-metric-lbl">Modules</span>
+        <!-- Single Common Course Overview Card (Clean, modern white card) -->
+        <div class="course-overview-card">
+          <div class="course-card-left">
+            <div class="course-badge-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M12 2a8 8 0 0 0-8 8c0 3.3 2 6.2 5 7.4V20a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2.6c3-1.2 5-4.1 5-7.4a8 8 0 0 0-8-8z" />
+                <path d="M9.5 9h5" />
+                <path d="M9.5 13h5" />
+              </svg>
+            </div>
+            <div class="course-card-info">
+              <div class="course-tag-row">
+                <span class="course-common-pill">
+                  <span class="dot"></span>
+                  Common Curriculum &bull; All Batches
+                </span>
+              </div>
+              <h2 class="course-card-title">Course: Generative AI &amp; LLMs</h2>
+              <p class="course-card-desc">
+                Hierarchy: <strong>Course &rarr; Phase / Month &rarr; Module &rarr; Topics</strong>. All topics are structured for
+                <strong>Online Class</strong> delivery. Mentors select topics from this curriculum when scheduling live
+                sessions for specific batches.
+              </p>
+            </div>
           </div>
-          <div class="stat-metric-chip">
-            <span class="stat-metric-num" id="statTopicCount">30</span>
-            <span class="stat-metric-lbl">Topics</span>
-          </div>
-          <div class="stat-metric-chip">
-            <span class="stat-metric-num" style="color: #059669; font-size: 0.9375rem;">Online</span>
-            <span class="stat-metric-lbl">Class Format</span>
+
+          <div class="course-metrics-row">
+            <div class="stat-metric-chip">
+              <span class="stat-metric-num" id="statPhaseCount">1</span>
+              <span class="stat-metric-lbl">Phases</span>
+            </div>
+            <div class="stat-metric-chip">
+              <span class="stat-metric-num" id="statModuleCount">1</span>
+              <span class="stat-metric-lbl">Modules</span>
+            </div>
+            <div class="stat-metric-chip">
+              <span class="stat-metric-num" id="statTopicCount">1</span>
+              <span class="stat-metric-lbl">Topics</span>
+            </div>
+            <div class="stat-metric-chip">
+              <span class="stat-metric-num" style="color: #059669; font-size: 0.9375rem;">Online</span>
+              <span class="stat-metric-lbl">Class Format</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Modules Accordion: Course -> Module -> Topics -->
-      <div class="modules-accordion-wrap" id="modulesContainer">
-        <!-- Dynamically rendered via JavaScript -->
-      </div>
+        <!-- Program Phases Accordion Container -->
+        <div class="phases-wrap" id="phasesContainer">
+          <!-- Dynamically rendered via JavaScript -->
+        </div>
 
-    </div>
-  </main>
-</div>
-
-<!-- =========================================================================
-     MODAL 1: ADD MODULE
-     ========================================================================= -->
-<div class="admin-modal-backdrop" id="addModuleModal">
-  <div class="admin-modal-box">
-    <div class="modal-head">
-      <div>
-        <h3>Add Curriculum Module</h3>
-        <p>Create a new module under Generative AI &amp; LLMs.</p>
       </div>
-      <button type="button" class="btn-modal-close" onclick="closeModal('addModuleModal')">&times;</button>
-    </div>
-    <form id="addModuleForm" onsubmit="event.preventDefault(); submitAddModule();">
-      <div class="modal-field-group">
-        <label>Course Name</label>
-        <input type="text" class="modal-input" value="Generative AI &amp; LLMs" disabled style="background: #f1f5f9; color: #475569; font-weight: 600;">
-      </div>
-
-      <div class="modal-field-group">
-        <label>Module Order / Sequence *</label>
-        <input type="number" class="modal-input" id="modOrderInput" required min="1" max="50" placeholder="e.g. 7">
-      </div>
-
-      <div class="modal-field-group">
-        <label>Module Name *</label>
-        <input type="text" class="modal-input" id="modTitleInput" required placeholder="e.g. Foundations of Generative AI & Deep Learning">
-      </div>
-
-      <div class="modal-field-group">
-        <label>Description *</label>
-        <textarea class="modal-textarea" id="modDescInput" rows="2" required placeholder="Brief overview of module scope and key learning outcomes..."></textarea>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-secondary" onclick="closeModal('addModuleModal')">Cancel</button>
-        <button type="submit" class="btn-submit-primary">Create Module</button>
-      </div>
-    </form>
+    </main>
   </div>
-</div>
 
-<!-- =========================================================================
-     MODAL 2: EDIT MODULE
-     ========================================================================= -->
-<div class="admin-modal-backdrop" id="editModuleModal">
-  <div class="admin-modal-box">
-    <div class="modal-head">
-      <div>
-        <h3>Edit Curriculum Module</h3>
-        <p>Update module name, order, or description.</p>
+  <!-- =========================================================================
+       MODAL: ADD PHASE / MONTH
+       ========================================================================= -->
+  <div class="admin-modal-backdrop" id="addPhaseModal">
+    <div class="admin-modal-box">
+      <div class="modal-head">
+        <div>
+          <h3>Add Program Phase / Month</h3>
+          <p>Define a new curriculum phase or month in the database.</p>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="closeModal('addPhaseModal')">&times;</button>
       </div>
-      <button type="button" class="btn-modal-close" onclick="closeModal('editModuleModal')">&times;</button>
+      <form id="addPhaseForm" onsubmit="event.preventDefault(); submitAddPhase();">
+        <div class="modal-grid-2">
+          <div class="modal-field-group">
+            <label>Phase / Month Number (Display Order) *</label>
+            <input type="number" class="modal-input" id="phaseNumberInput" required min="1" max="50" placeholder="e.g. 1">
+          </div>
+          <div class="modal-field-group">
+            <label>Status *</label>
+            <select class="modal-select" id="phaseStatusInput" required>
+              <option value="Current">Current</option>
+              <option value="Upcoming" selected>Upcoming</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-field-group">
+          <label>Phase / Month Title *</label>
+          <input type="text" class="modal-input" id="phaseTitleInput" required placeholder="e.g. Advanced Prompt Engineering & Fine-Tuning">
+        </div>
+
+        <div class="modal-field-group">
+          <label>Description</label>
+          <textarea class="modal-textarea" id="phaseDescInput" rows="2" placeholder="Brief scope and objectives of this learning phase..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('addPhaseModal')">Cancel</button>
+          <button type="submit" class="btn-submit-primary">Create Phase / Month</button>
+        </div>
+      </form>
     </div>
-    <form id="editModuleForm" onsubmit="event.preventDefault(); submitEditModule();">
-      <input type="hidden" id="editModId">
-      
-      <div class="modal-field-group">
-        <label>Module Order / Sequence *</label>
-        <input type="number" class="modal-input" id="editModOrderInput" required min="1">
-      </div>
-
-      <div class="modal-field-group">
-        <label>Module Name *</label>
-        <input type="text" class="modal-input" id="editModTitleInput" required>
-      </div>
-
-      <div class="modal-field-group">
-        <label>Description *</label>
-        <textarea class="modal-textarea" id="editModDescInput" rows="2" required></textarea>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-secondary" onclick="closeModal('editModuleModal')">Cancel</button>
-        <button type="submit" class="btn-submit-primary">Save Changes</button>
-      </div>
-    </form>
   </div>
-</div>
 
-<!-- =========================================================================
+  <!-- =========================================================================
+       MODAL: EDIT PHASE / MONTH
+       ========================================================================= -->
+  <div class="admin-modal-backdrop" id="editPhaseModal">
+    <div class="admin-modal-box">
+      <div class="modal-head">
+        <div>
+          <h3>Edit Program Phase / Month</h3>
+          <p>Update phase title, display order, status, or description.</p>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="closeModal('editPhaseModal')">&times;</button>
+      </div>
+      <form id="editPhaseForm" onsubmit="event.preventDefault(); submitEditPhase();">
+        <input type="hidden" id="editPhaseId">
+
+        <div class="modal-grid-2">
+          <div class="modal-field-group">
+            <label>Phase / Month Number (Display Order) *</label>
+            <input type="number" class="modal-input" id="editPhaseNumberInput" required min="1" max="50">
+          </div>
+          <div class="modal-field-group">
+            <label>Status *</label>
+            <select class="modal-select" id="editPhaseStatusInput" required>
+              <option value="Current">Current</option>
+              <option value="Upcoming">Upcoming</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-field-group">
+          <label>Phase / Month Title *</label>
+          <input type="text" class="modal-input" id="editPhaseTitleInput" required>
+        </div>
+
+        <div class="modal-field-group">
+          <label>Description</label>
+          <textarea class="modal-textarea" id="editPhaseDescInput" rows="2"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('editPhaseModal')">Cancel</button>
+          <button type="submit" class="btn-submit-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: ADD MODULE
+       ========================================================================= -->
+  <div class="admin-modal-backdrop" id="addModuleModal">
+    <div class="admin-modal-box">
+      <div class="modal-head">
+        <div>
+          <h3>Add Curriculum Module</h3>
+          <p>Create a new module inside a program phase.</p>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="closeModal('addModuleModal')">&times;</button>
+      </div>
+      <form id="addModuleForm" onsubmit="event.preventDefault(); submitAddModule();">
+        <div class="modal-field-group">
+          <label>Target Phase / Month *</label>
+          <select class="modal-select" id="modPhaseSelect" required></select>
+        </div>
+
+        <div class="modal-field-group">
+          <label>Module Order / Sequence *</label>
+          <input type="number" class="modal-input" id="modOrderInput" required min="1" max="50" placeholder="e.g. 1">
+        </div>
+
+        <div class="modal-field-group">
+          <label>Module Name *</label>
+          <input type="text" class="modal-input" id="modTitleInput" required placeholder="e.g. Foundations of Generative AI & Deep Learning">
+        </div>
+
+        <div class="modal-field-group">
+          <label>Description *</label>
+          <textarea class="modal-textarea" id="modDescInput" rows="2" required placeholder="Brief overview of module scope and key learning outcomes..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('addModuleModal')">Cancel</button>
+          <button type="submit" class="btn-submit-primary">Create Module</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: EDIT MODULE
+       ========================================================================= -->
+  <div class="admin-modal-backdrop" id="editModuleModal">
+    <div class="admin-modal-box">
+      <div class="modal-head">
+        <div>
+          <h3>Edit Curriculum Module</h3>
+          <p>Update module name, phase, order, or description.</p>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="closeModal('editModuleModal')">&times;</button>
+      </div>
+      <form id="editModuleForm" onsubmit="event.preventDefault(); submitEditModule();">
+        <input type="hidden" id="editModId">
+
+        <div class="modal-field-group">
+          <label>Phase / Month *</label>
+          <select class="modal-select" id="editModPhaseSelect" required></select>
+        </div>
+        
+        <div class="modal-field-group">
+          <label>Module Order / Sequence *</label>
+          <input type="number" class="modal-input" id="editModOrderInput" required min="1">
+        </div>
+
+        <div class="modal-field-group">
+          <label>Module Name *</label>
+          <input type="text" class="modal-input" id="editModTitleInput" required>
+        </div>
+
+        <div class="modal-field-group">
+          <label>Description *</label>
+          <textarea class="modal-textarea" id="editModDescInput" rows="2" required></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('editModuleModal')">Cancel</button>
+          <button type="submit" class="btn-submit-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
      MODAL 3: ADD TOPIC
      ========================================================================= -->
-<div class="admin-modal-backdrop" id="addTopicModal">
-  <div class="admin-modal-box">
-    <div class="modal-head">
-      <div>
-        <h3>Add Topic</h3>
-        <p>Add a new topic directly inside this module.</p>
+  <div class="admin-modal-backdrop" id="addTopicModal">
+    <div class="admin-modal-box">
+      <div class="modal-head">
+        <div>
+          <h3>Add Topic</h3>
+          <p>Add a new topic directly inside this module.</p>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="closeModal('addTopicModal')">&times;</button>
       </div>
-      <button type="button" class="btn-modal-close" onclick="closeModal('addTopicModal')">&times;</button>
+      <form id="addTopicForm" onsubmit="event.preventDefault(); submitAddTopic();">
+        <input type="hidden" id="addTopicTargetModId">
+
+        <div class="modal-field-group">
+          <label>Module</label>
+          <input type="text" class="modal-input" id="addTopicModNameDisplay" disabled
+            style="background: #f1f5f9; color: #334155; font-weight: 600;">
+        </div>
+
+        <div class="modal-grid-2">
+          <div class="modal-field-group">
+            <label>Topic Order *</label>
+            <input type="number" class="modal-input" id="topicOrderInput" required min="1" max="100"
+              placeholder="e.g. 1">
+          </div>
+
+          <div class="modal-field-group">
+            <label>Status *</label>
+            <select class="modal-select" id="topicStatusInput" required>
+              <option value="Active" selected>Active</option>
+              <option value="Draft">Draft</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-field-group">
+          <label>Topic Name *</label>
+          <input type="text" class="modal-input" id="topicTitleInput" required
+            placeholder="e.g. Introduction to Generative AI">
+        </div>
+
+        <div class="modal-field-group">
+          <label>Description *</label>
+          <textarea class="modal-textarea" id="topicDescInput" rows="2" required
+            placeholder="Syllabus topics, theoretical breakdown, and concepts covered..."></textarea>
+        </div>
+
+        <div class="modal-grid-2">
+          <div class="modal-field-group">
+            <label>Class Type *</label>
+            <!-- Strictly Online Class only -->
+            <input type="text" class="modal-input" value="Online Class" readonly disabled
+              style="background: #eff6ff; color: #1d4ed8; font-weight: 700; border-color: #bfdbfe;">
+          </div>
+
+          <div class="modal-field-group">
+            <label>Duration *</label>
+            <select class="modal-select" id="topicDurationInput" required>
+              <option value="60 Mins">60 Mins (1.0 hr)</option>
+              <option value="90 Mins" selected>90 Mins (1.5 hrs)</option>
+              <option value="120 Mins">120 Mins (2.0 hrs)</option>
+              <option value="150 Mins">150 Mins (2.5 hrs)</option>
+              <option value="180 Mins">180 Mins (3.0 hrs)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('addTopicModal')">Cancel</button>
+          <button type="submit" class="btn-submit-primary">Add Topic</button>
+        </div>
+      </form>
     </div>
-    <form id="addTopicForm" onsubmit="event.preventDefault(); submitAddTopic();">
-      <input type="hidden" id="addTopicTargetModId">
-
-      <div class="modal-field-group">
-        <label>Module</label>
-        <input type="text" class="modal-input" id="addTopicModNameDisplay" disabled style="background: #f1f5f9; color: #334155; font-weight: 600;">
-      </div>
-
-      <div class="modal-grid-2">
-        <div class="modal-field-group">
-          <label>Topic Order *</label>
-          <input type="number" class="modal-input" id="topicOrderInput" required min="1" max="100" placeholder="e.g. 1">
-        </div>
-
-        <div class="modal-field-group">
-          <label>Status *</label>
-          <select class="modal-select" id="topicStatusInput" required>
-            <option value="Active" selected>Active</option>
-            <option value="Draft">Draft</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="modal-field-group">
-        <label>Topic Name *</label>
-        <input type="text" class="modal-input" id="topicTitleInput" required placeholder="e.g. Introduction to Generative AI">
-      </div>
-
-      <div class="modal-field-group">
-        <label>Description *</label>
-        <textarea class="modal-textarea" id="topicDescInput" rows="2" required placeholder="Syllabus topics, theoretical breakdown, and concepts covered..."></textarea>
-      </div>
-
-      <div class="modal-grid-2">
-        <div class="modal-field-group">
-          <label>Class Type *</label>
-          <!-- Strictly Online Class only -->
-          <input type="text" class="modal-input" value="Online Class" readonly disabled style="background: #eff6ff; color: #1d4ed8; font-weight: 700; border-color: #bfdbfe;">
-        </div>
-
-        <div class="modal-field-group">
-          <label>Duration *</label>
-          <select class="modal-select" id="topicDurationInput" required>
-            <option value="60 Mins">60 Mins (1.0 hr)</option>
-            <option value="90 Mins" selected>90 Mins (1.5 hrs)</option>
-            <option value="120 Mins">120 Mins (2.0 hrs)</option>
-            <option value="150 Mins">150 Mins (2.5 hrs)</option>
-            <option value="180 Mins">180 Mins (3.0 hrs)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-secondary" onclick="closeModal('addTopicModal')">Cancel</button>
-        <button type="submit" class="btn-submit-primary">Add Topic</button>
-      </div>
-    </form>
   </div>
-</div>
 
-<!-- =========================================================================
+  <!-- =========================================================================
      MODAL 4: EDIT TOPIC
      ========================================================================= -->
-<div class="admin-modal-backdrop" id="editTopicModal">
-  <div class="admin-modal-box">
-    <div class="modal-head">
-      <div>
-        <h3>Edit Topic</h3>
-        <p>Update topic name, description, duration, or status.</p>
+  <div class="admin-modal-backdrop" id="editTopicModal">
+    <div class="admin-modal-box">
+      <div class="modal-head">
+        <div>
+          <h3>Edit Topic</h3>
+          <p>Update topic name, description, duration, or status.</p>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="closeModal('editTopicModal')">&times;</button>
       </div>
-      <button type="button" class="btn-modal-close" onclick="closeModal('editTopicModal')">&times;</button>
+      <form id="editTopicForm" onsubmit="event.preventDefault(); submitEditTopic();">
+        <input type="hidden" id="editTopicModId">
+        <input type="hidden" id="editTopicId">
+
+        <div class="modal-grid-2">
+          <div class="modal-field-group">
+            <label>Topic Order *</label>
+            <input type="number" class="modal-input" id="editTopicOrderInput" required min="1">
+          </div>
+
+          <div class="modal-field-group">
+            <label>Status *</label>
+            <select class="modal-select" id="editTopicStatusInput" required>
+              <option value="Active">Active</option>
+              <option value="Draft">Draft</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-field-group">
+          <label>Topic Name *</label>
+          <input type="text" class="modal-input" id="editTopicTitleInput" required>
+        </div>
+
+        <div class="modal-field-group">
+          <label>Description *</label>
+          <textarea class="modal-textarea" id="editTopicDescInput" rows="2" required></textarea>
+        </div>
+
+        <div class="modal-grid-2">
+          <div class="modal-field-group">
+            <label>Class Type *</label>
+            <input type="text" class="modal-input" value="Online Class" readonly disabled
+              style="background: #eff6ff; color: #1d4ed8; font-weight: 700; border-color: #bfdbfe;">
+          </div>
+
+          <div class="modal-field-group">
+            <label>Duration *</label>
+            <select class="modal-select" id="editTopicDurationInput" required>
+              <option value="60 Mins">60 Mins (1.0 hr)</option>
+              <option value="90 Mins">90 Mins (1.5 hrs)</option>
+              <option value="120 Mins">120 Mins (2.0 hrs)</option>
+              <option value="150 Mins">150 Mins (2.5 hrs)</option>
+              <option value="180 Mins">180 Mins (3.0 hrs)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('editTopicModal')">Cancel</button>
+          <button type="submit" class="btn-submit-primary">Save Changes</button>
+        </div>
+      </form>
     </div>
-    <form id="editTopicForm" onsubmit="event.preventDefault(); submitEditTopic();">
-      <input type="hidden" id="editTopicModId">
-      <input type="hidden" id="editTopicId">
-
-      <div class="modal-grid-2">
-        <div class="modal-field-group">
-          <label>Topic Order *</label>
-          <input type="number" class="modal-input" id="editTopicOrderInput" required min="1">
-        </div>
-
-        <div class="modal-field-group">
-          <label>Status *</label>
-          <select class="modal-select" id="editTopicStatusInput" required>
-            <option value="Active">Active</option>
-            <option value="Draft">Draft</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="modal-field-group">
-        <label>Topic Name *</label>
-        <input type="text" class="modal-input" id="editTopicTitleInput" required>
-      </div>
-
-      <div class="modal-field-group">
-        <label>Description *</label>
-        <textarea class="modal-textarea" id="editTopicDescInput" rows="2" required></textarea>
-      </div>
-
-      <div class="modal-grid-2">
-        <div class="modal-field-group">
-          <label>Class Type *</label>
-          <input type="text" class="modal-input" value="Online Class" readonly disabled style="background: #eff6ff; color: #1d4ed8; font-weight: 700; border-color: #bfdbfe;">
-        </div>
-
-        <div class="modal-field-group">
-          <label>Duration *</label>
-          <select class="modal-select" id="editTopicDurationInput" required>
-            <option value="60 Mins">60 Mins (1.0 hr)</option>
-            <option value="90 Mins">90 Mins (1.5 hrs)</option>
-            <option value="120 Mins">120 Mins (2.0 hrs)</option>
-            <option value="150 Mins">150 Mins (2.5 hrs)</option>
-            <option value="180 Mins">180 Mins (3.0 hrs)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-secondary" onclick="closeModal('editTopicModal')">Cancel</button>
-        <button type="submit" class="btn-submit-primary">Save Changes</button>
-      </div>
-    </form>
   </div>
-</div>
 
-<!-- =========================================================================
+  <!-- =========================================================================
      MODAL 5: DELETE CONFIRMATION
      ========================================================================= -->
-<div class="admin-modal-backdrop" id="deleteConfirmModal">
-  <div class="admin-modal-box" style="max-width: 400px;">
-    <div class="modal-head" style="border-bottom: none; margin-bottom: 6px;">
-      <div>
-        <h3 id="delConfirmTitle" style="color: #dc2626;">Confirm Deletion</h3>
+  <div class="admin-modal-backdrop" id="deleteConfirmModal">
+    <div class="admin-modal-box" style="max-width: 400px;">
+      <div class="modal-head" style="border-bottom: none; margin-bottom: 6px;">
+        <div>
+          <h3 id="delConfirmTitle" style="color: #dc2626;">Confirm Deletion</h3>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="closeModal('deleteConfirmModal')">&times;</button>
       </div>
-      <button type="button" class="btn-modal-close" onclick="closeModal('deleteConfirmModal')">&times;</button>
-    </div>
-    <p id="delConfirmMessage" style="font-size: 0.84375rem; color: #475569; margin: 0 0 16px; line-height: 1.45;">
-      Are you sure you want to delete this item? This action cannot be undone.
-    </p>
-    <div class="modal-footer" style="margin-top: 0; padding-top: 10px;">
-      <button type="button" class="btn-secondary" onclick="closeModal('deleteConfirmModal')">Cancel</button>
-      <button type="button" class="btn-danger-confirm" id="btnConfirmDeleteAction">Delete</button>
+      <p id="delConfirmMessage" style="font-size: 0.84375rem; color: #475569; margin: 0 0 16px; line-height: 1.45;">
+        Are you sure you want to delete this item? This action cannot be undone.
+      </p>
+      <div class="modal-footer" style="margin-top: 0; padding-top: 10px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('deleteConfirmModal')">Cancel</button>
+        <button type="button" class="btn-danger-confirm" id="btnConfirmDeleteAction">Delete</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Toast Feedback -->
-<div class="admin-toast" id="adminToast">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-  <span id="toastMsg">Operation completed successfully.</span>
-</div>
+  <!-- Toast Feedback -->
+  <div class="admin-toast" id="adminToast">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+    <span id="toastMsg">Operation completed successfully.</span>
+  </div>
 
-<!-- =========================================================================
-     JAVASCRIPT: Course -> Module -> Topics Architecture
-     ========================================================================= -->
-<script>
-  // REAL DATABASE CURRICULUM STATE
-  let curriculumModules = [];
+  <script id="phasesData" type="application/json">{{ phases_json|default:"[]"|safe }}</script>
+  <script>
+    // REAL DATABASE CURRICULUM STATE (Phases with nested Modules & Topics)
+    let curriculumPhases = [];
 
-  // Injected initial data from Django ORM view context (with fallback to API)
-  const initialDbData = {{ modules_json|default:"[]"|safe }};
-
-  async function initCurriculum() {
-    if (initialDbData && initialDbData.length > 0) {
-      curriculumModules = initialDbData.map((m, idx) => ({
-        ...m,
-        expanded: idx < 2 // expand first 2 modules by default
-      }));
-      renderModules();
-    } else {
-      await fetchCurriculumFromBackend();
-    }
-  }
-
-  // Fetch live from Django Database API
-  async function fetchCurriculumFromBackend() {
+    // Injected initial data from Django ORM view context
+    let initialDbData = [];
     try {
-      const resp = await fetch('/api/admin/curriculum/data/');
-      const data = await resp.json();
-      if (data.status === 'success' && data.modules) {
-        curriculumModules = data.modules.map((m, idx) => {
-          // Preserve expanded state if already exists
-          const existing = curriculumModules.find(ex => ex.id === m.id);
-          return {
+      initialDbData = JSON.parse(document.getElementById('phasesData').textContent || '[]');
+    } catch(e) {
+      initialDbData = [];
+    }
+
+    async function initCurriculum() {
+      if (initialDbData && initialDbData.length > 0) {
+        curriculumPhases = initialDbData.map((p, idx) => ({
+          ...p,
+          expanded: true, // expand phases by default
+          modules: (p.modules || []).map((m, mIdx) => ({
             ...m,
-            expanded: existing ? existing.expanded : (idx < 2)
-          };
-        });
-        renderModules();
+            expanded: mIdx < 2 // expand first 2 modules
+          }))
+        }));
+        renderPhases();
+      } else {
+        await fetchCurriculumFromBackend();
       }
-    } catch (err) {
-      console.error('Error fetching curriculum from backend:', err);
-    }
-  }
-
-  // Update Counters
-  function updateCounters() {
-    const modCount = curriculumModules.length;
-    let topicCount = 0;
-    curriculumModules.forEach(m => {
-      topicCount += (m.topics || []).length;
-    });
-    document.getElementById('statModuleCount').innerText = modCount;
-    document.getElementById('statTopicCount').innerText = topicCount;
-  }
-
-  // Render All Modules & Topics
-  function renderModules(filterText = '') {
-    const container = document.getElementById('modulesContainer');
-    container.innerHTML = '';
-    const query = filterText.trim().toLowerCase();
-
-    // Sort modules by order
-    curriculumModules.sort((a, b) => (parseInt(a.order) || 0) - (parseInt(b.order) || 0));
-
-    if (curriculumModules.length === 0) {
-      container.innerHTML = `
-        <div style="background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 48px; text-align: center; color: #64748b;">
-          <h3 style="margin: 0 0 8px; color: #0f172a; font-weight: 700;">No curriculum modules yet</h3>
-          <p style="margin: 0 0 16px; font-size: 0.875rem;">Click "<strong>Add Module</strong>" above to create your first curriculum module in the database.</p>
-          <button type="button" class="btn-primary-add-mod" onclick="openAddModuleModal()" style="margin: 0 auto;">
-            <span>Add First Module</span>
-          </button>
-        </div>
-      `;
-      updateCounters();
-      return;
     }
 
-    curriculumModules.forEach((mod) => {
-      const topics = mod.topics || [];
-      topics.sort((a, b) => (parseInt(a.order) || 0) - (parseInt(b.order) || 0));
+    // Fetch live from Django Database API
+    async function fetchCurriculumFromBackend() {
+      try {
+        const resp = await fetch('/api/admin/curriculum/data/');
+        const data = await resp.json();
+        if (data.status === 'success' && data.phases) {
+          curriculumPhases = data.phases.map((p) => {
+            const existingPhase = curriculumPhases.find(ex => ex.id === p.id);
+            return {
+              ...p,
+              expanded: existingPhase ? existingPhase.expanded : true,
+              modules: (p.modules || []).map((m) => {
+                const existingMod = (existingPhase?.modules || []).find(exM => exM.id === m.id);
+                return {
+                  ...m,
+                  expanded: existingMod ? existingMod.expanded : true
+                };
+              })
+            };
+          });
+          renderPhases();
+        }
+      } catch (err) {
+        console.error('Error fetching curriculum from backend:', err);
+      }
+    }
 
-      let totalMins = 0;
-      topics.forEach(t => {
-        const m = parseInt(t.duration) || 90;
-        totalMins += m;
+    // Update Counters
+    function updateCounters() {
+      const phaseCount = curriculumPhases.length;
+      let modCount = 0;
+      let topicCount = 0;
+
+      curriculumPhases.forEach(p => {
+        (p.modules || []).forEach(m => {
+          modCount += 1;
+          topicCount += (m.topics || []).length;
+        });
       });
-      const durationHours = (totalMins / 60).toFixed(1) + ' hrs';
 
-      const modMatches = mod.name.toLowerCase().includes(query) || (mod.description || '').toLowerCase().includes(query);
-      const matchingTopics = topics.filter(t => t.name.toLowerCase().includes(query) || (t.description || '').toLowerCase().includes(query));
+      const phaseEl = document.getElementById('statPhaseCount');
+      if (phaseEl) phaseEl.innerText = phaseCount;
+      const modEl = document.getElementById('statModuleCount');
+      if (modEl) modEl.innerText = modCount;
+      const topEl = document.getElementById('statTopicCount');
+      if (topEl) topEl.innerText = topicCount;
+    }
 
-      if (query && !modMatches && matchingTopics.length === 0) {
+    // Render Phases, Modules & Topics
+    function renderPhases(filterText = '') {
+      const container = document.getElementById('phasesContainer');
+      container.innerHTML = '';
+      const query = filterText.trim().toLowerCase();
+
+      // Sort phases by number
+      curriculumPhases.sort((a, b) => (parseInt(a.number) || 0) - (parseInt(b.number) || 0));
+
+      if (curriculumPhases.length === 0) {
+        container.innerHTML = `
+          <div style="background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 48px; text-align: center; color: #64748b;">
+            <h3 style="margin: 0 0 8px; color: #0f172a; font-weight: 700;">No curriculum phases or months yet</h3>
+            <p style="margin: 0 0 16px; font-size: 0.875rem;">Click "<strong>+ Add Phase / Month</strong>" above to define the first learning phase in your database.</p>
+            <button type="button" class="btn-primary-add-mod" onclick="openAddPhaseModal()" style="margin: 0 auto;">
+              <span>+ Add First Phase / Month</span>
+            </button>
+          </div>
+        `;
+        updateCounters();
         return;
       }
 
-      const card = document.createElement('div');
-      card.className = `module-card ${mod.expanded ? 'expanded' : ''}`;
-      card.id = `card-${mod.id}`;
+      curriculumPhases.forEach((phase) => {
+        const modules = phase.modules || [];
+        modules.sort((a, b) => (parseInt(a.order) || 0) - (parseInt(b.order) || 0));
 
-      // Card Header
-      const header = document.createElement('div');
-      header.className = 'module-card-header';
-      header.onclick = (e) => {
-        if (e.target.closest('.module-header-right')) return;
-        toggleModule(mod.id);
-      };
-
-      header.innerHTML = `
-        <div class="module-header-left">
-          <span class="module-chevron">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </span>
-          <span class="module-order-badge">Module ${mod.order}</span>
-          <div class="module-title-col">
-            <h3 class="module-name-title">${mod.name}</h3>
-            <p class="module-desc-sub">${mod.description || ''}</p>
-          </div>
-        </div>
-
-        <div class="module-header-right">
-          <span class="module-stat-pill">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
-            ${topics.length} Topics
-          </span>
-          <span class="module-stat-pill">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            ${durationHours}
-          </span>
-          <button type="button" class="btn-add-topic-in-mod" onclick="openAddTopicModal('${mod.id}', '${escapeQuotes(mod.name)}')" title="Add Topic to Module ${mod.order}">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Topic</span>
-          </button>
-          <button type="button" class="btn-icon-action" onclick="openEditModuleModal('${mod.id}')" title="Edit Module">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-          </button>
-          <button type="button" class="btn-icon-action delete" onclick="confirmDeleteModule('${mod.id}', '${escapeQuotes(mod.name)}')" title="Delete Module">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-          </button>
-        </div>
-      `;
-
-      // Card Body with Topics Table
-      const body = document.createElement('div');
-      body.className = 'module-card-body';
-
-      let tableHtml = '';
-      if (topics.length === 0) {
-        tableHtml = `
-          <div style="text-align: center; padding: 22px; color: #64748b; font-size: 0.8125rem; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
-            No topics defined under this module yet. Click "<strong>Add Topic</strong>" to add the first curriculum topic.
-          </div>
-        `;
-      } else {
-        tableHtml = `
-          <div class="topics-table-container">
-            <table class="topics-table">
-              <thead>
-                <tr>
-                  <th style="width: 44px; text-align: center;">#</th>
-                  <th>Topic Name &amp; Description</th>
-                  <th style="width: 120px;">Class Type</th>
-                  <th style="width: 95px;">Duration</th>
-                  <th style="width: 80px;">Status</th>
-                  <th style="width: 76px; text-align: right;">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-        `;
-
-        topics.forEach((top) => {
-          const statusClass = (top.status || 'Active').toLowerCase() === 'active' ? 'active' : 'draft';
-          tableHtml += `
-            <tr id="row-${top.id}">
-              <td class="td-topic-order">${top.order}</td>
-              <td class="td-topic-info">
-                <div class="topic-name-bold">${top.name}</div>
-                <div class="topic-desc-small">${top.description || ''}</div>
-              </td>
-              <td>
-                <span class="badge-type-online">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                  Online Class
-                </span>
-              </td>
-              <td>
-                <span class="duration-text-pill">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  ${top.duration}
-                </span>
-              </td>
-              <td>
-                <span class="badge-status ${statusClass}">
-                  ${top.status || 'Active'}
-                </span>
-              </td>
-              <td class="td-actions">
-                <div class="td-actions-wrap">
-                  <button type="button" class="btn-icon-action" onclick="openEditTopicModal('${mod.id}', '${top.id}')" title="Edit Topic">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                  </button>
-                  <button type="button" class="btn-icon-action delete" onclick="confirmDeleteTopic('${mod.id}', '${top.id}', '${escapeQuotes(top.name)}')" title="Delete Topic">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          `;
+        let phaseTotalTopics = 0;
+        modules.forEach(m => {
+          phaseTotalTopics += (m.topics || []).length;
         });
 
-        tableHtml += `
-              </tbody>
-            </table>
+        // Filter checks
+        const phaseMatches = phase.title.toLowerCase().includes(query) || (phase.description || '').toLowerCase().includes(query);
+        const matchingModules = modules.filter(m => {
+          const mMatch = m.name.toLowerCase().includes(query) || (m.description || '').toLowerCase().includes(query);
+          const tMatch = (m.topics || []).some(t => t.name.toLowerCase().includes(query) || (t.description || '').toLowerCase().includes(query));
+          return mMatch || tMatch;
+        });
+
+        if (query && !phaseMatches && matchingModules.length === 0) {
+          return;
+        }
+
+        const phaseCard = document.createElement('div');
+        phaseCard.className = `phase-card ${phase.expanded ? 'expanded' : ''}`;
+        phaseCard.id = `phase-card-${phase.id}`;
+
+        // Status badge styling
+        let statusStyle = 'background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;';
+        if (phase.status === 'Current') {
+          statusStyle = 'background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;';
+        } else if (phase.status === 'Completed') {
+          statusStyle = 'background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;';
+        }
+
+        // Phase Header
+        const phaseHeader = document.createElement('div');
+        phaseHeader.className = 'phase-card-header';
+        phaseHeader.onclick = (e) => {
+          if (e.target.closest('.phase-header-right')) return;
+          togglePhase(phase.id);
+        };
+
+        phaseHeader.innerHTML = `
+          <div class="phase-header-left">
+            <span class="phase-chevron">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+            <span class="phase-order-badge">Phase ${phase.number}</span>
+            <div class="phase-title-col">
+              <div class="phase-title-row">
+                <h3 class="phase-name-title">${phase.title}</h3>
+                <span class="badge-status" style="${statusStyle}">${phase.status || 'Upcoming'}</span>
+              </div>
+              <p class="phase-desc-sub">${phase.description || ''}</p>
+            </div>
+          </div>
+
+          <div class="phase-header-right">
+            <span class="phase-stat-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+              ${modules.length} Modules
+            </span>
+            <span class="phase-stat-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              ${phaseTotalTopics} Topics
+            </span>
+            <button type="button" class="btn-add-module-in-phase" onclick="openAddModuleModal('${phase.id}')" title="Add Module inside Phase ${phase.number}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>+ Add Module</span>
+            </button>
+            <button type="button" class="btn-icon-action" onclick="openEditPhaseModal('${phase.id}')" title="Edit Phase ${phase.number}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            </button>
+            <button type="button" class="btn-icon-action delete" onclick="confirmDeletePhase('${phase.id}', '${escapeQuotes(phase.title)}')" title="Delete Phase ${phase.number}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </button>
           </div>
         `;
+
+        // Phase Body (Holds Modules)
+        const phaseBody = document.createElement('div');
+        phaseBody.className = 'phase-card-body';
+
+        if (modules.length === 0) {
+          phaseBody.innerHTML = `
+            <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 26px; text-align: center; color: #64748b; font-size: 0.8125rem;">
+              No modules in <strong>${phase.title}</strong> yet.
+              <div style="margin-top: 10px;">
+                <button type="button" class="btn-add-module-in-phase" onclick="openAddModuleModal('${phase.id}')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Add First Module to Phase ${phase.number}</span>
+                </button>
+              </div>
+            </div>
+          `;
+        } else {
+          const modulesWrap = document.createElement('div');
+          modulesWrap.className = 'phase-modules-wrap';
+
+          modules.forEach((mod) => {
+            const topics = mod.topics || [];
+            topics.sort((a, b) => (parseInt(a.order) || 0) - (parseInt(b.order) || 0));
+
+            let totalMins = 0;
+            topics.forEach(t => {
+              const m = parseInt(t.duration) || 90;
+              totalMins += m;
+            });
+            const durationHours = (totalMins / 60).toFixed(1) + ' hrs';
+
+            const modMatches = mod.name.toLowerCase().includes(query) || (mod.description || '').toLowerCase().includes(query);
+            const matchingTopics = topics.filter(t => t.name.toLowerCase().includes(query) || (t.description || '').toLowerCase().includes(query));
+
+            if (query && !modMatches && matchingTopics.length === 0) {
+              return;
+            }
+
+            const modCard = document.createElement('div');
+            modCard.className = `module-card ${mod.expanded ? 'expanded' : ''}`;
+            modCard.id = `card-${mod.id}`;
+
+            // Module Header
+            const modHeader = document.createElement('div');
+            modHeader.className = 'module-card-header';
+            modHeader.onclick = (e) => {
+              if (e.target.closest('.module-header-right')) return;
+              toggleModule(phase.id, mod.id);
+            };
+
+            modHeader.innerHTML = `
+              <div class="module-header-left">
+                <span class="module-chevron">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+                <span class="module-order-badge">Module ${mod.order}</span>
+                <div class="module-title-col">
+                  <h4 class="module-name-title">${mod.name}</h4>
+                  <p class="module-desc-sub">${mod.description || ''}</p>
+                </div>
+              </div>
+
+              <div class="module-header-right">
+                <span class="module-stat-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                  ${topics.length} Topics
+                </span>
+                <span class="module-stat-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ${durationHours}
+                </span>
+                <button type="button" class="btn-add-topic-in-mod" onclick="openAddTopicModal('${mod.id}', '${escapeQuotes(mod.name)}')" title="Add Topic to Module ${mod.order}">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Add Topic</span>
+                </button>
+                <button type="button" class="btn-icon-action" onclick="openEditModuleModal('${mod.id}')" title="Edit Module">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+                <button type="button" class="btn-icon-action delete" onclick="confirmDeleteModule('${mod.id}', '${escapeQuotes(mod.name)}')" title="Delete Module">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                </button>
+              </div>
+            `;
+
+            // Module Body with Topics Table
+            const modBody = document.createElement('div');
+            modBody.className = 'module-card-body';
+
+            let tableHtml = '';
+            if (topics.length === 0) {
+              tableHtml = `
+                <div style="text-align: center; padding: 20px; color: #64748b; font-size: 0.8125rem; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                  No topics defined under this module yet. Click "<strong>Add Topic</strong>" to add the first curriculum topic.
+                </div>
+              `;
+            } else {
+              tableHtml = `
+                <div class="topics-table-container">
+                  <table class="topics-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 44px; text-align: center;">#</th>
+                        <th>Topic Name &amp; Description</th>
+                        <th style="width: 120px;">Class Type</th>
+                        <th style="width: 95px;">Duration</th>
+                        <th style="width: 80px;">Status</th>
+                        <th style="width: 76px; text-align: right;">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+              `;
+
+              topics.forEach((top) => {
+                const statusClass = (top.status || 'Active').toLowerCase() === 'active' ? 'active' : 'draft';
+                tableHtml += `
+                  <tr id="row-${top.id}">
+                    <td class="td-topic-order">${top.order}</td>
+                    <td class="td-topic-info">
+                      <div class="topic-name-bold">${top.name}</div>
+                      <div class="topic-desc-small">${top.description || ''}</div>
+                    </td>
+                    <td>
+                      <span class="badge-type-online">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                        Online Class
+                      </span>
+                    </td>
+                    <td>
+                      <span class="duration-text-pill">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        ${top.duration}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge-status ${statusClass}">
+                        ${top.status || 'Active'}
+                      </span>
+                    </td>
+                    <td class="td-actions">
+                      <div class="td-actions-wrap">
+                        <button type="button" class="btn-icon-action" onclick="openEditTopicModal('${mod.id}', '${top.id}')" title="Edit Topic">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                        </button>
+                        <button type="button" class="btn-icon-action delete" onclick="confirmDeleteTopic('${mod.id}', '${top.id}', '${escapeQuotes(top.name)}')" title="Delete Topic">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              });
+
+              tableHtml += `
+                    </tbody>
+                  </table>
+                </div>
+              `;
+            }
+
+            modBody.innerHTML = `
+              ${tableHtml}
+              <div class="module-footer-bar">
+                <button type="button" class="btn-bottom-add-topic" onclick="openAddTopicModal('${mod.id}', '${escapeQuotes(mod.name)}')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Add Topic to Module ${mod.order}</span>
+                </button>
+              </div>
+            `;
+
+            modCard.appendChild(modHeader);
+            modCard.appendChild(modBody);
+            modulesWrap.appendChild(modCard);
+          });
+
+          phaseBody.appendChild(modulesWrap);
+        }
+
+        phaseCard.appendChild(phaseHeader);
+        phaseCard.appendChild(phaseBody);
+        container.appendChild(phaseCard);
+      });
+
+      updateCounters();
+    }
+
+    function escapeQuotes(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // Toggle Phase
+    function togglePhase(phaseId) {
+      const phase = curriculumPhases.find(p => String(p.id) === String(phaseId));
+      if (!phase) return;
+      phase.expanded = !phase.expanded;
+      const card = document.getElementById(`phase-card-${phaseId}`);
+      if (card) {
+        if (phase.expanded) {
+          card.classList.add('expanded');
+        } else {
+          card.classList.remove('expanded');
+        }
       }
+    }
 
-      body.innerHTML = `
-        ${tableHtml}
-        <div class="module-footer-bar">
-          <button type="button" class="btn-bottom-add-topic" onclick="openAddTopicModal('${mod.id}', '${escapeQuotes(mod.name)}')">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Topic to Module ${mod.order}</span>
-          </button>
-        </div>
-      `;
+    // Toggle Module inside Phase
+    function toggleModule(phaseId, modId) {
+      const phase = curriculumPhases.find(p => String(p.id) === String(phaseId));
+      if (!phase) return;
+      const mod = (phase.modules || []).find(m => String(m.id) === String(modId));
+      if (!mod) return;
+      mod.expanded = !mod.expanded;
+      const card = document.getElementById(`card-${modId}`);
+      if (card) {
+        if (mod.expanded) {
+          card.classList.add('expanded');
+        } else {
+          card.classList.remove('expanded');
+        }
+      }
+    }
 
-      card.appendChild(header);
-      card.appendChild(body);
-      container.appendChild(card);
+    // Toggle All Phases
+    let allExpanded = true;
+    function toggleAllPhases() {
+      allExpanded = !allExpanded;
+      curriculumPhases.forEach(p => {
+        p.expanded = allExpanded;
+        (p.modules || []).forEach(m => m.expanded = allExpanded);
+      });
+      document.getElementById('btnToggleAllText').innerText = allExpanded ? 'Collapse All' : 'Expand All';
+      renderPhases();
+    }
+
+    // Search Filter
+    function filterCurriculum() {
+      const query = document.getElementById('searchCurriculumInput').value;
+      renderPhases(query);
+    }
+
+    // Toast
+    function showToast(msg) {
+      const toast = document.getElementById('adminToast');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.add('show');
+      clearTimeout(window.adminToastTimer);
+      window.adminToastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2800);
+    }
+
+    // Modal Helpers
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.add('open');
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('open');
+    }
+
+    window.addEventListener('click', (e) => {
+      if (e.target.classList.contains('admin-modal-backdrop')) {
+        e.target.classList.remove('open');
+      }
     });
 
-    updateCounters();
-  }
-
-  function escapeQuotes(str) {
-    if (!str) return '';
-    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-  }
-
-  // Toggle Module
-  function toggleModule(modId) {
-    const mod = curriculumModules.find(m => String(m.id) === String(modId));
-    if (!mod) return;
-    mod.expanded = !mod.expanded;
-    const card = document.getElementById(`card-${modId}`);
-    if (card) {
-      if (mod.expanded) {
-        card.classList.add('expanded');
-      } else {
-        card.classList.remove('expanded');
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.admin-modal-backdrop.open').forEach(m => m.classList.remove('open'));
       }
-    }
-  }
+    });
 
-  // Toggle All Modules
-  let allExpanded = false;
-  function toggleAllModules() {
-    allExpanded = !allExpanded;
-    curriculumModules.forEach(m => m.expanded = allExpanded);
-    document.getElementById('btnToggleAllText').innerText = allExpanded ? 'Collapse All' : 'Expand All';
-    renderModules();
-  }
-
-  // Search Filter
-  function filterCurriculum() {
-    const query = document.getElementById('searchCurriculumInput').value;
-    renderModules(query);
-  }
-
-  // Toast
-  function showToast(msg) {
-    const toast = document.getElementById('adminToast');
-    document.getElementById('toastMsg').innerText = msg;
-    toast.classList.add('show');
-    clearTimeout(window.adminToastTimer);
-    window.adminToastTimer = setTimeout(() => {
-      toast.classList.remove('show');
-    }, 2800);
-  }
-
-  // Modal Helpers
-  function openModal(id) {
-    const m = document.getElementById(id);
-    if (m) m.classList.add('open');
-  }
-
-  function closeModal(id) {
-    const m = document.getElementById(id);
-    if (m) m.classList.remove('open');
-  }
-
-  window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('admin-modal-backdrop')) {
-      e.target.classList.remove('open');
-    }
-  });
-
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.admin-modal-backdrop.open').forEach(m => m.classList.remove('open'));
-    }
-  });
-
-  // ==================== REAL DATABASE CRUD: MODULES ====================
-
-  function openAddModuleModal() {
-    document.getElementById('addModuleForm').reset();
-    document.getElementById('modOrderInput').value = curriculumModules.length + 1;
-    openModal('addModuleModal');
-  }
-
-  async function submitAddModule() {
-    const order = parseInt(document.getElementById('modOrderInput').value) || (curriculumModules.length + 1);
-    const title = document.getElementById('modTitleInput').value.trim();
-    const desc = document.getElementById('modDescInput').value.trim();
-
-    if (!title || !desc) {
-      alert('Please fill out Module Name and Description.');
-      return;
-    }
-
-    try {
-      const resp = await fetch('/api/admin/curriculum/add-module/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order: order, name: title, description: desc })
+    // Populate Phase Select Dropdowns
+    function populatePhaseDropdowns(selectedPhaseId = null) {
+      const selects = [document.getElementById('modPhaseSelect'), document.getElementById('editModPhaseSelect')];
+      selects.forEach(select => {
+        if (!select) return;
+        select.innerHTML = '';
+        curriculumPhases.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.innerText = `Phase ${p.number}: ${p.title}`;
+          if (selectedPhaseId && String(p.id) === String(selectedPhaseId)) {
+            opt.selected = true;
+          }
+          select.appendChild(opt);
+        });
       });
-      const res = await resp.json();
-      if (res.status === 'success') {
-        closeModal('addModuleModal');
-        showToast(`Module "${title}" added to database!`);
-        await fetchCurriculumFromBackend();
-      } else {
-        alert(res.message || 'Failed to add module');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Network error while saving module.');
     }
-  }
 
-  function openEditModuleModal(modId) {
-    const mod = curriculumModules.find(m => String(m.id) === String(modId));
-    if (!mod) return;
+    // ==================== REAL DATABASE CRUD: PHASES ====================
 
-    document.getElementById('editModId').value = mod.id;
-    document.getElementById('editModOrderInput').value = mod.order;
-    document.getElementById('editModTitleInput').value = mod.name;
-    document.getElementById('editModDescInput').value = mod.description || '';
-
-    openModal('editModuleModal');
-  }
-
-  async function submitEditModule() {
-    const modId = document.getElementById('editModId').value;
-    const order = parseInt(document.getElementById('editModOrderInput').value);
-    const title = document.getElementById('editModTitleInput').value.trim();
-    const desc = document.getElementById('editModDescInput').value.trim();
-
-    try {
-      const resp = await fetch(`/api/admin/curriculum/edit-module/${modId}/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order: order, name: title, description: desc })
-      });
-      const res = await resp.json();
-      if (res.status === 'success') {
-        closeModal('editModuleModal');
-        showToast(`Module updated in database!`);
-        await fetchCurriculumFromBackend();
-      } else {
-        alert(res.message || 'Failed to update module');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Network error while updating module.');
+    function openAddPhaseModal() {
+      document.getElementById('addPhaseForm').reset();
+      document.getElementById('phaseNumberInput').value = curriculumPhases.length + 1;
+      document.getElementById('phaseStatusInput').value = 'Upcoming';
+      openModal('addPhaseModal');
     }
-  }
 
-  function confirmDeleteModule(modId, modTitle) {
-    document.getElementById('delConfirmTitle').innerText = 'Delete Module?';
-    document.getElementById('delConfirmMessage').innerText = `Are you sure you want to delete "${modTitle}" and all its topics from the database? This cannot be undone.`;
-    
-    const confirmBtn = document.getElementById('btnConfirmDeleteAction');
-    confirmBtn.onclick = async () => {
+    async function submitAddPhase() {
+      const number = parseInt(document.getElementById('phaseNumberInput').value) || (curriculumPhases.length + 1);
+      const title = document.getElementById('phaseTitleInput').value.trim();
+      const desc = document.getElementById('phaseDescInput').value.trim();
+      const status = document.getElementById('phaseStatusInput').value;
+
+      if (!title) {
+        alert('Please enter Phase / Month Title.');
+        return;
+      }
+
       try {
-        const resp = await fetch(`/api/admin/curriculum/delete-module/${modId}/`, {
+        const resp = await fetch('/api/admin/curriculum/add-phase/', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ number, title, description: desc, status })
         });
         const res = await resp.json();
         if (res.status === 'success') {
-          closeModal('deleteConfirmModal');
-          showToast(`Module removed from database.`);
+          closeModal('addPhaseModal');
+          showToast(`Phase "${title}" created successfully!`);
           await fetchCurriculumFromBackend();
         } else {
-          alert(res.message || 'Failed to delete module');
+          alert(res.message || 'Failed to create phase');
         }
       } catch (e) {
         console.error(e);
-        alert('Network error while deleting module.');
+        alert('Network error while creating phase.');
       }
-    };
-
-    openModal('deleteConfirmModal');
-  }
-
-  // ==================== REAL DATABASE CRUD: TOPICS ====================
-
-  function openAddTopicModal(modId, modName) {
-    document.getElementById('addTopicForm').reset();
-    document.getElementById('addTopicTargetModId').value = modId;
-    document.getElementById('addTopicModNameDisplay').value = modName;
-
-    const mod = curriculumModules.find(m => String(m.id) === String(modId));
-    const nextOrder = (mod && mod.topics) ? mod.topics.length + 1 : 1;
-    document.getElementById('topicOrderInput').value = nextOrder;
-
-    openModal('addTopicModal');
-  }
-
-  async function submitAddTopic() {
-    const modId = document.getElementById('addTopicTargetModId').value;
-    const title = document.getElementById('topicTitleInput').value.trim();
-    const desc = document.getElementById('topicDescInput').value.trim();
-    const duration = document.getElementById('topicDurationInput').value;
-    const order = parseInt(document.getElementById('topicOrderInput').value) || 1;
-    const status = document.getElementById('topicStatusInput').value;
-
-    if (!title || !desc) {
-      alert('Please fill out Topic Name and Description.');
-      return;
     }
 
-    try {
-      const resp = await fetch('/api/admin/curriculum/add-topic/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          module_id: modId,
-          order: order,
-          name: title,
-          description: desc,
-          duration: duration,
-          status: status
-        })
-      });
-      const res = await resp.json();
-      if (res.status === 'success') {
-        closeModal('addTopicModal');
-        showToast(`Topic "${title}" added to database!`);
-        await fetchCurriculumFromBackend();
-      } else {
-        alert(res.message || 'Failed to add topic');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Network error while adding topic.');
+    function openEditPhaseModal(phaseId) {
+      const phase = curriculumPhases.find(p => String(p.id) === String(phaseId));
+      if (!phase) return;
+
+      document.getElementById('editPhaseId').value = phase.id;
+      document.getElementById('editPhaseNumberInput').value = phase.number;
+      document.getElementById('editPhaseTitleInput').value = phase.title;
+      document.getElementById('editPhaseDescInput').value = phase.description || '';
+      document.getElementById('editPhaseStatusInput').value = phase.status || 'Upcoming';
+
+      openModal('editPhaseModal');
     }
-  }
 
-  function openEditTopicModal(modId, topId) {
-    const mod = curriculumModules.find(m => String(m.id) === String(modId));
-    if (!mod) return;
-    const top = mod.topics.find(t => String(t.id) === String(topId));
-    if (!top) return;
+    async function submitEditPhase() {
+      const phaseId = document.getElementById('editPhaseId').value;
+      const number = parseInt(document.getElementById('editPhaseNumberInput').value);
+      const title = document.getElementById('editPhaseTitleInput').value.trim();
+      const desc = document.getElementById('editPhaseDescInput').value.trim();
+      const status = document.getElementById('editPhaseStatusInput').value;
 
-    document.getElementById('editTopicModId').value = modId;
-    document.getElementById('editTopicId').value = topId;
-    document.getElementById('editTopicOrderInput').value = top.order || 1;
-    document.getElementById('editTopicStatusInput').value = top.status || 'Active';
-    document.getElementById('editTopicTitleInput').value = top.name;
-    document.getElementById('editTopicDescInput').value = top.description || '';
-    document.getElementById('editTopicDurationInput').value = top.duration || '90 Mins';
-
-    openModal('editTopicModal');
-  }
-
-  async function submitEditTopic() {
-    const topId = document.getElementById('editTopicId').value;
-    const order = parseInt(document.getElementById('editTopicOrderInput').value);
-    const status = document.getElementById('editTopicStatusInput').value;
-    const title = document.getElementById('editTopicTitleInput').value.trim();
-    const desc = document.getElementById('editTopicDescInput').value.trim();
-    const duration = document.getElementById('editTopicDurationInput').value;
-
-    try {
-      const resp = await fetch(`/api/admin/curriculum/edit-topic/${topId}/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          order: order,
-          name: title,
-          description: desc,
-          duration: duration,
-          status: status
-        })
-      });
-      const res = await resp.json();
-      if (res.status === 'success') {
-        closeModal('editTopicModal');
-        showToast(`Topic updated in database!`);
-        await fetchCurriculumFromBackend();
-      } else {
-        alert(res.message || 'Failed to update topic');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Network error while updating topic.');
-    }
-  }
-
-  function confirmDeleteTopic(modId, topId, topTitle) {
-    document.getElementById('delConfirmTitle').innerText = 'Delete Topic?';
-    document.getElementById('delConfirmMessage').innerText = `Are you sure you want to delete "${topTitle}" from the database?`;
-
-    const confirmBtn = document.getElementById('btnConfirmDeleteAction');
-    confirmBtn.onclick = async () => {
       try {
-        const resp = await fetch(`/api/admin/curriculum/delete-topic/${topId}/`, {
+        const resp = await fetch(`/api/admin/curriculum/edit-phase/${phaseId}/`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ number, title, description: desc, status })
         });
         const res = await resp.json();
         if (res.status === 'success') {
-          closeModal('deleteConfirmModal');
-          showToast(`Topic deleted from database.`);
+          closeModal('editPhaseModal');
+          showToast(`Phase updated in database!`);
           await fetchCurriculumFromBackend();
         } else {
-          alert(res.message || 'Failed to delete topic');
+          alert(res.message || 'Failed to update phase');
         }
       } catch (e) {
         console.error(e);
-        alert('Network error while deleting topic.');
+        alert('Network error while updating phase.');
       }
-    };
+    }
 
-    openModal('deleteConfirmModal');
-  }
+    function confirmDeletePhase(phaseId, phaseTitle) {
+      document.getElementById('delConfirmTitle').innerText = 'Delete Phase / Month?';
+      document.getElementById('delConfirmMessage').innerText = `Are you sure you want to delete "${phaseTitle}" and all its modules and topics? This action cannot be undone.`;
 
-  // Initialize from Django ORM data on DOM ready
-  document.addEventListener('DOMContentLoaded', initCurriculum);
-</script>
+      const confirmBtn = document.getElementById('btnConfirmDeleteAction');
+      confirmBtn.onclick = async () => {
+        try {
+          const resp = await fetch(`/api/admin/curriculum/delete-phase/${phaseId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          const res = await resp.json();
+          if (res.status === 'success') {
+            closeModal('deleteConfirmModal');
+            showToast(`Phase removed from database.`);
+            await fetchCurriculumFromBackend();
+          } else {
+            alert(res.message || 'Failed to delete phase');
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Network error while deleting phase.');
+        }
+      };
 
+      openModal('deleteConfirmModal');
+    }
+
+    // ==================== REAL DATABASE CRUD: MODULES ====================
+
+    function openAddModuleModal(targetPhaseId = null) {
+      if (curriculumPhases.length === 0) {
+        alert('Please create a Phase / Month first before adding modules.');
+        openAddPhaseModal();
+        return;
+      }
+
+      document.getElementById('addModuleForm').reset();
+      populatePhaseDropdowns(targetPhaseId || curriculumPhases[0].id);
+
+      const selectedPhase = curriculumPhases.find(p => String(p.id) === String(targetPhaseId)) || curriculumPhases[0];
+      const nextOrder = selectedPhase ? (selectedPhase.modules || []).length + 1 : 1;
+      document.getElementById('modOrderInput').value = nextOrder;
+
+      openModal('addModuleModal');
+    }
+
+    async function submitAddModule() {
+      const phaseId = document.getElementById('modPhaseSelect').value;
+      const order = parseInt(document.getElementById('modOrderInput').value) || 1;
+      const title = document.getElementById('modTitleInput').value.trim();
+      const desc = document.getElementById('modDescInput').value.trim();
+
+      if (!title || !desc) {
+        alert('Please fill out Module Name and Description.');
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/admin/curriculum/add-module/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phase_id: phaseId, order: order, name: title, description: desc })
+        });
+        const res = await resp.json();
+        if (res.status === 'success') {
+          closeModal('addModuleModal');
+          showToast(`Module "${title}" created successfully!`);
+          await fetchCurriculumFromBackend();
+        } else {
+          alert(res.message || 'Failed to add module');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Network error while saving module.');
+      }
+    }
+
+    function openEditModuleModal(modId) {
+      let targetMod = null;
+      let targetPhase = null;
+      for (const p of curriculumPhases) {
+        const m = (p.modules || []).find(mod => String(mod.id) === String(modId));
+        if (m) {
+          targetMod = m;
+          targetPhase = p;
+          break;
+        }
+      }
+      if (!targetMod) return;
+
+      populatePhaseDropdowns(targetPhase ? targetPhase.id : null);
+      document.getElementById('editModId').value = targetMod.id;
+      document.getElementById('editModOrderInput').value = targetMod.order;
+      document.getElementById('editModTitleInput').value = targetMod.name;
+      document.getElementById('editModDescInput').value = targetMod.description || '';
+
+      openModal('editModuleModal');
+    }
+
+    async function submitEditModule() {
+      const modId = document.getElementById('editModId').value;
+      const phaseId = document.getElementById('editModPhaseSelect').value;
+      const order = parseInt(document.getElementById('editModOrderInput').value);
+      const title = document.getElementById('editModTitleInput').value.trim();
+      const desc = document.getElementById('editModDescInput').value.trim();
+
+      try {
+        const resp = await fetch(`/api/admin/curriculum/edit-module/${modId}/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phase_id: phaseId, order: order, name: title, description: desc })
+        });
+        const res = await resp.json();
+        if (res.status === 'success') {
+          closeModal('editModuleModal');
+          showToast(`Module updated in database!`);
+          await fetchCurriculumFromBackend();
+        } else {
+          alert(res.message || 'Failed to update module');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Network error while updating module.');
+      }
+    }
+
+    function confirmDeleteModule(modId, modTitle) {
+      document.getElementById('delConfirmTitle').innerText = 'Delete Module?';
+      document.getElementById('delConfirmMessage').innerText = `Are you sure you want to delete "${modTitle}" and all its topics from the database? This cannot be undone.`;
+
+      const confirmBtn = document.getElementById('btnConfirmDeleteAction');
+      confirmBtn.onclick = async () => {
+        try {
+          const resp = await fetch(`/api/admin/curriculum/delete-module/${modId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          const res = await resp.json();
+          if (res.status === 'success') {
+            closeModal('deleteConfirmModal');
+            showToast(`Module removed from database.`);
+            await fetchCurriculumFromBackend();
+          } else {
+            alert(res.message || 'Failed to delete module');
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Network error while deleting module.');
+        }
+      };
+
+      openModal('deleteConfirmModal');
+    }
+
+    // ==================== REAL DATABASE CRUD: TOPICS ====================
+
+    function findModuleById(modId) {
+      for (const p of curriculumPhases) {
+        const m = (p.modules || []).find(mod => String(mod.id) === String(modId));
+        if (m) return m;
+      }
+      return null;
+    }
+
+    function openAddTopicModal(modId, modName) {
+      document.getElementById('addTopicForm').reset();
+      document.getElementById('addTopicTargetModId').value = modId;
+      document.getElementById('addTopicModNameDisplay').value = modName;
+
+      const mod = findModuleById(modId);
+      const nextOrder = (mod && mod.topics) ? mod.topics.length + 1 : 1;
+      document.getElementById('topicOrderInput').value = nextOrder;
+
+      openModal('addTopicModal');
+    }
+
+    async function submitAddTopic() {
+      const modId = document.getElementById('addTopicTargetModId').value;
+      const title = document.getElementById('topicTitleInput').value.trim();
+      const desc = document.getElementById('topicDescInput').value.trim();
+      const duration = document.getElementById('topicDurationInput').value;
+      const order = parseInt(document.getElementById('topicOrderInput').value) || 1;
+      const status = document.getElementById('topicStatusInput').value;
+
+      if (!title || !desc) {
+        alert('Please fill out Topic Name and Description.');
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/admin/curriculum/add-topic/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            module_id: modId,
+            order: order,
+            name: title,
+            description: desc,
+            duration: duration,
+            status: status
+          })
+        });
+        const res = await resp.json();
+        if (res.status === 'success') {
+          closeModal('addTopicModal');
+          showToast(`Topic "${title}" added to database!`);
+          await fetchCurriculumFromBackend();
+        } else {
+          alert(res.message || 'Failed to add topic');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Network error while adding topic.');
+      }
+    }
+
+    function openEditTopicModal(modId, topId) {
+      const mod = findModuleById(modId);
+      if (!mod) return;
+      const top = (mod.topics || []).find(t => String(t.id) === String(topId));
+      if (!top) return;
+
+      document.getElementById('editTopicModId').value = modId;
+      document.getElementById('editTopicId').value = topId;
+      document.getElementById('editTopicOrderInput').value = top.order || 1;
+      document.getElementById('editTopicStatusInput').value = top.status || 'Active';
+      document.getElementById('editTopicTitleInput').value = top.name;
+      document.getElementById('editTopicDescInput').value = top.description || '';
+      document.getElementById('editTopicDurationInput').value = top.duration || '90 Mins';
+
+      openModal('editTopicModal');
+    }
+
+    async function submitEditTopic() {
+      const topId = document.getElementById('editTopicId').value;
+      const order = parseInt(document.getElementById('editTopicOrderInput').value);
+      const status = document.getElementById('editTopicStatusInput').value;
+      const title = document.getElementById('editTopicTitleInput').value.trim();
+      const desc = document.getElementById('editTopicDescInput').value.trim();
+      const duration = document.getElementById('editTopicDurationInput').value;
+
+      try {
+        const resp = await fetch(`/api/admin/curriculum/edit-topic/${topId}/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            order: order,
+            name: title,
+            description: desc,
+            duration: duration,
+            status: status
+          })
+        });
+        const res = await resp.json();
+        if (res.status === 'success') {
+          closeModal('editTopicModal');
+          showToast(`Topic updated in database!`);
+          await fetchCurriculumFromBackend();
+        } else {
+          alert(res.message || 'Failed to update topic');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Network error while updating topic.');
+      }
+    }
+
+    function confirmDeleteTopic(modId, topId, topTitle) {
+      document.getElementById('delConfirmTitle').innerText = 'Delete Topic?';
+      document.getElementById('delConfirmMessage').innerText = `Are you sure you want to delete "${topTitle}" from the database?`;
+
+      const confirmBtn = document.getElementById('btnConfirmDeleteAction');
+      confirmBtn.onclick = async () => {
+        try {
+          const resp = await fetch(`/api/admin/curriculum/delete-topic/${topId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          const res = await resp.json();
+          if (res.status === 'success') {
+            closeModal('deleteConfirmModal');
+            showToast(`Topic deleted from database.`);
+            await fetchCurriculumFromBackend();
+          } else {
+            alert(res.message || 'Failed to delete topic');
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Network error while deleting topic.');
+        }
+      };
+
+      openModal('deleteConfirmModal');
+    }
+
+    // Initialize from Django ORM data on DOM ready
+    document.addEventListener('DOMContentLoaded', initCurriculum);
+  </script>
 
 </body>
+
 </html>

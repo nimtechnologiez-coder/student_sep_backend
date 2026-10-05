@@ -26,7 +26,7 @@ class Trainer(models.Model):
 
 class Batch(models.Model):
     name = models.CharField(max_length=50)
-    course = models.CharField(max_length=100)
+    course = models.CharField(max_length=100, default='Generative AI & LLMs')
     status = models.CharField(max_length=20, choices=[('Active', 'Active'), ('Upcoming', 'Upcoming'), ('Completed', 'Completed')], default='Active')
     start_date = models.DateField(default=timezone.now)
     trainer = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'Mentor'})
@@ -73,7 +73,7 @@ class Student(models.Model):
     parent_username = models.CharField(max_length=50, blank=True, null=True)
     parent_password = models.CharField(max_length=50, blank=True, null=True)
     batch = models.ForeignKey(Batch, on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
-    course = models.CharField(max_length=100, blank=True)
+    course = models.CharField(max_length=100, blank=True, default='Generative AI & LLMs')
     timing_preference = models.CharField(max_length=20, choices=[('Morning', 'Morning'), ('Afternoon', 'Afternoon'), ('Evening', 'Evening')], default='Morning')
     join_date = models.DateField(default=timezone.now)
     avatar_url = models.URLField(blank=True, null=True)
@@ -397,13 +397,16 @@ class TaskSubmission(models.Model):
         return f"{self.student.name} - {self.task.title}"
 
 class CurriculumMonth(models.Model):
-    number = models.IntegerField()
+    number = models.IntegerField(default=1)
     title = models.CharField(max_length=200)
-    description = models.TextField()
+    description = models.TextField(blank=True, default='')
     status = models.CharField(max_length=20, default="Upcoming") # Current, Completed, Upcoming
+
+    class Meta:
+        ordering = ['number', 'id']
     
     def __str__(self):
-        return f"Month {self.number}: {self.title}"
+        return f"Phase {self.number}: {self.title}"
 
 class CurriculumModule(models.Model):
     month = models.ForeignKey(CurriculumMonth, on_delete=models.CASCADE, related_name='modules')
@@ -429,6 +432,7 @@ class CurriculumTopic(models.Model):
 
 
 class CourseModule(models.Model):
+    phase = models.ForeignKey(CurriculumMonth, on_delete=models.CASCADE, null=True, blank=True, related_name='course_modules')
     course_name = models.CharField(max_length=200, default='Generative AI & LLMs')
     order = models.IntegerField(default=1)
     name = models.CharField(max_length=255)

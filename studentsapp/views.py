@@ -20,21 +20,26 @@ def dashboard(request):
     if role == 'mentor':
         return mentor_dashboard(request)
         
+    curr_user = request.user.get_full_name() if (request.user.is_authenticated and request.user.get_full_name()) else (request.user.username if request.user.is_authenticated else '')
+    app_u = AppUser.objects.filter(role__iexact=role).first()
+    user_name = curr_user or (app_u.name if app_u else '')
+    user_initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
+
     role_meta = {
         'accountant': {
             'role': 'accountant',
             'role_title': 'Accountant Dashboard',
-            'user_name': 'Manoj Nair',
-            'user_role': 'Senior Accountant',
-            'user_initials': 'MN',
+            'user_name': user_name,
+            'user_role': 'Accountant',
+            'user_initials': user_initials,
             'focus_area': 'Tuition Receivables, Installment Ledger & Receipts'
         },
         'admin': {
             'role': 'admin',
             'role_title': 'Admin Dashboard',
-            'user_name': 'Sneha N',
+            'user_name': user_name,
             'user_role': 'Administrator',
-            'user_initials': 'SN',
+            'user_initials': user_initials,
             'focus_area': 'Institutional Operations, Batches & Academic Analytics'
         }
     }
@@ -50,7 +55,6 @@ def dashboard(request):
     
     fee_agg = FeePayment.objects.filter(payment_date__year=target_year).aggregate(total=Sum('amount'))
     fee_total = fee_agg['total'] or 0
-    # Format fee e.g. 2850000 -> 28.5 L
     fee_collection_str = f"₹ {fee_total/100000:.1f} L" if fee_total >= 100000 else f"₹ {fee_total:,.0f}"
     
     placement_offers = PlacementOffer.objects.count()
@@ -78,17 +82,13 @@ def dashboard(request):
         'attendance_trend': '0%'
     }
 
-    # Recent lists
     recent_admissions = Student.objects.order_by('-join_date')[:5]
     todays_classes = ClassSchedule.objects.filter(date=now.date()).order_by('-id')[:3]
     recent_activities = Activity.objects.order_by('-timestamp')[:5]
     
-    
-    # Chart data
     student_status_data = list(Student.objects.values('status').annotate(count=Count('status')))
     batch_students_data = list(Batch.objects.annotate(student_count=Count('students', filter=Q(students__approval_status='Approved') & ~Q(students__status='Dropped'))).values('name', 'student_count')[:6])
     
-    # Monthly fee collection
     from collections import defaultdict
     fees = FeePayment.objects.filter(payment_date__year=target_year)
     monthly_fees = defaultdict(int)
@@ -98,12 +98,11 @@ def dashboard(request):
     month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     fee_collection_data = []
     total_acc = 0
-    # For a cumulative chart, if that's what the line graph is (it says 28.5L in Sep, rising from Jan)
-    for i in range(1, 10): # Let's say up to September
+    for i in range(1, 10):
         total_acc += monthly_fees.get(i, 0)
         fee_collection_data.append({
             'month': month_names[i-1],
-            'amount_lakhs': float(total_acc) / 100000.0 # Fallback realistic dummy logic if 0
+            'amount_lakhs': float(total_acc) / 100000.0
         })
 
     context = {
@@ -122,18 +121,47 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 def students(request):
-    # Auto-fix existing approved students with missing credentials
-    approved_missing = Student.objects.filter(approval_status='Approved').filter(
-        Q(parent_username__isnull=True) | Q(parent_username__exact='') | Q(parent_username__exact='-')
-    )
-    for s in approved_missing:
-        first_name = s.name.split()[0] if s.name else "Parent"
-        nums_parent = "".join(random.choices(string.digits, k=3))
-        s.parent_username = f"P_{first_name}{nums_parent}"
+    # Auto-fix existing students with missing credentials (username, portal_password, parent_username, parent_password)
+    for s in Student.objects.all():
+        updated = False
+        first_name = s.name.split()[0] if s.name else "Student"
         
-        p_pwd_list = random.choices(string.ascii_letters + string.digits + "!@#$", k=8)
-        s.parent_password = "".join(p_pwd_list)
-        s.save()
+        if not s.username or s.username == '-':
+            nums_user = "".join(random.choices(string.digits, k=3))
+            s.username = f"STU_{first_name}{nums_user}"
+            updated = True
+            
+        if not s.portal_password or s.portal_password == '-':
+            upper = random.choices(string.ascii_uppercase, k=2)
+            lower = random.choices(string.ascii_lowercase, k=2)
+            nums_pwd = random.choices(string.digits, k=3)
+            special = random.choices("!@#$%^&*", k=1)
+            pwd_list = upper + lower + nums_pwd + special
+            random.shuffle(pwd_list)
+            s.portal_password = "".join(pwd_list)
+            updated = True
+
+        if not s.parent_username or s.parent_username == '-':
+            nums_parent = "".join(random.choices(string.digits, k=3))
+            s.parent_username = f"P_{first_name}{nums_parent}"
+            updated = True
+
+        if not s.parent_password or s.parent_password == '-':
+            p_upper = random.choices(string.ascii_uppercase, k=2)
+            p_lower = random.choices(string.ascii_lowercase, k=2)
+            p_nums = random.choices(string.digits, k=3)
+            p_special = random.choices("!@#$%^&*", k=1)
+            p_pwd_list = p_upper + p_lower + p_nums + p_special
+            random.shuffle(p_pwd_list)
+            s.parent_password = "".join(p_pwd_list)
+            updated = True
+
+        if not s.course or s.course == '-' or 'Full Stack' in s.course:
+            s.course = "Generative AI & LLMs"
+            updated = True
+
+        if updated:
+            s.save()
 
     students_list = Student.objects.all().order_by('-join_date')
     
@@ -208,6 +236,10 @@ def batches(request):
     unassigned_students = Student.objects.filter(batch__isnull=True).exclude(status='Dropped')
     all_batches = Batch.objects.filter(status='Active')
 
+    tot_att = Attendance.objects.count()
+    pres_att = Attendance.objects.filter(status='Present').count()
+    att_pct_str = f"{int((pres_att / tot_att) * 100)}%" if tot_att > 0 else "0%"
+
     context = {
         'all_batches': all_batches,
         'unassigned_students': unassigned_students,
@@ -220,7 +252,7 @@ def batches(request):
             'completed': Batch.objects.filter(status='Completed').count(),
             'enrolled': Student.objects.filter(batch__isnull=False).count(),
             'upcoming': Batch.objects.filter(status='Upcoming').count(),
-            'attendance': "85%"
+            'attendance': att_pct_str
         },
         'current_q': query,
         'current_status': status_filter,
@@ -313,8 +345,8 @@ def classes(request):
     # 1: Upcoming classes (sorted by Date ascending -> Start Time ascending)
     # 2: Past classes (sorted by Date descending -> Start Time ascending)
     def get_sort_key(c):
-        dummy_time = time(0, 0)
-        t = c.time if c.time else dummy_time
+        default_time = time(0, 0)
+        t = c.time if c.time else default_time
         if c.date == today:
             return (0, c.date, t)
         elif c.date > today:
@@ -359,39 +391,57 @@ def classes(request):
     return render(request, 'classes.html', context)
 
 def academic(request):
-    modules = CourseModule.objects.prefetch_related('topics').all().order_by('order', 'id')
-    modules_list = []
+    phases = CurriculumMonth.objects.prefetch_related('course_modules__topics').all().order_by('number', 'id')
+    phases_list = []
+    total_modules = 0
     total_topics = 0
-    for m in modules:
-        topics_list = []
-        for t in m.topics.all().order_by('order', 'id'):
-            topics_list.append({
-                'id': t.id,
-                'order': t.order,
-                'name': t.name,
-                'description': t.description,
-                'duration': t.duration,
-                'class_type': t.class_type,
-                'status': t.status,
+
+    for p in phases:
+        mods_list = []
+        for m in p.course_modules.all().order_by('order', 'id'):
+            total_modules += 1
+            tops_list = []
+            for t in m.topics.all().order_by('order', 'id'):
+                total_topics += 1
+                tops_list.append({
+                    'id': t.id,
+                    'order': t.order,
+                    'name': t.name,
+                    'description': t.description,
+                    'duration': t.duration,
+                    'class_type': t.class_type,
+                    'status': t.status,
+                })
+            mods_list.append({
+                'id': m.id,
+                'phase_id': p.id,
+                'order': m.order,
+                'name': m.name,
+                'description': m.description,
+                'topics': tops_list
             })
-            total_topics += 1
-        modules_list.append({
-            'id': m.id,
-            'order': m.order,
-            'name': m.name,
-            'description': m.description,
-            'topics': topics_list
+        phases_list.append({
+            'id': p.id,
+            'number': p.number,
+            'title': p.title,
+            'description': p.description,
+            'status': p.status,
+            'modules': mods_list
         })
     
+    first_cm = CourseModule.objects.values_list('course_name', flat=True).first()
+    course_title = first_cm or Batch.objects.values_list('course', flat=True).first() or Student.objects.exclude(course__isnull=True).values_list('course', flat=True).first() or "Generative AI & LLMs"
+
     context = {
         'active_page': 'curriculum',
-        'course_title': 'Generative AI & LLMs',
-        'modules': modules,
-        'modules_json': json.dumps(modules_list),
+        'course_title': course_title,
+        'phases': phases,
+        'phases_json': json.dumps(phases_list),
         'kpi': {
-            'total_modules': modules.count(),
+            'total_phases': phases.count(),
+            'total_modules': total_modules,
             'total_topics': total_topics,
-            'course': 'Generative AI & LLMs',
+            'course': course_title,
             'delivery_type': 'Online Class'
         }
     }
@@ -399,13 +449,20 @@ def academic(request):
 
 def assessments(request):
     assessments_list = Assessment.objects.all().order_by('-date')
+    from django.db.models import Avg
+    avg_val = AssessmentResult.objects.aggregate(avg=Avg('marks_obtained'))['avg']
+    if avg_val is None:
+        avg_val = TaskSubmission.objects.filter(status='Evaluated').aggregate(avg=Avg('marks_obtained'))['avg']
+    avg_score_str = f"{int(avg_val)}%" if avg_val is not None else "0%"
+    pending_submissions = TaskSubmission.objects.filter(status='Submitted').count()
+
     context = {
         'active_page': 'assessments', 
         'assessments': assessments_list,
         'kpi': {
             'total': Assessment.objects.count(),
-            'avg_score': "75%",
-            'pending': 0,
+            'avg_score': avg_score_str,
+            'pending': pending_submissions,
             'high': AssessmentResult.objects.filter(score__gte=90).count() if hasattr(AssessmentResult, 'score') else 0
         }
     }
@@ -495,10 +552,9 @@ def users_roles(request):
         total_capacity=Sum('batch__capacity', filter=Q(batch__status='Active'))
     ).order_by('-id')
     
-    # Fill in default 10 if total_capacity is None
     for u in users_qs:
         if u.total_capacity is None:
-            u.total_capacity = 10
+            u.total_capacity = 0
 
     if query:
         users_qs = users_qs.filter(Q(name__icontains=query) | Q(email__icontains=query) | Q(username__icontains=query))
@@ -661,25 +717,23 @@ def get_current_mentor(request):
 
 def mentor_dashboard(request):
     trainer = get_current_mentor(request)
-    user_name = trainer.name if trainer else request.session.get('appuser_name', 'Mentor')
-    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else 'M'
+    user_name = trainer.name if trainer else request.session.get('appuser_name', '')
+    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
 
     mentor_batches_qs = Batch.objects.filter(trainer=trainer) if trainer else Batch.objects.none()
 
-    # Calculate real student count and capacity for each batch
     batches_list = []
     for b in mentor_batches_qs:
         st_count = Student.objects.filter(batch=b).exclude(status='Dropped').count()
-        cap = getattr(b, 'capacity', 10) or 10
+        cap = getattr(b, 'capacity', 0) or 0
         percent = min(100, int((st_count / cap) * 100)) if cap > 0 else 0
         b.students_count = st_count
         b.capacity = cap
         b.capacity_percent = percent
-        b.timing_lower = (b.timing or 'Morning').lower()
-        b.program = getattr(b, 'course', None) or 'Generative AI & LLMs'
+        b.timing_lower = (b.timing or '').lower()
+        b.program = getattr(b, 'course', None) or ''
         batches_list.append(b)
 
-    # ONLY students belonging to batches where Batch.trainer = logged-in mentor
     students_count = Student.objects.filter(
         batch__in=mentor_batches_qs
     ).exclude(batch__isnull=True).exclude(status='Dropped').distinct().count()
@@ -692,7 +746,7 @@ def mentor_dashboard(request):
 
     todays_classes = []
     for c in todays_classes_qs:
-        c.display_name = c.subject or (c.batch.name if c.batch else 'General Class')
+        c.display_name = c.subject or (c.batch.name if c.batch else '')
         c.time_str = c.time.strftime('%I:%M %p') if c.time else ''
         todays_classes.append(c)
 
@@ -701,8 +755,9 @@ def mentor_dashboard(request):
         is_read=False
     ).count()
 
-    context = {
+    pending_eval_qs = TaskSubmission.objects.filter(task__batch__in=mentor_batches_qs, status='Submitted') if mentor_batches_qs.exists() else TaskSubmission.objects.none()
 
+    context = {
         'active_page': 'mentor_dashboard',
         'role': 'mentor',
         'is_mentor': True,
@@ -711,8 +766,8 @@ def mentor_dashboard(request):
         'user_initials': initials,
         'date_str': today.strftime('%a, %d %b %Y'),
         'my_students_count': students_count,
-        'pending_evaluations_count': 0,
-        'pending_evaluations': [],
+        'pending_evaluations_count': pending_eval_qs.count(),
+        'pending_evaluations': list(pending_eval_qs[:5]),
         'todays_classes_count': len(todays_classes),
         'todays_classes': todays_classes,
         'my_batches_count': len(batches_list),
@@ -799,9 +854,11 @@ def mentor_students(request):
 
 def mentor_student_detail(request, student_id):
     trainer = get_current_mentor(request)
-    user_name = trainer.name if trainer else request.session.get('appuser_name', 'Mentor')
-    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else 'M'
+    user_name = trainer.name if trainer else request.session.get('appuser_name', '')
+    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
     student = Student.objects.filter(student_id=student_id).first()
+    evaluations = list(TaskSubmission.objects.filter(student=student).order_by('-submitted_at')) if student else []
+    attendance_records = list(Attendance.objects.filter(student=student).order_by('-date')) if student else []
 
     context = {
         'active_page': 'mentor_students',
@@ -811,15 +868,15 @@ def mentor_student_detail(request, student_id):
         'user_role': 'Mentor',
         'user_initials': initials,
         'student': student,
-        'evaluations': [],
-        'attendance_records': [],
+        'evaluations': evaluations,
+        'attendance_records': attendance_records,
     }
     return render(request, 'mentor/student_detail.html', context)
 
 def mentor_curriculum(request):
     trainer = get_current_mentor(request)
-    user_name = trainer.name if trainer else request.session.get('appuser_name', 'Mentor')
-    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else 'M'
+    user_name = trainer.name if trainer else request.session.get('appuser_name', '')
+    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
     
     modules = CourseModule.objects.prefetch_related('topics').all().order_by('order', 'id')
     modules_list = []
@@ -845,6 +902,9 @@ def mentor_curriculum(request):
             'topics': topics_list
         })
 
+    first_cm = CourseModule.objects.values_list('course_name', flat=True).first()
+    course_title = first_cm or Batch.objects.values_list('course', flat=True).first() or ""
+
     context = {
         'active_page': 'mentor_curriculum',
         'role': 'mentor',
@@ -852,13 +912,13 @@ def mentor_curriculum(request):
         'user_name': user_name,
         'user_role': 'Mentor',
         'user_initials': initials,
-        'course_title': 'Generative AI & LLMs',
+        'course_title': course_title,
         'modules': modules,
         'modules_json': json.dumps(modules_list),
         'kpi': {
             'total_modules': modules.count(),
             'total_topics': total_topics,
-            'course': 'Generative AI & LLMs',
+            'course': course_title,
             'delivery_type': 'Online Class'
         }
     }
@@ -1003,15 +1063,25 @@ def mentor_tasks(request):
     return render(request, 'mentor/tasks.html', context)
 
 def mentor_evaluations(request, task_id=None):
+    trainer = get_current_mentor(request)
+    user_name = trainer.name if trainer else request.session.get('appuser_name', '')
+    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
+    user_role = trainer.role if (trainer and hasattr(trainer, 'role') and trainer.role) else 'Mentor'
+    
+    submissions_qs = TaskSubmission.objects.all().order_by('-submitted_at')
+    if task_id:
+        submissions_qs = submissions_qs.filter(task_id=task_id)
+    elif trainer:
+        submissions_qs = submissions_qs.filter(task__batch__trainer=trainer)
+
     context = {
         'active_page': 'mentor_tasks',
         'role': 'mentor',
         'is_mentor': True,
-        'user_name': 'Dr. Rajiv Sen',
-        'user_role': 'Senior Faculty Mentor',
-        'user_initials': 'RS',
-        # TODO: Fetch real data
-        'submissions': []
+        'user_name': user_name,
+        'user_role': user_role,
+        'user_initials': initials,
+        'submissions': list(submissions_qs)
     }
     return render(request, 'mentor/evaluations.html', context)
 
@@ -1019,55 +1089,82 @@ def mentor_academic(request):
     return redirect('mentor_students')
 
 def mentor_assessments(request):
+    trainer = get_current_mentor(request)
+    user_name = trainer.name if trainer else request.session.get('appuser_name', '')
+    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
+    user_role = trainer.role if (trainer and hasattr(trainer, 'role') and trainer.role) else 'Mentor'
+    
+    assessments_qs = Assessment.objects.all().order_by('-date')
+
     context = {
         'active_page': 'mentor_assessments',
         'role': 'mentor',
         'is_mentor': True,
-        'user_name': 'Dr. Rajiv Sen',
-        'user_role': 'Senior Faculty Mentor',
-        'user_initials': 'RS',
-        # TODO: Fetch real data
-        'assessments': []
+        'user_name': user_name,
+        'user_role': user_role,
+        'user_initials': initials,
+        'assessments': list(assessments_qs)
     }
     return render(request, 'mentor/assessments.html', context)
 
 def mentor_assessment_detail(request, assessment_id):
+    trainer = get_current_mentor(request)
+    user_name = trainer.name if trainer else request.session.get('appuser_name', '')
+    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
+    user_role = trainer.role if (trainer and hasattr(trainer, 'role') and trainer.role) else 'Mentor'
+    
+    asm = Assessment.objects.filter(id=assessment_id).first()
+    results = list(AssessmentResult.objects.filter(assessment=asm)) if asm else []
+
     context = {
         'active_page': 'mentor_assessments',
         'role': 'mentor',
         'is_mentor': True,
-        'user_name': 'Dr. Rajiv Sen',
-        'user_role': 'Senior Faculty Mentor',
-        'user_initials': 'RS',
-        # TODO: Fetch real data
-        'assessment': None,
-        'student_results': []
+        'user_name': user_name,
+        'user_role': user_role,
+        'user_initials': initials,
+        'assessment': asm,
+        'student_results': results
     }
     return render(request, 'mentor/assessment_detail.html', context)
 
 def mentor_placement(request):
+    trainer = get_current_mentor(request)
+    user_name = trainer.name if trainer else request.session.get('appuser_name', '')
+    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
+    user_role = trainer.role if (trainer and hasattr(trainer, 'role') and trainer.role) else 'Mentor'
+    
+    my_batches = Batch.objects.filter(trainer=trainer) if trainer else Batch.objects.none()
+    students_qs = Student.objects.filter(batch__in=my_batches).exclude(status='Dropped') if trainer else Student.objects.none()
+
     context = {
         'active_page': 'mentor_placement',
         'role': 'mentor',
         'is_mentor': True,
-        'user_name': 'Dr. Rajiv Sen',
-        'user_role': 'Senior Faculty Mentor',
-        'user_initials': 'RS',
-        # TODO: Fetch real data
-        'students': []
+        'user_name': user_name,
+        'user_role': user_role,
+        'user_initials': initials,
+        'students': list(students_qs)
     }
     return render(request, 'mentor/placement.html', context)
 
 def mentor_reports(request):
+    trainer = get_current_mentor(request)
+    user_name = trainer.name if trainer else request.session.get('appuser_name', '')
+    initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
+    user_role = trainer.role if (trainer and hasattr(trainer, 'role') and trainer.role) else 'Mentor'
+    
+    my_batches = Batch.objects.filter(trainer=trainer) if trainer else Batch.objects.none()
+    students_qs = Student.objects.filter(batch__in=my_batches).exclude(status='Dropped') if trainer else Student.objects.none()
+
     context = {
         'active_page': 'mentor_reports',
         'role': 'mentor',
         'is_mentor': True,
-        'user_name': 'Dr. Rajiv Sen',
-        'user_role': 'Senior Faculty Mentor',
-        'user_initials': 'RS',
-        # TODO: Fetch real data
-        'students': [],
+        'user_name': user_name,
+        'user_role': user_role,
+        'user_initials': initials,
+        'students': list(students_qs),
         'attendance_trend': [],
         'subject_mastery': []
     }
@@ -1180,6 +1277,9 @@ def mentor_task_detail(request, task_id):
 
 def placement(request):
     offers = PlacementOffer.objects.all().order_by('-offer_date')
+    from django.db.models import Avg
+    avg_val = PlacementOffer.objects.aggregate(avg=Avg('package'))['avg']
+    avg_pkg_str = f"₹{avg_val:.1f} LPA" if avg_val is not None else "₹0 LPA"
     context = {
         'active_page': 'placement', 
         'offers': offers,
@@ -1187,7 +1287,7 @@ def placement(request):
             'total': PlacementOffer.objects.filter(status='Accepted').count(),
             'extended': PlacementOffer.objects.count(),
             'interviews': PlacementOffer.objects.filter(status='Pending').count(),
-            'avg_pkg': "₹6.5 LPA"
+            'avg_pkg': avg_pkg_str
         }
     }
     return render(request, 'placement.html', context)
@@ -1235,11 +1335,12 @@ def api_approve_student(request, student_id):
             student = Student.objects.get(student_id=student_id)
             
             first_name = student.name.split()[0] if student.name else "Student"
-            if not student.username:
+            if not student.username or student.username == '-':
                 # Generate username: STU_firstname + 3 numbers
                 nums_user = "".join(random.choices(string.digits, k=3))
                 student.username = f"STU_{first_name}{nums_user}"
                 
+            if not student.portal_password or student.portal_password == '-':
                 # Generate password: 2 upper, 2 lower, 3 digits, 1 special
                 upper = random.choices(string.ascii_uppercase, k=2)
                 lower = random.choices(string.ascii_lowercase, k=2)
@@ -1249,11 +1350,12 @@ def api_approve_student(request, student_id):
                 random.shuffle(pwd_list)
                 student.portal_password = "".join(pwd_list)
             
-            if not student.parent_username:
+            if not student.parent_username or student.parent_username == '-':
                 # Auto-generate Parent credentials: P_firstname + 3 numbers
                 nums_parent = "".join(random.choices(string.digits, k=3))
                 student.parent_username = f"P_{first_name}{nums_parent}"
                 
+            if not student.parent_password or student.parent_password == '-':
                 p_upper = random.choices(string.ascii_uppercase, k=2)
                 p_lower = random.choices(string.ascii_lowercase, k=2)
                 p_nums = random.choices(string.digits, k=3)
@@ -1277,16 +1379,7 @@ def api_approve_student(request, student_id):
                     break
                     
             if not assigned_batch:
-                # Get or create an active batch for this timing preference
-                assigned_batch, _ = Batch.objects.get_or_create(
-                    name=f"{target_timing} Batch 1",
-                    timing=target_timing,
-                    defaults={
-                        'course': student.course or 'Full Stack Web Development',
-                        'status': 'Active',
-                        'capacity': 25
-                    }
-                )
+                assigned_batch = Batch.objects.filter(timing=target_timing).first() or Batch.objects.first()
                 
             student.batch = assigned_batch
             if assigned_batch and assigned_batch.trainer:
@@ -1351,12 +1444,46 @@ def api_add_student(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            student_id = data.get('student_id') or f"NIM-2026-{random.randint(10000, 99999)}"
+            student_id = data.get('student_id') or f"NIM-{timezone.now().year}-{random.randint(10000, 99999)}"
+            name = data.get('name', '')
+            first_name = name.split()[0] if name else "Student"
+            
+            username = data.get('username') or f"STU_{first_name}{''.join(random.choices(string.digits, k=3))}"
+            
+            if data.get('password'):
+                portal_password = data.get('password')
+            else:
+                upper = random.choices(string.ascii_uppercase, k=2)
+                lower = random.choices(string.ascii_lowercase, k=2)
+                nums_pwd = random.choices(string.digits, k=3)
+                special = random.choices("!@#$%^&*", k=1)
+                pwd_list = upper + lower + nums_pwd + special
+                random.shuffle(pwd_list)
+                portal_password = "".join(pwd_list)
+                
+            parent_username = data.get('parent_username') or f"P_{first_name}{''.join(random.choices(string.digits, k=3))}"
+            
+            if data.get('parent_password'):
+                parent_password = data.get('parent_password')
+            else:
+                p_upper = random.choices(string.ascii_uppercase, k=2)
+                p_lower = random.choices(string.ascii_lowercase, k=2)
+                p_nums = random.choices(string.digits, k=3)
+                p_special = random.choices("!@#$%^&*", k=1)
+                p_pwd_list = p_upper + p_lower + p_nums + p_special
+                random.shuffle(p_pwd_list)
+                parent_password = "".join(p_pwd_list)
+
             student = Student.objects.create(
                 student_id=student_id,
-                name=data.get('name', ''),
+                name=name,
                 email=data.get('email', ''),
                 phone=data.get('phone', ''),
+                username=username,
+                portal_password=portal_password,
+                parent_username=parent_username,
+                parent_password=parent_password,
+                course=data.get('course') or data.get('program') or 'Generative AI & LLMs',
                 approval_status='Approved',
                 status='Active',
                 join_date=timezone.now().date()
@@ -1371,7 +1498,7 @@ def api_register_student(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            student_id = data.get('student_id') or data.get('registrationId') or f"NIM-2026-{random.randint(10000, 99999)}"
+            student_id = data.get('student_id') or data.get('registrationId') or f"NIM-{timezone.now().year}-{random.randint(10000, 99999)}"
             name = data.get('name') or data.get('fullName', '')
             email = data.get('email', '')
             phone = data.get('phone', '')
@@ -1379,14 +1506,13 @@ def api_register_student(request):
             guardian_name = data.get('guardian_name') or data.get('guardianName', '')
             guardian_phone = data.get('guardian_phone') or data.get('guardianPhone', '')
             address = data.get('address', '')
-            timing_pref = data.get('timing_preference') or data.get('batchTiming') or 'Morning'
-            plan = data.get('plan') or 'Placement Included'
-            amount = data.get('amount') or (90000 if plan == 'Placement Included' else 60000)
+            timing_pref = data.get('timing_preference') or data.get('batchTiming') or ''
+            plan = data.get('plan') or ''
+            amount = data.get('amount') or 0.0
             payment_method = data.get('payment_method') or data.get('paymentMethod') or 'UPI'
             transaction_id = data.get('transaction_id') or data.get('transactionId') or f"TXN-{random.randint(10000000, 99999999)}"
-            course = data.get('course') or ('Full Stack Web Development (Placement)' if plan == 'Placement Included' else 'Full Stack Web Development')
+            course = data.get('course') or data.get('program') or 'Generative AI & LLMs'
 
-            # Create Student in Pending approval state (Credentials & Batch will be generated upon Admin Approval)
             student = Student.objects.create(
                 student_id=student_id,
                 name=name,
@@ -1404,13 +1530,12 @@ def api_register_student(request):
                 join_date=timezone.now().date()
             )
 
-            # Record fee payment
             try:
                 amount_num = float(amount)
             except (TypeError, ValueError):
-                amount_num = 90000.0 if plan == 'Placement Included' else 60000.0
+                amount_num = 0.0
 
-            balance_due = 0.0 if amount_num >= 90000.0 else max(0.0, 90000.0 - amount_num)
+            balance_due = max(0.0, float(data.get('balance_due', 0.0)))
 
             FeePayment.objects.create(
                 student=student,
@@ -1514,13 +1639,13 @@ def api_student_dashboard_data(request, student_id=None):
         return JsonResponse({'success': False, 'error': 'No student records found'}, status=404)
 
     # 1. Student Info
-    batch_name = student.batch.name if student.batch else f"{student.timing_preference or 'Morning'} Batch"
-    timing = student.timing_preference or (student.batch.timing if student.batch else "Morning")
+    batch_name = student.batch.name if student.batch else (student.timing_preference or '')
+    timing = student.timing_preference or (student.batch.timing if student.batch else '')
     
     # 2. Attendance stats
     tot_att = Attendance.objects.filter(student=student).count()
     pres_att = Attendance.objects.filter(student=student, status='Present').count()
-    att_percent = round((pres_att / tot_att * 100), 1) if tot_att > 0 else 94.2
+    att_percent = round((pres_att / tot_att * 100), 1) if tot_att > 0 else 0.0
 
     # 3. Upcoming Classes
     classes_qs = ClassSchedule.objects.all().order_by('date', 'time')[:3]
@@ -1531,19 +1656,19 @@ def api_student_dashboard_data(request, student_id=None):
             'subject': c.subject,
             'batch_name': c.batch.name if c.batch else batch_name,
             'date': c.date.strftime("%d %b %Y") if c.date else "",
-            'time': c.time.strftime("%I:%M %p") if c.time else "10:00 AM",
-            'duration': c.duration or "90 Mins",
-            'meeting_link': c.meeting_link or "#",
+            'time': c.time.strftime("%I:%M %p") if c.time else "",
+            'duration': c.duration or "",
+            'meeting_link': c.meeting_link or "",
             'mode': c.mode
         })
 
     # 4. Fee Details
     latest_fee = FeePayment.objects.filter(student=student).order_by('-payment_date').first()
     fee_data = {
-        'amount': float(latest_fee.amount) if latest_fee else 90000.0,
+        'amount': float(latest_fee.amount) if latest_fee else 0.0,
         'balance_due': float(latest_fee.balance_due) if latest_fee else 0.0,
-        'status': latest_fee.status if latest_fee else 'Paid',
-        'transaction_id': latest_fee.transaction_id if latest_fee else 'TXN-98421045'
+        'status': latest_fee.status if latest_fee else '',
+        'transaction_id': latest_fee.transaction_id if latest_fee else ''
     }
 
     # 5. Tasks/Assignments
@@ -1555,7 +1680,7 @@ def api_student_dashboard_data(request, student_id=None):
             'id': t.id,
             'title': t.title,
             'subject': t.subject,
-            'due_date': t.due_date.strftime("%d %b %Y") if t.due_date else "Tomorrow",
+            'due_date': t.due_date.strftime("%d %b %Y") if t.due_date else "",
             'status': sub.status if sub else 'Pending',
             'grade': sub.marks if sub else None
         })
@@ -1568,12 +1693,12 @@ def api_student_dashboard_data(request, student_id=None):
             'email': student.email,
             'phone': student.phone,
             'username': student.username,
-            'course': student.course or "Full Stack Web Development",
+            'course': student.course or "",
             'batch': batch_name,
             'timing': timing,
             'status': student.status,
             'approval_status': student.approval_status,
-            'join_date': student.join_date.strftime("%d %b %Y") if student.join_date else "Oct 01, 2026",
+            'join_date': student.join_date.strftime("%d %b %Y") if student.join_date else "",
             'attendance_percent': att_percent,
         },
         'classes': classes_data,
@@ -1604,15 +1729,16 @@ def api_student_profile(request, student_id=None):
             'name': student.name,
             'email': student.email,
             'phone': student.phone,
-            'username': student.username or "-",
-            'parent_username': student.parent_username or "-",
-            'course': student.course or "Full Stack Web Development",
-            'batch': student.batch.name if student.batch else f"{student.timing_preference or 'Morning'} Batch",
-            'timing': student.timing_preference or "Morning",
+            'username': student.username or "",
+            'parent_username': student.parent_username or "",
+            'parent_name': getattr(student, 'parent_name', '') or getattr(student, 'guardian_name', '') or "",
+            'course': student.course or "",
+            'batch': student.batch.name if student.batch else (student.timing_preference or ""),
+            'timing': student.timing_preference or "",
             'status': student.status,
             'approval_status': student.approval_status,
             'join_date': student.join_date.strftime("%d %b %Y") if student.join_date else "",
-            'mentor': student.mentor.name if student.mentor else "Faculty Mentor"
+            'mentor': student.mentor.name if student.mentor else ""
         }
     })
 
@@ -1655,7 +1781,7 @@ def api_student_curriculum(request, student_id=None):
         
     return JsonResponse({
         'success': True,
-        'course': student.course if student else "Full Stack Web Development",
+        'course': student.course if student else "",
         'months': months_data
     })
 
@@ -1671,17 +1797,17 @@ def api_student_classes_list(request, student_id=None):
         classes_data.append({
             'id': c.id,
             'subject': c.subject,
-            'batch': c.batch.name if c.batch else "All Batches",
+            'batch': c.batch.name if c.batch else "",
             'date': c.date.strftime("%Y-%m-%d") if c.date else "",
             'date_formatted': c.date.strftime("%d %b %Y") if c.date else "",
-            'time': c.time.strftime("%I:%M %p") if c.time else "10:00 AM",
-            'end_time': c.get_end_time().strftime("%I:%M %p") if c.get_end_time() else "11:30 AM",
-            'duration': c.duration or "90 Mins",
+            'time': c.time.strftime("%I:%M %p") if c.time else "",
+            'end_time': c.get_end_time().strftime("%I:%M %p") if c.get_end_time() else "",
+            'duration': c.duration or "",
             'description': c.description,
             'mode': c.mode,
-            'meeting_link': c.meeting_link or "#",
+            'meeting_link': c.meeting_link or "",
             'status': c.get_status(),
-            'trainer': c.trainer.name if c.trainer else "Senior Mentor"
+            'trainer': c.trainer.name if c.trainer else ""
         })
         
     return JsonResponse({
@@ -1743,21 +1869,21 @@ def api_student_attendance_list(request, student_id=None):
             'id': a.id,
             'date': a.date.strftime("%d %b %Y"),
             'status': a.status,
-            'subject': a.class_schedule.subject if a.class_schedule else "Scheduled Session",
-            'batch': a.batch.name if a.batch else (student.batch.name if student.batch else "Morning Batch")
+            'subject': a.class_schedule.subject if a.class_schedule else "",
+            'batch': a.batch.name if a.batch else (student.batch.name if student.batch else "")
         })
         
     total = len(records)
-    rate = round((present_count / total * 100), 1) if total > 0 else 94.2
+    rate = round((present_count / total * 100), 1) if total > 0 else 0.0
     
     return JsonResponse({
         'success': True,
         'records': records,
         'stats': {
-            'total_sessions': total or 24,
-            'present_count': present_count or 22,
-            'absent_count': absent_count or 1,
-            'late_count': late_count or 1,
+            'total_sessions': total,
+            'present_count': present_count,
+            'absent_count': absent_count,
+            'late_count': late_count,
             'attendance_rate': rate
         }
     })
@@ -1773,15 +1899,19 @@ def api_student_career(request, student_id=None):
             'company': o.company,
             'offer_date': o.offer_date.strftime("%d %b %Y")
         })
+
+    att_tot = Attendance.objects.filter(student=student).count() if student else 0
+    att_pres = Attendance.objects.filter(student=student, status='Present').count() if student else 0
+    readiness = int((att_pres / att_tot) * 100) if att_tot > 0 else 0
         
     return JsonResponse({
         'success': True,
         'student_id': student.student_id if student else "",
         'student_name': student.name if student else "",
-        'course': student.course if student else "Full Stack Web Development",
+        'course': student.course if student else "",
         'offers': offers_data,
-        'portfolio_status': 'Complete' if student else 'In Progress',
-        'readiness_score': 88
+        'portfolio_status': 'Complete' if (student and student.approval_status == 'Approved') else 'In Progress',
+        'readiness_score': readiness
     })
 
 @csrf_exempt
@@ -1968,18 +2098,18 @@ def api_add_batch(request):
             trainer = AppUser.objects.get(id=trainer_id) if trainer_id else None
             
             # Generate auto name
-            auto_name = data.get('name', f"GenAI - {random.randint(1000, 9999)}" )
+            auto_name = data.get('name') or f"Batch - {random.randint(1000, 9999)}"
             
             b = Batch.objects.create(
                 name=auto_name,
-                course=data.get('course', 'Generative AI & LLMs'),
+                course=data.get('course', ''),
                 trainer=trainer,
-                capacity=data.get('capacity', 10),
-                schedule_days=data.get('schedule_days', 'Mon-Fri'),
-                schedule_time=data.get('schedule_time', '9:00 AM - 1:00 PM'),
+                capacity=data.get('capacity', 0),
+                schedule_days=data.get('schedule_days', ''),
+                schedule_time=data.get('schedule_time', ''),
                 status='Active',
                 start_date=timezone.now().date(),
-                timing=data.get('timing', 'Morning')
+                timing=data.get('timing', '')
             )
             return JsonResponse({'success': True, 'batch_id': b.id})
         except Exception as e:
@@ -2113,15 +2243,15 @@ def api_delete_batch(request, batch_id):
                         
                     trainer_id = new_batch_data.get('trainer_id')
                     trainer = AppUser.objects.get(id=trainer_id) if trainer_id else None
-                    auto_name = new_batch_data.get('name') or f"GenAI - {random.randint(1000, 9999)}"
+                    auto_name = new_batch_data.get('name') or f"Batch - {random.randint(1000, 9999)}"
                     
                     target_batch = Batch.objects.create(
                         name=auto_name,
-                        course=new_batch_data.get('course', 'Generative AI & LLMs'),
+                        course=new_batch_data.get('course', ''),
                         trainer=trainer,
                         capacity=new_capacity,
-                        schedule_days=new_batch_data.get('schedule_days', 'Mon-Fri'),
-                        schedule_time=new_batch_data.get('schedule_time', '9:00 AM - 1:00 PM'),
+                        schedule_days=new_batch_data.get('schedule_days', ''),
+                        schedule_time=new_batch_data.get('schedule_time', ''),
                         status='Active',
                         start_date=timezone.now().date(),
                         timing=new_timing  # locked to old batch timing
@@ -2750,38 +2880,48 @@ def api_student_tasks(request, student_id):
 
 @csrf_exempt
 def api_curriculum_get(request):
-    months = CurriculumMonth.objects.all().order_by('number')
+    phases = CurriculumMonth.objects.prefetch_related('course_modules__topics').all().order_by('number', 'id')
     data = []
-    for m in months:
-        modules_data = []
-        for mod in m.modules.all():
+    course_name = CourseModule.objects.values_list('course_name', flat=True).first() or 'Generative AI & LLMs'
+    
+    for p in phases:
+        mods_data = []
+        for mod in p.course_modules.all().order_by('order', 'id'):
             topics_data = []
-            for t in mod.topics.all():
+            for t in mod.topics.all().order_by('order', 'id'):
                 topics_data.append({
                     'id': f"topic-{t.id}",
-                    'title': t.title,
-                    'description': t.description,
-                    'type': t.type,
-                    'duration': t.duration,
-                    'status': t.status
+                    'title': t.name,
+                    'description': t.description or '',
+                    'type': t.class_type or 'Online Class',
+                    'duration': t.duration or '90 Mins',
+                    'status': 'Completed' if t.status == 'Completed' else ('In Progress' if t.status == 'Active' else 'Upcoming')
                 })
-            modules_data.append({
+            mods_data.append({
                 'id': f"mod-{mod.id}",
-                'code': mod.code,
-                'title': mod.title,
-                'weekRange': mod.week_range,
-                'status': mod.status,
-                'learningObjectives': mod.learning_objectives,
+                'code': f"MOD-{mod.order}",
+                'title': mod.name,
+                'weekRange': f"Week {((mod.order - 1) * 4) + 1} - {mod.order * 4}",
+                'status': 'In Progress' if mod.order == 1 else 'Upcoming',
+                'learningObjectives': [mod.description] if mod.description else [],
                 'topics': topics_data
             })
+        
         data.append({
-            'monthNumber': m.number,
-            'title': m.title,
-            'description': m.description,
-            'status': m.status,
-            'modules': modules_data
+            'monthNumber': p.number,
+            'title': p.title,
+            'shortTopic': p.title[:30],
+            'code': f"PHASE-{p.number}",
+            'duration': f"{max(len(mods_data), 1) * 2} Weeks",
+            'status': p.status or 'Upcoming',
+            'description': p.description,
+            'modules': mods_data
         })
-    return JsonResponse({'curriculum': data})
+        
+    return JsonResponse({
+        'curriculum': data,
+        'course_name': course_name
+    })
 
 @csrf_exempt
 def api_curriculum_add_month(request):
@@ -2836,47 +2976,136 @@ def api_curriculum_add_topic(request):
 # =============================================================================
 
 def api_admin_curriculum_data(request):
-    modules = CourseModule.objects.prefetch_related('topics').all().order_by('order', 'id')
-    modules_list = []
-    for m in modules:
-        topics_list = []
-        for t in m.topics.all().order_by('order', 'id'):
-            topics_list.append({
-                'id': t.id,
-                'order': t.order,
-                'name': t.name,
-                'description': t.description,
-                'duration': t.duration,
-                'class_type': t.class_type,
-                'status': t.status,
+    phases = CurriculumMonth.objects.prefetch_related('course_modules__topics').all().order_by('number', 'id')
+    phases_list = []
+    for p in phases:
+        mods_list = []
+        for m in p.course_modules.all().order_by('order', 'id'):
+            tops_list = []
+            for t in m.topics.all().order_by('order', 'id'):
+                tops_list.append({
+                    'id': t.id,
+                    'order': t.order,
+                    'name': t.name,
+                    'description': t.description,
+                    'duration': t.duration,
+                    'class_type': t.class_type,
+                    'status': t.status,
+                })
+            mods_list.append({
+                'id': m.id,
+                'phase_id': p.id,
+                'order': m.order,
+                'name': m.name,
+                'description': m.description,
+                'topics': tops_list
             })
-        modules_list.append({
-            'id': m.id,
-            'order': m.order,
-            'name': m.name,
-            'description': m.description,
-            'topics': topics_list
+        phases_list.append({
+            'id': p.id,
+            'number': p.number,
+            'title': p.title,
+            'description': p.description,
+            'status': p.status,
+            'modules': mods_list
         })
-    return JsonResponse({'status': 'success', 'modules': modules_list})
+    return JsonResponse({'status': 'success', 'phases': phases_list})
+
+@csrf_exempt
+def api_admin_add_phase(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            number = int(data.get('number', CurriculumMonth.objects.count() + 1))
+            title = data.get('title', '').strip()
+            description = data.get('description', '').strip()
+            status = data.get('status', 'Upcoming').strip()
+            if not title:
+                return JsonResponse({'status': 'error', 'message': 'Phase / Month title is required'}, status=400)
+            phase = CurriculumMonth.objects.create(
+                number=number,
+                title=title,
+                description=description,
+                status=status
+            )
+            return JsonResponse({'status': 'success', 'phase': {
+                'id': phase.id,
+                'number': phase.number,
+                'title': phase.title,
+                'description': phase.description,
+                'status': phase.status,
+                'modules': []
+            }})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+@csrf_exempt
+def api_admin_edit_phase(request, phase_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            phase = CurriculumMonth.objects.get(id=phase_id)
+            phase.number = int(data.get('number', phase.number))
+            phase.title = data.get('title', phase.title).strip()
+            phase.description = data.get('description', phase.description).strip()
+            phase.status = data.get('status', phase.status).strip()
+            phase.save()
+            return JsonResponse({'status': 'success', 'phase': {
+                'id': phase.id,
+                'number': phase.number,
+                'title': phase.title,
+                'description': phase.description,
+                'status': phase.status
+            }})
+        except CurriculumMonth.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Phase / Month not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error'}, status=405)
+
+@csrf_exempt
+def api_admin_delete_phase(request, phase_id):
+    if request.method == 'POST':
+        try:
+            phase = CurriculumMonth.objects.get(id=phase_id)
+            phase.delete()
+            return JsonResponse({'status': 'success'})
+        except CurriculumMonth.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Phase / Month not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error'}, status=405)
 
 @csrf_exempt
 def api_admin_add_module(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            order = int(data.get('order', CourseModule.objects.count() + 1))
+            phase_id = data.get('phase_id')
+            phase = None
+            if phase_id:
+                phase = CurriculumMonth.objects.filter(id=phase_id).first()
+            if not phase:
+                phase = CurriculumMonth.objects.first()
+            if not phase:
+                phase = CurriculumMonth.objects.create(number=1, title='Phase 1: Foundations', status='Current')
+
+            order = int(data.get('order', phase.course_modules.count() + 1))
             name = data.get('name', '').strip()
             description = data.get('description', '').strip()
             if not name:
                 return JsonResponse({'status': 'error', 'message': 'Module name is required'}, status=400)
+            course_name = data.get('course_name') or 'Generative AI & LLMs'
             mod = CourseModule.objects.create(
-                course_name='Generative AI & LLMs',
+                phase=phase,
+                course_name=course_name,
                 order=order,
                 name=name,
                 description=description
             )
             return JsonResponse({'status': 'success', 'module': {
                 'id': mod.id,
+                'phase_id': phase.id,
                 'order': mod.order,
                 'name': mod.name,
                 'description': mod.description,
@@ -2892,12 +3121,17 @@ def api_admin_edit_module(request, module_id):
         try:
             data = json.loads(request.body)
             mod = CourseModule.objects.get(id=module_id)
+            if 'phase_id' in data and data['phase_id']:
+                target_phase = CurriculumMonth.objects.filter(id=data['phase_id']).first()
+                if target_phase:
+                    mod.phase = target_phase
             mod.order = int(data.get('order', mod.order))
             mod.name = data.get('name', mod.name).strip()
             mod.description = data.get('description', mod.description).strip()
             mod.save()
             return JsonResponse({'status': 'success', 'module': {
                 'id': mod.id,
+                'phase_id': mod.phase.id if mod.phase else None,
                 'order': mod.order,
                 'name': mod.name,
                 'description': mod.description
@@ -3169,252 +3403,89 @@ def get_student_curriculum_roadmap_data(student):
             'course_progress_pct': 0
         }
         
-    course_name = student.course or (student.batch.course if student.batch else '')
-    is_fullstack = 'Full Stack' in course_name or 'Web Development' in course_name or 'Placement' in course_name or not course_name
-    
-    attendances = Attendance.objects.filter(student=student)
-    total_sessions = attendances.count()
-    present_sessions = attendances.filter(status='Present').count()
-    
-    is_new_student = total_sessions == 0
-    
-    if is_fullstack:
-        base_months = [
-            {
-                'number': 1,
-                'title': 'HTML5, CSS3, Modern JavaScript & Git Foundations',
-                'description': 'Master modern web architecture, responsive layouts, ES6+ JavaScript, DOM manipulation, and Git version control.',
-                'modules': [
-                    {'code': 'MOD-01', 'title': 'HTML5 & Responsive CSS3 Design', 'week_range': 'Week 1 - 2', 'topics': [
-                        {'title': 'Semantic HTML5 Structure & Accessibility', 'type': 'Reading', 'duration': '45m'},
-                        {'title': 'Flexbox & CSS Grid Layout Systems', 'type': 'Hands-on Lab', 'duration': '2h'},
-                        {'title': 'CSS Variables & Responsive Breakpoints', 'type': 'Hands-on Lab', 'duration': '1.5h'}
-                    ]},
-                    {'code': 'MOD-02', 'title': 'Modern JavaScript ES6+ & Git Workflow', 'week_range': 'Week 3 - 4', 'topics': [
-                        {'title': 'ES6+ Arrow Functions & Destructuring', 'type': 'Reading', 'duration': '1h'},
-                        {'title': 'Promises, Async/Await & Fetch API', 'type': 'Hands-on Lab', 'duration': '2h'},
-                        {'title': 'Git Version Control & Branching Strategy', 'type': 'Hands-on Lab', 'duration': '1.5h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 2,
-                'title': 'Frontend Web Development with React & Next.js',
-                'description': 'Build high-performance single page applications with React, Next.js App Router, Tailwind CSS, and state management.',
-                'modules': [
-                    {'code': 'MOD-03', 'title': 'React Core Concepts & Hooks', 'week_range': 'Week 5 - 6', 'topics': [
-                        {'title': 'JSX, Components & Props', 'type': 'Reading', 'duration': '1h'},
-                        {'title': 'State Management with useState & useEffect', 'type': 'Hands-on Lab', 'duration': '2h'},
-                        {'title': 'Custom React Hooks & Context API', 'type': 'Hands-on Lab', 'duration': '1.5h'}
-                    ]},
-                    {'code': 'MOD-04', 'title': 'Next.js App Router & Server Components', 'week_range': 'Week 7 - 8', 'topics': [
-                        {'title': 'Next.js File-system Routing', 'type': 'Reading', 'duration': '1h'},
-                        {'title': 'React Server Components vs Client Components', 'type': 'Hands-on Lab', 'duration': '2h'},
-                        {'title': 'API Routes & Dynamic Data Fetching', 'type': 'Hands-on Lab', 'duration': '2h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 3,
-                'title': 'Backend Systems with Python, Django & PostgreSQL',
-                'description': 'Develop scalable backend web services, relational database schemas, Django ORM models, and admin dashboards.',
-                'modules': [
-                    {'code': 'MOD-05', 'title': 'Python & Django Framework Basics', 'week_range': 'Week 9 - 10', 'topics': [
-                        {'title': 'Python Object-Oriented Programming', 'type': 'Reading', 'duration': '1h'},
-                        {'title': 'Django Project Setup & MVT Architecture', 'type': 'Hands-on Lab', 'duration': '2h'},
-                        {'title': 'Django ORM Models & Migrations', 'type': 'Hands-on Lab', 'duration': '2h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 4,
-                'title': 'RESTful APIs, Authentication & Microservices',
-                'description': 'Design secure RESTful APIs using Django REST Framework, JWT authentication, CORS header management, and middleware.',
-                'modules': [
-                    {'code': 'MOD-06', 'title': 'Django REST Framework & JWT Auth', 'week_range': 'Week 11 - 12', 'topics': [
-                        {'title': 'DRF Serializers & ViewSets', 'type': 'Reading', 'duration': '1.5h'},
-                        {'title': 'JWT Authentication & Permission Classes', 'type': 'Hands-on Lab', 'duration': '2h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 5,
-                'title': 'Full Stack Web Application & Cloud Deployment',
-                'description': 'Integrate frontend Next.js applications with Django REST APIs, deploy on AWS/Vercel, and configure CI/CD pipelines.',
-                'modules': [
-                    {'code': 'MOD-07', 'title': 'Cloud Deployment & DevOps', 'week_range': 'Week 13 - 14', 'topics': [
-                        {'title': 'Docker Containerization', 'type': 'Reading', 'duration': '1.5h'},
-                        {'title': 'Vercel & AWS Deployment', 'type': 'Hands-on Lab', 'duration': '2.5h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 6,
-                'title': 'Full Stack Capstone Project & Career Readiness',
-                'description': 'Build an end-to-end full stack web portal capstone, complete code reviews, technical interview prep, and portfolio polish.',
-                'modules': [
-                    {'code': 'MOD-08', 'title': 'Capstone Project & Portfolio', 'week_range': 'Week 15 - 16', 'topics': [
-                        {'title': 'Capstone Architecture & Design', 'type': 'Project', 'duration': '5h'},
-                        {'title': 'Technical Interview Prep & Resume Polish', 'type': 'Reading', 'duration': '2h'}
-                    ]}
-                ]
-            }
-        ]
-    else:
-        base_months = [
-            {
-                'number': 1,
-                'title': 'Python & Applied Statistics Foundations',
-                'description': 'Core Python programming, NumPy, Pandas, Exploratory Data Analysis, and Statistical Inference.',
-                'modules': [
-                    {'code': 'MOD-01', 'title': 'Python Data Science Stack', 'week_range': 'Week 1 - 2', 'topics': [
-                        {'title': 'NumPy & Vectorized Computing', 'type': 'Reading', 'duration': '1h'},
-                        {'title': 'Pandas DataFrames & Manipulation', 'type': 'Hands-on Lab', 'duration': '2h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 2,
-                'title': 'Machine Learning Mastery',
-                'description': 'Supervised & Unsupervised Machine Learning algorithms using Scikit-Learn.',
-                'modules': [
-                    {'code': 'MOD-02', 'title': 'Supervised Machine Learning', 'week_range': 'Week 3 - 4', 'topics': [
-                        {'title': 'Linear & Logistic Regression', 'type': 'Reading', 'duration': '1.5h'},
-                        {'title': 'Decision Trees & Random Forests', 'type': 'Hands-on Lab', 'duration': '2h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 3,
-                'title': 'Deep Learning & Computer Vision',
-                'description': 'Neural Networks, PyTorch, Convolutional Neural Networks, and Image Recognition.',
-                'modules': [
-                    {'code': 'MOD-03', 'title': 'PyTorch & Deep Neural Networks', 'week_range': 'Week 5 - 6', 'topics': [
-                        {'title': 'Artificial Neural Networks', 'type': 'Reading', 'duration': '1.5h'},
-                        {'title': 'CNNs & Transfer Learning', 'type': 'Hands-on Lab', 'duration': '2h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 4,
-                'title': 'NLP & Transformer Architectures',
-                'description': 'Natural Language Processing, BERT, GPT, Attention Mechanisms, and HuggingFace Transformers.',
-                'modules': [
-                    {'code': 'MOD-04', 'title': 'Transformers & Attention', 'week_range': 'Week 7 - 8', 'topics': [
-                        {'title': 'Self-Attention & Transformer Blocks', 'type': 'Reading', 'duration': '2h'},
-                        {'title': 'HuggingFace Pipelines & Fine-tuning', 'type': 'Hands-on Lab', 'duration': '3h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 5,
-                'title': 'Generative AI & Enterprise RAG',
-                'description': 'Large Language Models, Retrieval-Augmented Generation, LangChain, LlamaIndex, and Vector DBs.',
-                'modules': [
-                    {'code': 'MOD-05', 'title': 'RAG Systems & Vector DBs', 'week_range': 'Week 9 - 10', 'topics': [
-                        {'title': 'LangChain Architecture', 'type': 'Reading', 'duration': '2h'},
-                        {'title': 'ChromaDB & Pinecone Vector Search', 'type': 'Hands-on Lab', 'duration': '3h'}
-                    ]}
-                ]
-            },
-            {
-                'number': 6,
-                'title': 'Agentic AI & Capstone Portfolio',
-                'description': 'Autonomous AI Agents, Multi-Agent Orchestration with AutoGen/CrewAI, and Production Deployment.',
-                'modules': [
-                    {'code': 'MOD-06', 'title': 'Autonomous Agents & Capstone', 'week_range': 'Week 11 - 12', 'topics': [
-                        {'title': 'Agent Tool Calling & Memory', 'type': 'Project', 'duration': '4h'},
-                        {'title': 'Enterprise AI Capstone Deployment', 'type': 'Project', 'duration': '6h'}
-                    ]}
-                ]
-            }
-        ]
+    phases = CurriculumMonth.objects.prefetch_related('course_modules__topics').all().order_by('number', 'id')
+    if phases.exists():
+        roadmap = []
+        total_topics_count = 0
+        completed_topics_count = 0
+        for p in phases:
+            mods_data = []
+            for mod in p.course_modules.all().order_by('order', 'id'):
+                topics_data = []
+                for top in mod.topics.all().order_by('order', 'id'):
+                    total_topics_count += 1
+                    if top.status == 'Completed':
+                        completed_topics_count += 1
+                    topics_data.append({
+                        'id': f"t_{p.number}_{mod.id}_{top.id}",
+                        'title': top.name,
+                        'type': top.class_type or 'Online Class',
+                        'duration': top.duration or '90 Mins',
+                        'status': 'Completed' if top.status == 'Completed' else ('In Progress' if top.status == 'Active' else 'Upcoming')
+                    })
+                mods_data.append({
+                    'id': f"m_{mod.id}",
+                    'code': f"MOD-{mod.order}",
+                    'title': mod.name,
+                    'week_range': f"Week {((mod.order - 1) * 4) + 1} - {mod.order * 4}",
+                    'status': 'In Progress' if mod.order == 1 else 'Upcoming',
+                    'topics': topics_data
+                })
+            roadmap.append({
+                'number': p.number,
+                'title': p.title,
+                'description': p.description,
+                'status': p.status or 'Upcoming',
+                'modules': mods_data
+            })
+        course_progress_pct = round((completed_topics_count / total_topics_count * 100)) if total_topics_count > 0 else 0
+        return {
+            'roadmap': roadmap,
+            'completed_topics': completed_topics_count,
+            'total_topics': total_topics_count,
+            'course_progress_pct': course_progress_pct
+        }
 
+    months_qs = CurriculumMonth.objects.prefetch_related('modules__topics').all().order_by('number')
+    
     roadmap = []
     total_topics_count = 0
     completed_topics_count = 0
     
-    if is_new_student:
-        for m in base_months:
-            m_status = 'Current' if m['number'] == 1 else 'Upcoming'
+    if months_qs.exists():
+        for m in months_qs:
             mods_data = []
-            for mod in m['modules']:
-                mod_status = 'In Progress' if m['number'] == 1 else 'Not Started'
+            for mod in m.modules.all():
                 topics_data = []
-                for idx, top in enumerate(mod['topics']):
+                for top in mod.topics.all():
                     total_topics_count += 1
-                    t_status = 'In Progress' if (m['number'] == 1 and idx == 0) else 'Not Started'
-                    topics_data.append({
-                        'id': f"t_{m['number']}_{mod['code']}_{idx}",
-                        'title': top['title'],
-                        'type': top['type'],
-                        'duration': top['duration'],
-                        'status': t_status
-                    })
-                mods_data.append({
-                    'id': f"m_{mod['code']}",
-                    'code': mod['code'],
-                    'title': mod['title'],
-                    'week_range': mod['week_range'],
-                    'status': mod_status,
-                    'topics': topics_data
-                })
-            roadmap.append({
-                'number': m['number'],
-                'title': m['title'],
-                'description': m['description'],
-                'status': m_status,
-                'modules': mods_data
-            })
-        course_progress_pct = 0
-    else:
-        completion_ratio = present_sessions / total_sessions if total_sessions > 0 else 0
-        completed_months_cnt = min(5, int(completion_ratio * 6))
-        if completed_months_cnt == 0:
-            completed_months_cnt = 1
-            
-        for m in base_months:
-            if m['number'] <= completed_months_cnt:
-                m_status = 'Completed'
-            elif m['number'] == completed_months_cnt + 1:
-                m_status = 'Current'
-            else:
-                m_status = 'Upcoming'
-                
-            mods_data = []
-            for mod in m['modules']:
-                mod_status = 'Completed' if m_status == 'Completed' else ('In Progress' if m_status == 'Current' else 'Not Started')
-                topics_data = []
-                for idx, top in enumerate(mod['topics']):
-                    total_topics_count += 1
-                    t_status = 'Completed' if m_status == 'Completed' else ('In Progress' if (m_status == 'Current' and idx == 0) else 'Not Started')
-                    if t_status == 'Completed':
+                    if top.status == 'Completed':
                         completed_topics_count += 1
                     topics_data.append({
-                        'id': f"t_{m['number']}_{mod['code']}_{idx}",
-                        'title': top['title'],
-                        'type': top['type'],
-                        'duration': top['duration'],
-                        'status': t_status
+                        'id': f"t_{m.number}_{mod.code}_{top.id}",
+                        'title': top.title,
+                        'type': top.type or '',
+                        'duration': top.duration or '',
+                        'status': top.status or 'Not Started'
                     })
                 mods_data.append({
-                    'id': f"m_{mod['code']}",
-                    'code': mod['code'],
-                    'title': mod['title'],
-                    'week_range': mod['week_range'],
-                    'status': mod_status,
+                    'id': f"m_{mod.code}",
+                    'code': mod.code,
+                    'title': mod.title,
+                    'week_range': mod.week_range,
+                    'status': mod.status or 'Not Started',
                     'topics': topics_data
                 })
             roadmap.append({
-                'number': m['number'],
-                'title': m['title'],
-                'description': m['description'],
-                'status': m_status,
+                'number': m.number,
+                'title': m.title,
+                'description': m.description,
+                'status': m.status or 'Not Started',
                 'modules': mods_data
             })
-            
-        course_progress_pct = round((completed_topics_count / total_topics_count * 100)) if total_topics_count > 0 else 0
-        
+    
+    course_progress_pct = round((completed_topics_count / total_topics_count * 100)) if total_topics_count > 0 else 0
+    
     return {
         'roadmap': roadmap,
         'completed_topics': completed_topics_count,
@@ -3422,13 +3493,14 @@ def get_student_curriculum_roadmap_data(student):
         'course_progress_pct': course_progress_pct
     }
 
+
 def api_student_dashboard_data(request, student_id=None):
     student = get_student_by_id_or_default(student_id)
     if not student:
         return JsonResponse({'status': 'error', 'message': 'No student found'}, status=404)
         
     batch = student.batch
-    mentor_name = student.mentor.name if student.mentor else (batch.trainer.name if batch and batch.trainer else 'Unassigned')
+    mentor_name = student.mentor.name if student.mentor else (batch.trainer.name if batch and batch.trainer else '')
     
     # Calculate attendance stats
     attendances = Attendance.objects.filter(student=student)
@@ -3445,7 +3517,7 @@ def api_student_dashboard_data(request, student_id=None):
     pending_tasks_qs = tasks.exclude(id__in=submitted_task_ids)
     pending_count = pending_tasks_qs.count()
     first_pending_task = pending_tasks_qs.first()
-    pending_task_name = first_pending_task.title if first_pending_task else "No pending tasks"
+    pending_task_name = first_pending_task.title if first_pending_task else ""
     
     now_dt = timezone.now()
     overdue_count = pending_tasks_qs.filter(due_date__lt=now_dt).count()
@@ -3454,7 +3526,7 @@ def api_student_dashboard_data(request, student_id=None):
     payments = FeePayment.objects.filter(student=student)
     total_paid = sum([p.amount for p in payments if p.status == 'Paid'])
     total_due = sum([p.balance_due for p in payments if p.status == 'Pending'])
-    total_fee = float(total_paid + total_due) if (total_paid or total_due) else 0.0
+    total_fee = float(total_paid + total_due)
     paid_pct = round((float(total_paid) / total_fee * 100)) if total_fee > 0 else 0
     
     next_due_pay = payments.filter(status='Pending', due_date__isnull=False).order_by('due_date').first()
@@ -3472,12 +3544,12 @@ def api_student_dashboard_data(request, student_id=None):
                 'date': cls.date.strftime('%d %b %Y'),
                 'time': cls.time.strftime('%I:%M %p') if cls.time else '',
                 'end_time': cls.end_time.strftime('%I:%M %p') if cls.end_time else '',
-                'duration': cls.duration or '90 Mins',
+                'duration': cls.duration or '',
                 'mode': cls.mode,
                 'meeting_link': cls.meeting_link or '',
                 'is_live': cls.get_status() == 'Live Now',
                 'status': cls.get_status(),
-                'trainer': cls.trainer.name if cls.trainer else (batch.trainer.name if batch.trainer else 'Faculty Mentor'),
+                'trainer': cls.trainer.name if cls.trainer else (batch.trainer.name if batch.trainer else ''),
                 'description': cls.description or ''
             }
             
@@ -3499,10 +3571,10 @@ def api_student_dashboard_data(request, student_id=None):
             'status': 'Passed'
         })
         
-    # Announcements
+    # Announcements (Top 3 latest items dynamically: new added, old automatically removed)
     notifs_qs = Notification.objects.filter(
         Q(target_student=student) | Q(target_group__in=['All Users', 'All Students'])
-    ).order_by('-timestamp')[:4]
+    ).order_by('-timestamp')[:3]
     
     announcements = [{
         'id': n.id,
@@ -3520,12 +3592,12 @@ def api_student_dashboard_data(request, student_id=None):
             'name': student.name,
             'email': student.email,
             'phone': student.phone,
-            'course': student.course or (batch.course if batch else 'Generative AI & LLMs'),
-            'batch': batch.name if batch else 'Unassigned Batch',
-            'status': student.status,
-            'timing_preference': student.timing_preference,
-            'initials': student.initials,
-            'avatar_color': student.avatar_color,
+            'course': student.course or (batch.course if batch else ''),
+            'batch': batch.name if batch else '',
+            'status': student.status or '',
+            'timing_preference': student.timing_preference or '',
+            'initials': student.initials or '',
+            'avatar_color': student.avatar_color or '',
             'mentor_name': mentor_name,
             'join_date': student.join_date.strftime('%d %b %Y') if student.join_date else ''
         },
@@ -3565,8 +3637,8 @@ def api_student_profile(request, student_id=None):
             'name': student.name,
             'email': student.email,
             'phone': student.phone,
-            'course': student.course or (batch.course if batch else 'Generative AI & LLMs'),
-            'batch': batch.name if batch else 'Unassigned',
+            'course': student.course or (batch.course if batch else ''),
+            'batch': batch.name if batch else '',
             'status': student.status,
             'timing_preference': student.timing_preference,
             'join_date': student.join_date.strftime('%Y-%m-%d') if student.join_date else '',
@@ -3574,14 +3646,15 @@ def api_student_profile(request, student_id=None):
             'portal_password': student.portal_password or '',
             'parent_username': student.parent_username or '',
             'parent_password': student.parent_password or '',
-            'term_credits': student.term_credits or 'Semester 1 / 4 Cr',
-            'topics_count': student.topics_count or 12,
-            'hands_on_labs': student.hands_on_labs or 4,
-            'compute_env': student.compute_env or 'AWS Cloud9',
+            'parent_name': getattr(student, 'parent_name', '') or getattr(student, 'guardian_name', '') or '',
+            'term_credits': getattr(student, 'term_credits', '') or '',
+            'topics_count': getattr(student, 'topics_count', 0) or 0,
+            'hands_on_labs': getattr(student, 'hands_on_labs', 0) or 0,
+            'compute_env': getattr(student, 'compute_env', '') or '',
             'initials': student.initials,
             'avatar_color': student.avatar_color,
             'mentor': {
-                'name': mentor.name if mentor else 'Not Assigned',
+                'name': mentor.name if mentor else '',
                 'email': mentor.email if mentor else '',
                 'role': mentor.role if mentor else ''
             } if mentor else None
