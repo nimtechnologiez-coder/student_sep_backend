@@ -23,7 +23,7 @@ class StudentsappConfig(AppConfig):
             return
 
         try:
-            from .fee_reminders import start_fee_reminder_scheduler
+            from .views import start_fee_reminder_scheduler
             start_fee_reminder_scheduler(interval_seconds=300)
             logger.info("Fee reminder scheduler initialized in StudentsappConfig.ready()")
         except Exception as e:

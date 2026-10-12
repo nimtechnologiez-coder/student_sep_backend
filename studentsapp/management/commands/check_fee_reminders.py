@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from studentsapp.fee_reminders import check_and_create_fee_reminders
+from studentsapp.views import check_and_create_fee_reminders
 
 
 class Command(BaseCommand):

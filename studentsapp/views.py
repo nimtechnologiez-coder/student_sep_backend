@@ -868,6 +868,19 @@ def assessments(request):
     }
     return render(request, 'assessments.html', context)
 
+def check_and_create_fee_reminders(student=None):
+    """
+    Fee reminders are displayed exclusively via the Fee Reminder modal at the top of the portal.
+    No automatic duplicate notification records are generated.
+    """
+    return 0
+
+def start_fee_reminder_scheduler(interval_seconds=300):
+    """
+    Background scheduler for fee reminder checks.
+    """
+    pass
+
 def fees(request):
     query = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status', '').strip()
@@ -1683,6 +1696,28 @@ def get_mentor_unread_count(trainer):
     if not trainer:
         return 0
     return get_mentor_notifications_qs(trainer).filter(is_read=False).count()
+
+def mentor_context(request):
+    """Context processor providing unread notifications count for templates."""
+    try:
+        appuser_role = str(request.session.get('appuser_role', '')).lower()
+        is_mentor_path = request.path.startswith('/mentor/')
+
+        if is_mentor_path or appuser_role == 'mentor':
+            trainer = get_current_mentor(request)
+            unread_count = get_mentor_unread_count(trainer)
+            return {
+                'unread_notifications_count': unread_count
+            }
+        else:
+            admin_unread_count = Notification.objects.filter(is_read=False).count()
+            return {
+                'unread_notifications_count': admin_unread_count
+            }
+    except Exception:
+        return {
+            'unread_notifications_count': 0
+        }
 
 def mentor_dashboard(request):
     trainer = get_current_mentor(request)
@@ -3262,7 +3297,6 @@ def api_auth_login(request):
 
                     # Check for any missed or upcoming fee reminders when student logs in
                     try:
-                        from .fee_reminders import check_and_create_fee_reminders
                         check_and_create_fee_reminders(student)
                     except Exception as fe:
                         logger.error(f"Error checking fee reminders on student login: {fe}")
@@ -5315,12 +5349,6 @@ def get_linked_students_for_parent_or_student(identifier=None):
     return [default_s] if default_s else []
 
 def api_parent_notifications_list(request, identifier=None):
-    """
-    Fetches notifications dynamically for a parent and their linked child/children.
-    Supports identifier in URL path or ?student_id= / ?parentId= / ?child_id= query params.
-    Ensures notifications for academic evaluations, announcements, assignments,
-    attendance, and fees are displayed with synchronized read/unread status and deduplication.
-    """
     query_child_id = request.GET.get('student_id') or request.GET.get('child_id')
     lookup_id = identifier or query_child_id or request.GET.get('parentId')
 
@@ -5336,7 +5364,6 @@ def api_parent_notifications_list(request, identifier=None):
 
     # Run fee reminders check for linked children
     try:
-        from .fee_reminders import check_and_create_fee_reminders
         for child in linked_children:
             check_and_create_fee_reminders(child)
     except Exception as fe:

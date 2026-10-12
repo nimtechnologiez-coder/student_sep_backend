@@ -81,7 +81,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'studentsapp.context_processors.mentor_context',
+                'studentsapp.views.mentor_context',
             ],
         },
     },
