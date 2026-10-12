@@ -3,13 +3,19 @@
      NIM ACADEMY - EXACT MATCH SIDEBAR
      Matches Screenshot: Dark Navy (#0f172a), White Text, Blue Active Pill
      ========================================================================= -->
+<style>
+  .erp-sidebar .brand-logo-icon svg { width: 32px !important; height: 32px !important; max-width: 32px !important; max-height: 32px !important; display: block !important; }
+  .erp-sidebar .nav-icon svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: block !important; }
+  .erp-sidebar .nav-arrow svg { width: 14px !important; height: 14px !important; max-width: 14px !important; max-height: 14px !important; display: block !important; }
+  .erp-sidebar svg { flex-shrink: 0; max-width: 100%; }
+</style>
 <aside class="erp-sidebar" id="erpSidebar">
   
   <!-- Brand Logo Header -->
   <div class="sidebar-header">
     <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="brand-wrapper" title="NIM Academy">
       <div class="brand-logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="32" height="32" style="width:32px;height:32px;max-width:32px;max-height:32px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
           <path d="M6 12v5c3 3 9 3 12 0v-5"/>
         </svg>

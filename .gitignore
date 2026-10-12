@@ -1,3 +1,12 @@
 
 __pycache__/
 *.py[cod]
+.env
+
+__pycache__/
+*.py[cod]
+/staticfiles/
+
+__pycache__/
+*.py[cod]
+.env

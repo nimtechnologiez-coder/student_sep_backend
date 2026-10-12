@@ -2855,16 +2855,15 @@ def mentor_task_detail(request, task_id):
 
 def placement(request):
     offers = PlacementOffer.objects.all().order_by('-offer_date')
-    from django.db.models import Avg
-    avg_val = PlacementOffer.objects.aggregate(avg=Avg('package'))['avg']
-    avg_pkg_str = f"₹{avg_val:.1f} LPA" if avg_val is not None else "₹0 LPA"
+    avg_pkg_str = "₹0 LPA"
+    total_offers = PlacementOffer.objects.count()
     context = {
         'active_page': 'placement', 
         'offers': offers,
         'kpi': {
-            'total': PlacementOffer.objects.filter(status='Accepted').count(),
-            'extended': PlacementOffer.objects.count(),
-            'interviews': PlacementOffer.objects.filter(status='Pending').count(),
+            'total': total_offers,
+            'extended': total_offers,
+            'interviews': 0,
             'avg_pkg': avg_pkg_str
         }
     }
