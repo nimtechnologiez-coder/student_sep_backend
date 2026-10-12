@@ -67,6 +67,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:3000',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'https://student-sep-backend.onrender.com',
 ]
 
 ROOT_URLCONF = 'student_portal.urls'
@@ -102,6 +103,8 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD', 'Nim#tech@2026'),
         'HOST': os.environ.get('DB_HOST', 'aws-0-ap-south-1.pooler.supabase.com'),
         'PORT': os.environ.get('DB_PORT', '5432'),
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', 600)),
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 

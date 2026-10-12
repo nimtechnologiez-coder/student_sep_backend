@@ -3,6 +3,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Sum, Q, Count, Avg
+from django.db import transaction
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
@@ -1362,15 +1363,12 @@ def users_roles(request):
     role_filter = request.GET.get('role', '')
     status_filter = request.GET.get('status', '')
 
-    from django.db.models import Sum
+    from django.db.models import Sum, Value
+    from django.db.models.functions import Coalesce
     users_qs = AppUser.objects.annotate(
         student_count=Count('mentees', filter=Q(mentees__approval_status='Approved') & ~Q(mentees__status='Dropped')),
-        total_capacity=Sum('batch__capacity', filter=Q(batch__status='Active'))
+        total_capacity=Coalesce(Sum('batch__capacity', filter=Q(batch__status='Active')), Value(0))
     ).order_by('-id')
-    
-    for u in users_qs:
-        if u.total_capacity is None:
-            u.total_capacity = 0
 
     if query:
         users_qs = users_qs.filter(Q(name__icontains=query) | Q(email__icontains=query) | Q(username__icontains=query))
@@ -1383,16 +1381,25 @@ def users_roles(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    kpi_counts = AppUser.objects.aggregate(
+        total=Count('id'),
+        admins=Count('id', filter=Q(role__iexact='Admin')),
+        mentors=Count('id', filter=Q(role__iexact='Mentor')),
+        accountants=Count('id', filter=Q(role__iexact='Accountant')),
+        active=Count('id', filter=Q(status__iexact='Active')),
+        blocked=Count('id', filter=Q(status__iexact='Blocked')),
+    )
+
     context = {
         'active_page': 'users_roles', 
         'users': page_obj,
         'kpi': {
-            'total': AppUser.objects.count(),
-            'admins': AppUser.objects.filter(role='Admin').count(),
-            'mentors': AppUser.objects.filter(role='Mentor').count(),
-            'accountants': AppUser.objects.filter(role='Accountant').count(),
-            'active': AppUser.objects.filter(status='Active').count(),
-            'blocked': AppUser.objects.filter(status='Blocked').count(),
+            'total': kpi_counts['total'] or 0,
+            'admins': kpi_counts['admins'] or 0,
+            'mentors': kpi_counts['mentors'] or 0,
+            'accountants': kpi_counts['accountants'] or 0,
+            'active': kpi_counts['active'] or 0,
+            'blocked': kpi_counts['blocked'] or 0,
         },
         'current_q': query,
         'current_role': role_filter,
@@ -3441,38 +3448,109 @@ def api_edit_student(request, student_id):
 
 @csrf_exempt
 def api_add_user(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            name = data.get('name', '')
-            email = data.get('email', '')
-            role = data.get('role', '')
-            
-            # Generate username: name + 3 numbers
-            first_name = name.split()[0] if name else 'User'
-            nums_user = "".join(random.choices(string.digits, k=3))
-            username = f"{first_name}{nums_user}"
-            
-            # Generate password: 2 capital, 3 small, 2 number, 1 special character
-            upper = random.choices(string.ascii_uppercase, k=2)
-            lower = random.choices(string.ascii_lowercase, k=3)
-            nums_pwd = random.choices(string.digits, k=2)
-            special = random.choices("!@#$%^&*", k=1)
-            pwd_list = upper + lower + nums_pwd + special
-            random.shuffle(pwd_list)
-            password = "".join(pwd_list)
-            
-            AppUser.objects.create(
-                name=name,
-                email=email,
-                role=role,
-                username=username,
-                portal_password=password
-            )
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False})
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed.'}, status=405)
+
+    # 1. Authorization check: Admin only
+    is_admin = False
+    if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
+        is_admin = True
+    elif request.session.get('appuser_id') and str(request.session.get('appuser_role', '')).lower() in ('admin', 'administrator'):
+        is_admin = True
+    elif str(request.session.get('role', '')).lower() in ('admin', 'administrator'):
+        is_admin = True
+
+    if not is_admin:
+        return JsonResponse({'success': False, 'error': 'Authentication required. Only administrators can invite users.'}, status=401)
+
+    try:
+        data = json.loads(request.body)
+        name = (data.get('name') or '').strip()
+        email = (data.get('email') or '').strip()
+        role = (data.get('role') or '').strip()
+        send_email = data.get('send_email', True)
+
+        if not name:
+            return JsonResponse({'success': False, 'error': 'Full Name is required.'}, status=400)
+        if not email:
+            return JsonResponse({'success': False, 'error': 'Official Email Address is required.'}, status=400)
+        if not role:
+            return JsonResponse({'success': False, 'error': 'Please select a role.'}, status=400)
+
+        # 2. Prevent duplicate accounts with the same email address
+        if AppUser.objects.filter(email__iexact=email).exists():
+            return JsonResponse({'success': False, 'error': f'An account with the email "{email}" already exists.'}, status=400)
+
+        # 3. Generate unique username
+        clean_first = re.sub(r'[^a-zA-Z0-9]', '', name.split()[0]) if name else 'User'
+        clean_first = clean_first or 'User'
+        username = f"{clean_first}{random.randint(100, 999)}"
+        while AppUser.objects.filter(username=username).exists():
+            username = f"{clean_first}{random.randint(100, 999)}"
+
+        # 4. Generate secure password: 2 uppercase, 3 lowercase, 2 digits, 1 special character
+        upper = random.choices(string.ascii_uppercase, k=2)
+        lower = random.choices(string.ascii_lowercase, k=3)
+        nums_pwd = random.choices(string.digits, k=2)
+        special = random.choices("!@#$%^&*", k=1)
+        pwd_list = upper + lower + nums_pwd + special
+        random.shuffle(pwd_list)
+        password = "".join(pwd_list)
+
+        # 5. Fast user creation
+        new_user = AppUser.objects.create(
+            name=name,
+            email=email,
+            role=role,
+            username=username,
+            portal_password=password,
+            status='Active'
+        )
+
+        # 6. Non-blocking background email dispatch (if SMTP/external service is configured)
+        from django.conf import settings
+        if send_email and getattr(settings, 'EMAIL_HOST', None):
+            def _async_send_invitation(to_email, user_name, user_role, uname, pwd):
+                try:
+                    from django.core.mail import send_mail
+                    subject = "Invitation to NIM Student Portal"
+                    msg = (
+                        f"Hello {user_name},\n\n"
+                        f"You have been invited to NIM Student Portal as {user_role}.\n"
+                        f"Username: {uname}\n"
+                        f"Temporary Password: {pwd}\n\n"
+                        f"Please log in and update your credentials."
+                    )
+                    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@nim.edu')
+                    send_mail(subject, msg, from_email, [to_email], fail_silently=True)
+                except Exception as exc:
+                    logger.warning("Background invitation email error for %s: %s", to_email, exc)
+
+            import threading
+            threading.Thread(
+                target=_async_send_invitation,
+                args=(email, name, role, username, password),
+                daemon=True
+            ).start()
+
+        # 7. Return user-creation result immediately
+        return JsonResponse({
+            'success': True,
+            'message': f'Invitation for {name} ({role}) sent successfully!',
+            'user': {
+                'id': new_user.id,
+                'name': new_user.name,
+                'email': new_user.email,
+                'role': new_user.role,
+                'username': new_user.username,
+                'status': new_user.status
+            }
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON request format.'}, status=400)
+    except Exception as e:
+        logger.exception("Failed to invite user: %s", e)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
 def api_edit_appuser(request, user_id):
@@ -3493,37 +3571,61 @@ def api_edit_appuser(request, user_id):
 
 @csrf_exempt
 def api_block_appuser(request, user_id):
-    if request.method == 'POST':
-        try:
-            u = AppUser.objects.get(id=user_id)
-            u.status = 'Blocked'
-            u.save()
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False})
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        updated = AppUser.objects.filter(id=user_id).update(status='Blocked')
+        if not updated:
+            return JsonResponse({'success': False, 'error': 'User not found.'}, status=404)
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
 def api_delete_appuser(request, user_id):
-    if request.method == 'POST':
-        try:
-            AppUser.objects.get(id=user_id).delete()
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False})
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        with transaction.atomic():
+            user = AppUser.objects.filter(id=user_id).first()
+            if not user:
+                # If user was already deleted, return success so repeated clicks or stale UI succeed
+                return JsonResponse({'success': True, 'message': 'User already removed.'})
+
+            # Fast direct cleanup of foreign keys to eliminate slow recursive ORM Collector checks across WAN
+            from studentsapp.models import (
+                Batch, Student, ClassSchedule, Notification,
+                NotificationUserStatus, StudentRequest, Task
+            )
+
+            Batch.objects.filter(trainer_id=user_id).update(trainer=None)
+            Student.objects.filter(mentor_id=user_id).update(mentor=None)
+            ClassSchedule.objects.filter(trainer_id=user_id).update(trainer=None)
+            Notification.objects.filter(sender_mentor_id=user_id).update(sender_mentor=None)
+            Notification.objects.filter(target_mentor_id=user_id).update(target_mentor=None)
+            StudentRequest.objects.filter(recipient_user_id=user_id).update(recipient_user=None)
+            Task.objects.filter(trainer_id=user_id).update(trainer=None)
+            NotificationUserStatus.objects.filter(user_id=user_id).delete()
+
+            AppUser.objects.filter(id=user_id).delete()
+
+        return JsonResponse({'success': True})
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception("Failed to delete user %s", user_id)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
 def api_unblock_appuser(request, user_id):
-    if request.method == 'POST':
-        try:
-            u = AppUser.objects.get(id=user_id)
-            u.status = 'Active'
-            u.save()
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False})
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        updated = AppUser.objects.filter(id=user_id).update(status='Active')
+        if not updated:
+            return JsonResponse({'success': False, 'error': 'User not found.'}, status=404)
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
 def api_add_batch(request):
