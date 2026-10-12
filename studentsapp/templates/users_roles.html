@@ -698,7 +698,53 @@
 
     document.getElementById('blockUserModal').addEventListener('click', function(e) { if(e.target===this) this.classList.remove('active'); });
 
+    function showToast(message, type = 'success') {
+      const existing = document.getElementById('globalAppToast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'globalAppToast';
+      toast.style.position = 'fixed';
+      toast.style.bottom = '24px';
+      toast.style.right = '24px';
+      toast.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+      toast.style.color = '#ffffff';
+      toast.style.padding = '12px 22px';
+      toast.style.borderRadius = '8px';
+      toast.style.boxShadow = '0 10px 25px -5px rgba(0,0,0,0.25)';
+      toast.style.zIndex = '99999';
+      toast.style.fontWeight = '600';
+      toast.style.fontSize = '0.875rem';
+      toast.style.display = 'flex';
+      toast.style.alignItems = 'center';
+      toast.style.gap = '10px';
+      toast.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px; flex-shrink: 0;">
+          ${type === 'success' 
+            ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' 
+            : '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'}
+        </svg>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => { if (toast && toast.parentNode) toast.remove(); }, 3500);
+    }
+
+    // Auto-display toast if set in sessionStorage
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedMsg = sessionStorage.getItem('toast_message');
+      if (savedMsg) {
+        sessionStorage.removeItem('toast_message');
+        showToast(savedMsg, 'success');
+      }
+    });
+
     function openInviteModal() {
+      const modal = document.getElementById('addUserModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+      }
       const form = document.getElementById('inviteUserForm');
       if (form) form.reset();
       const submitBtn = document.getElementById('btnSubmitAddUser');
@@ -710,12 +756,25 @@
           <span>Send Invitation</span>
         `;
       }
-      document.getElementById('addUserModal').classList.add('active');
     }
 
     function closeInviteModal() {
       const modal = document.getElementById('addUserModal');
-      if (modal) modal.classList.remove('active');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+      }
+      const form = document.getElementById('inviteUserForm');
+      if (form) form.reset();
+      const submitBtn = document.getElementById('btnSubmitAddUser');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-loading');
+        submitBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Send Invitation</span>
+        `;
+      }
     }
 
     document.getElementById('addUserModal').addEventListener('click', function(e) {
@@ -738,7 +797,7 @@
       const sendEmail = emailCheck ? emailCheck.checked : true;
 
       if (!name || !email || !role) {
-        alert('Please fill in all required fields (Full Name, Role, and Email Address).');
+        showToast('Please fill in all required fields (Full Name, Role, and Email Address).', 'error');
         return;
       }
 
@@ -773,18 +832,23 @@
       .then(async res => {
         const data = await res.json().catch(() => ({ success: false, error: 'Invalid response from server' }));
         if (res.status === 401) {
-          alert('Your session has expired. Please log in again.');
-          window.location.href = '/login/';
+          showToast('Your session has expired. Redirecting to login...', 'error');
+          setTimeout(() => { window.location.href = '/login/'; }, 1000);
           return;
         }
         if (data.success) {
-          // Close modal and display success message immediately
+          // Instantly close and hide modal so it never lingers
           closeInviteModal();
-          alert(data.message || 'Invitation sent successfully!');
-          location.reload();
+          // Store toast in sessionStorage and display toast immediately
+          sessionStorage.setItem('toast_message', data.message || 'Invitation sent successfully!');
+          showToast(data.message || 'Invitation sent successfully!', 'success');
+          // Smoothly reload the user list
+          setTimeout(() => {
+            location.reload();
+          }, 350);
         } else {
-          // Display error message immediately and keep modal open for correction
-          alert(data.error || 'Failed to send invitation.');
+          // Display error toast immediately and keep modal open for correction
+          showToast(data.error || 'Failed to send invitation.', 'error');
           if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('btn-loading');
@@ -796,7 +860,7 @@
         }
       })
       .catch(err => {
-        alert('Network or server error: ' + (err.message || err));
+        showToast('Network or server error: ' + (err.message || err), 'error');
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.classList.remove('btn-loading');
