@@ -1,5 +1,20 @@
 from django.db import models
 from django.utils import timezone
+import datetime
+
+def parse_time_str(val):
+    if not val:
+        return None
+    if isinstance(val, datetime.time):
+        return val
+    s = str(val).strip()
+    for fmt in ('%H:%M', '%H:%M:%S', '%I:%M %p', '%I:%M%p', '%I:%M:%S %p', '%H.%M'):
+        try:
+            return datetime.datetime.strptime(s, fmt).time()
+        except ValueError:
+            pass
+    return None
+
 
 class Trainer(models.Model):
     name = models.CharField(max_length=100)
@@ -34,10 +49,58 @@ class Batch(models.Model):
     timing = models.CharField(max_length=20, choices=[('Morning', 'Morning'), ('Afternoon', 'Afternoon'), ('Evening', 'Evening')], default='Morning')
     schedule_days = models.CharField(max_length=50, default='Mon-Fri')
     schedule_time = models.CharField(max_length=50, default='9:00 AM - 1:00 PM')
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
+
+    def get_start_time(self):
+        if self.start_time:
+            return self.start_time
+        if self.schedule_time and '-' in str(self.schedule_time):
+            st_str = str(self.schedule_time).split('-')[0].strip()
+            parsed = parse_time_str(st_str)
+            if parsed:
+                return parsed
+        timing_str = (self.timing or 'Morning').strip().capitalize()
+        if timing_str == 'Afternoon':
+            return datetime.time(13, 30)
+        elif timing_str == 'Evening':
+            return datetime.time(18, 0)
+        return datetime.time(9, 0)
+
+    def get_end_time(self):
+        if self.end_time:
+            return self.end_time
+        if self.schedule_time and '-' in str(self.schedule_time):
+            parts = str(self.schedule_time).split('-')
+            if len(parts) > 1:
+                et_str = parts[1].strip()
+                parsed = parse_time_str(et_str)
+                if parsed:
+                    return parsed
+        timing_str = (self.timing or 'Morning').strip().capitalize()
+        if timing_str == 'Afternoon':
+            return datetime.time(17, 30)
+        elif timing_str == 'Evening':
+            return datetime.time(22, 0)
+        return datetime.time(13, 0)
     
     @property
     def current_students_count(self):
-        return self.students.filter(approval_status='Approved').exclude(status='Dropped').count()
+        return self.students.filter(status='Active').count()
+
+    @property
+    def completion_date(self):
+        if self.start_date:
+            import calendar
+            import datetime
+            d = self.start_date
+            new_month = d.month + 6
+            year = d.year + (new_month - 1) // 12
+            month = ((new_month - 1) % 12) + 1
+            max_day = calendar.monthrange(year, month)[1]
+            day = min(d.day, max_day)
+            return datetime.date(year, month, day)
+        return None
     
 
     @property
@@ -55,6 +118,12 @@ class Batch(models.Model):
         # Use length or simple hash to keep it consistent
         return colors[len(self.name) % len(colors)]
 
+    @property
+    def trainer_name(self):
+        if self.trainer:
+            return self.trainer.name or self.trainer.username or "Not Assigned"
+        return "Not Assigned"
+
     def __str__(self):
         return self.name
 
@@ -63,7 +132,7 @@ class Student(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
-    status = models.CharField(max_length=20, choices=[('Active', 'Active'), ('Onboarding', 'Onboarding'), ('Completed', 'Completed'), ('Dropped', 'Dropped')], default='Active')
+    status = models.CharField(max_length=20, choices=[('Active', 'Active'), ('Pending Approval', 'Pending Approval'), ('Onboarding', 'Onboarding'), ('Completed', 'Completed'), ('Dropped', 'Dropped')], default='Pending Approval')
     term_credits = models.CharField(max_length=50, blank=True, null=True, default='Semester 1 / 4 Cr')
     topics_count = models.IntegerField(default=12)
     hands_on_labs = models.IntegerField(default=4)
@@ -79,8 +148,18 @@ class Student(models.Model):
     avatar_url = models.URLField(blank=True, null=True)
     approval_status = models.CharField(max_length=20, choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')], default='Pending')
     mentor = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='mentees', limit_choices_to={'role': 'Mentor'})
-
-    
+    dob = models.CharField(max_length=50, blank=True, null=True)
+    guardian_name = models.CharField(max_length=100, blank=True, null=True)
+    guardian_phone = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    plan = models.CharField(max_length=100, blank=True, null=True, default='Placement Included')
+    payment_option = models.CharField(max_length=50, default='Full Payment', choices=[('Full Payment', 'Full Payment'), ('2 Installments', '2 Installments')])
+    total_fee = models.DecimalField(max_digits=10, decimal_places=2, default=90000.00)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=10000.00)
+    resume_file = models.FileField(upload_to='resumes/', blank=True, null=True)
+    resume_name = models.CharField(max_length=255, blank=True, null=True)
+    github_url = models.CharField(max_length=500, blank=True, null=True)
+    linkedin_url = models.CharField(max_length=500, blank=True, null=True)
 
     @property
     def initials(self):
@@ -92,10 +171,114 @@ class Student(models.Model):
         return "??"
     
     @property
+    def batch_start_date(self):
+        if self.batch and self.batch.start_date:
+            return self.batch.start_date.strftime('%d-%b-%Y')
+        return "-"
+
+    @property
+    def completion_date(self):
+        if self.batch and self.batch.start_date:
+            comp_d = self.batch.completion_date
+            if comp_d:
+                return comp_d.strftime('%d-%b-%Y')
+        return "-"
+
+    @property
+    def end_date(self):
+        return self.completion_date
+
+    @property
+    def trainer(self):
+        if self.batch and self.batch.trainer:
+            return self.batch.trainer
+        return self.mentor
+
+    @property
+    def trainer_name(self):
+        t = self.trainer
+        if t:
+            return t.name or t.username or "Not Assigned"
+        return "Not Assigned"
+
+    @property
     def avatar_color(self):
         colors = ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#e11d48', '#0891b2', '#be123c']
         # Use length or simple hash to keep it consistent
         return colors[len(self.name) % len(colors)]
+
+    @property
+    def dynamic_base_fee(self):
+        if self.plan and 'Without' in str(self.plan):
+            return 70000.0
+        return 100000.0
+
+    @property
+    def dynamic_discount(self):
+        if self.discount is not None:
+            return float(self.discount)
+        return 10000.0
+
+    @property
+    def dynamic_total_fee(self):
+        if self.total_fee and float(self.total_fee) > 0:
+            return float(self.total_fee)
+        return float(self.dynamic_base_fee - self.dynamic_discount)
+
+    @property
+    def dynamic_installment_amount(self):
+        if self.payment_option == '2 Installments':
+            return round(self.dynamic_total_fee / 2.0, 2)
+        return self.dynamic_total_fee
+
+    @property
+    def amount_paid(self):
+        paid_sum = sum([float(p.amount) for p in self.payments.filter(status='Paid')])
+        return float(paid_sum)
+
+    @property
+    def remaining_balance(self):
+        rem = self.dynamic_total_fee - self.amount_paid
+        return max(0.0, round(rem, 2))
+
+    @property
+    def payment_status_display(self):
+        paid = self.amount_paid
+        total = self.dynamic_total_fee
+        if self.payment_option == '2 Installments':
+            if paid >= total:
+                return 'Fully Paid'
+            elif paid > 0:
+                return '1st Installment Paid'
+            else:
+                return 'Pending'
+        else:
+            if paid >= total:
+                return 'Paid'
+            elif paid > 0:
+                return 'Partially Paid'
+            else:
+                return 'Pending'
+
+    @property
+    def display_paid_amount(self):
+        val = self.amount_paid
+        return f"₹{val:,.0f}" if val == int(val) else f"₹{val:,.2f}"
+
+    @property
+    def display_total_fee(self):
+        val = self.dynamic_total_fee
+        return f"₹{val:,.0f}" if val == int(val) else f"₹{val:,.2f}"
+
+    @property
+    def display_remaining_balance(self):
+        val = self.remaining_balance
+        return f"₹{val:,.0f}" if val == int(val) else f"₹{val:,.2f}"
+
+    @property
+    def display_installment_amount(self):
+        val = self.dynamic_installment_amount
+        return f"₹{val:,.0f}" if val == int(val) else f"₹{val:,.2f}"
 
     def __str__(self):
         return self.name
@@ -106,6 +289,7 @@ class FeePayment(models.Model):
     balance_due = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     payment_method = models.CharField(max_length=50, default='UPI')
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    installment_name = models.CharField(max_length=50, blank=True, null=True, default='Full Payment')
     due_date = models.DateField(blank=True, null=True)
     payment_date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=20, choices=[('Paid', 'Paid'), ('Pending', 'Pending'), ('Failed', 'Failed')], default='Paid')
@@ -113,21 +297,36 @@ class FeePayment(models.Model):
 
     @property
     def initials(self):
-        parts = self.name.split()
-        if len(parts) >= 2:
-            return (parts[0][0] + parts[-1][0]).upper()
-        elif parts:
-            return parts[0][:2].upper()
-        return "??"
+        if self.student and self.student.name:
+            parts = self.student.name.split()
+            if len(parts) >= 2:
+                return (parts[0][0] + parts[-1][0]).upper()
+            elif parts:
+                return parts[0][:2].upper()
+        return "FP"
     
     @property
     def avatar_color(self):
         colors = ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#e11d48', '#0891b2', '#be123c']
-        # Use length or simple hash to keep it consistent
-        return colors[len(self.name) % len(colors)]
+        name = self.student.name if self.student and self.student.name else "Fee"
+        return colors[len(name) % len(colors)]
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.transaction_id and self.transaction_id.strip():
+            tid = self.transaction_id.strip()
+            existing = FeePayment.objects.filter(transaction_id__iexact=tid).exclude(pk=self.pk)
+            if existing.exists():
+                raise ValidationError(f"Duplicate entry: Transaction ID '{tid}' is already assigned to payment #{existing.first().id}.")
+
+    def save(self, *args, **kwargs):
+        if self.transaction_id and self.transaction_id.strip():
+            self.transaction_id = self.transaction_id.strip()
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.student.name} - {self.amount}"
+        return f"REC-#{self.id} {self.student.name} - ₹{self.amount} ({self.status})"
 
 class PlacementOffer(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='offers')
@@ -224,23 +423,28 @@ class ClassSchedule(models.Model):
 
     @property
     def is_completed(self):
-        return self.get_status() == 'past'
+        st = self.get_status().lower()
+        return st in ['past', 'completed']
 
     @property
     def is_past(self):
-        return self.get_status() == 'past'
+        st = self.get_status().lower()
+        return st in ['past', 'completed']
 
     @property
     def is_live(self):
-        return self.get_status() == 'live'
+        st = self.get_status().lower()
+        return 'live' in st
 
     @property
     def is_today_unstarted(self):
-        return self.get_status() == 'today'
+        st = self.get_status().lower()
+        return st in ['upcoming', 'today']
 
     @property
     def is_future(self):
-        return self.get_status() == 'upcoming'
+        st = self.get_status().lower()
+        return st in ['upcoming', 'future']
 
     @property
     def initials(self):
@@ -329,11 +533,31 @@ class Notification(models.Model):
     target_student = models.ForeignKey('Student', on_delete=models.CASCADE, null=True, blank=True, related_name='received_notifications')
     sender_student = models.ForeignKey('Student', on_delete=models.CASCADE, null=True, blank=True, related_name='sent_questions')
     sender_mentor = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_notifications')
+    target_mentor = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='received_mentor_notifications')
     direction = models.CharField(max_length=20, choices=DIRECTION_CHOICES, default='sent')
+    action_url = models.CharField(max_length=255, blank=True, null=True, default='/fees')
+    action_label = models.CharField(max_length=100, blank=True, null=True, default='Go to Fees & Payments')
+    fee_payment = models.ForeignKey('FeePayment', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
+    reminder_type = models.CharField(max_length=50, blank=True, null=True)
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"[{self.direction}] {self.title}"
+
+class NotificationUserStatus(models.Model):
+    notification = models.ForeignKey(Notification, on_delete=models.CASCADE, related_name='user_statuses')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, null=True, blank=True, related_name='notification_statuses')
+    user = models.ForeignKey('AppUser', on_delete=models.CASCADE, null=True, blank=True, related_name='notification_statuses')
+    is_read = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Notification User Status'
+        verbose_name_plural = 'Notification User Statuses'
+
+    def __str__(self):
+        return f"Status for Notif {self.notification_id} (Student: {self.student_id}, Read: {self.is_read}, Deleted: {self.is_deleted})"
 
 class AppUser(models.Model):
     name = models.CharField(max_length=100)
@@ -355,11 +579,16 @@ class StudentRequest(models.Model):
     description = models.TextField()
     priority = models.CharField(max_length=50, default='Normal')
     status = models.CharField(max_length=50, default='Open')
+    recipient_type = models.CharField(max_length=50, default='Mentor', blank=True, null=True)
+    recipient_user = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='student_requests')
+    attachment = models.FileField(upload_to='support_attachments/', blank=True, null=True)
+    attachment_name = models.CharField(max_length=255, blank=True, null=True)
     admin_reply = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"{self.subject} - {self.student.name}"
+
 
 class Task(models.Model):
     title = models.CharField(max_length=200)
@@ -367,24 +596,70 @@ class Task(models.Model):
     module_code = models.CharField(max_length=50, default='AI-101')
     max_marks = models.IntegerField(default=100)
     description = models.TextField(blank=True, null=True)
-    batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='tasks')
+    batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
     trainer = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True)
     due_date = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=50, default='Active')
+    assignment_type = models.CharField(max_length=20, default='batch', choices=[('batch', 'Batch-wise'), ('student', 'Student-wise')])
+    assigned_students = models.ManyToManyField('Student', blank=True, related_name='assigned_tasks')
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
     def submissions_count(self):
         return self.submissions.count()
 
+    @property
+    def assigned_count(self):
+        if self.assignment_type == 'student':
+            return self.assigned_students.count()
+        return self.batch.students.filter(status='Active').count() if self.batch else 0
+
+    @property
+    def assigned_display(self):
+        if self.assignment_type == 'student':
+            cnt = self.assigned_students.count()
+            names = list(self.assigned_students.values_list('name', flat=True)[:2])
+            if cnt == 0:
+                return "0 students"
+            elif cnt == 1:
+                return f"{names[0]} (1 student)"
+            elif cnt == 2:
+                return f"{', '.join(names)} (2 students)"
+            else:
+                return f"{', '.join(names)} +{cnt - 2} more ({cnt} students)"
+        cnt = self.batch.students.filter(status='Active').count() if self.batch else 0
+        return f"Entire Batch ({cnt} student{'s' if cnt != 1 else ''})"
+
+    @property
+    def submission_progress_display(self):
+        sub_cnt = self.submissions.count()
+        total_cnt = self.assigned_count
+        return f"{sub_cnt} / {total_cnt} Submitted"
+
+    @property
+    def grading_status_display(self):
+        sub_cnt = self.submissions.count()
+        if sub_cnt == 0:
+            return "No Submissions"
+        eval_cnt = self.submissions.filter(status='Evaluated').count()
+        if eval_cnt == sub_cnt:
+            return "Evaluated"
+        elif eval_cnt > 0:
+            return f"{eval_cnt} / {sub_cnt} Evaluated"
+        return "Awaiting Grading"
+
     def __str__(self):
-        return f"{self.title} - {self.batch.name}"
+        batch_name = self.batch.name if self.batch else 'Custom Students'
+        return f"{self.title} - {batch_name}"
 
 class TaskSubmission(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='submissions')
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='task_submissions')
     submission_url = models.URLField(blank=True, null=True)
     submission_text = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to='submissions/', blank=True, null=True)
+    file_name = models.CharField(max_length=255, blank=True, null=True)
+    file_size = models.CharField(max_length=50, blank=True, null=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=[('Submitted', 'Submitted'), ('Evaluated', 'Evaluated')], default='Submitted')
     marks_obtained = models.IntegerField(null=True, blank=True)
@@ -461,4 +736,19 @@ class CourseTopic(models.Model):
 
     def __str__(self):
         return f"{self.order}. {self.name}"
+
+
+class StudentTopicProgress(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='topic_progress')
+    topic = models.ForeignKey('CourseTopic', on_delete=models.CASCADE, null=True, blank=True, related_name='student_progress')
+    topic_identifier = models.CharField(max_length=100, blank=True, default='')
+    status = models.CharField(max_length=50, default='Completed')
+    completed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('student', 'topic')
+
+    def __str__(self):
+        topic_name = self.topic.name if self.topic else self.topic_identifier
+        return f"{self.student.name} - {topic_name}: {self.status}"
 

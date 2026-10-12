@@ -36,12 +36,12 @@
       <div class="header-right-meta">
         <div class="header-date-display">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x1="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          <span>Mon, 24 Sep 2026</span>
+          <span>{{ today|date:"D, d M Y" }}</span>
         </div>
 
         <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="header-notif-badge">5</span>
+          <span class="header-notif-badge" id="headerNotifBadge">{{ unread_notifications_count|default:0 }}</span>
         </a>
 
         <div class="header-user-profile" title="Admin Account">
@@ -86,9 +86,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.total }}</span>
+            <span class="kpi-stat-number">{{ kpi.avg_attendance_pct }}%</span>
             <span class="kpi-stat-label">Average Attendance</span>
-            <span class="kpi-trend-row"><span class="trend-green">↑ +2.1%</span> vs last month</span>
+            <span class="kpi-trend-row"><span class="trend-green">Institutional Rate</span></span>
           </div>
         </div>
 
@@ -97,9 +97,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.generated }}</span>
-            <span class="kpi-stat-label">Capstone Pass Rate</span>
-            <span class="kpi-trend-row"><span class="trend-blue">Cohort Avg: 84.6%</span></span>
+            <span class="kpi-stat-number">{{ kpi.pass_rate_pct }}%</span>
+            <span class="kpi-stat-label">Capstone / Task Pass Rate</span>
+            <span class="kpi-trend-row"><span class="trend-blue">Cohort Avg: {{ kpi.avg_score }}%</span></span>
           </div>
         </div>
 
@@ -108,9 +108,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 15 2 2 4-4"/><rect width="18" height="14" x="3" y="7" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.avg_score }}</span>
+            <span class="kpi-stat-number">{{ kpi.ready_students_count }}</span>
             <span class="kpi-stat-label">Placement Clearance</span>
-            <span class="kpi-trend-row"><span class="trend-green">379 Students Ready</span></span>
+            <span class="kpi-trend-row"><span class="trend-green">{{ kpi.active_students }} Active Students</span></span>
           </div>
         </div>
 
@@ -119,9 +119,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
           </div>
           <div class="kpi-details-col">
-            <span class="kpi-stat-number">{{ kpi.attendance }}</span>
+            <span class="kpi-stat-number">₹{{ kpi.total_fees_collected }}</span>
             <span class="kpi-stat-label">Fee Realization</span>
-            <span class="kpi-trend-row"><span class="trend-blue">₹1.18 Cr Collected</span></span>
+            <span class="kpi-trend-row"><span class="trend-blue">Pending: ₹{{ kpi.total_balance_due }}</span></span>
           </div>
         </div>
       </div>
@@ -131,7 +131,7 @@
         <div class="filter-controls-row">
           <div class="filter-search-box">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" class="filter-search-input" id="reportSearchInput" placeholder="Filter batch summary, trainer, program or metric...">
+            <input type="text" class="filter-search-input" id="reportSearchInput" placeholder="Filter batch summary, trainer, program or metric..." value="{{ current_q }}">
           </div>
 
           <div class="filter-dropdowns-group">
@@ -142,26 +142,26 @@
               <option value="all">All-Time Historical</option>
             </select>
 
-            <select class="filter-select" id="programFilterSelect">
+            <select class="filter-select" id="programFilterSelect" onchange="updateFilters({program: this.value})">
               <option value="">All Programs</option>
-              <option value="Generative AI">Generative AI & LLMs</option>
-              <option value="Cloud DevOps">Cloud DevOps & SRE</option>
-              <option value="Full Stack">Full Stack Web Engineering</option>
-              <option value="Data Engineering">Data Engineering</option>
+              <option value="Generative AI" {% if current_program == 'Generative AI' %}selected{% endif %}>Generative AI & LLMs</option>
+              <option value="Cloud DevOps" {% if current_program == 'Cloud DevOps' %}selected{% endif %}>Cloud DevOps & SRE</option>
+              <option value="Full Stack" {% if current_program == 'Full Stack' %}selected{% endif %}>Full Stack Web Engineering</option>
+              <option value="Data Engineering" {% if current_program == 'Data Engineering' %}selected{% endif %}>Data Engineering</option>
             </select>
 
-            <select class="filter-select" id="statusReportSelect">
+            <select class="filter-select" id="statusReportSelect" onchange="updateFilters({status: this.value})">
               <option value="">Standing: All</option>
-              <option value="Graduation Ready">Graduation Ready</option>
-              <option value="In Good Standing">In Good Standing</option>
-              <option value="Needs Attention">Needs Attention</option>
+              <option value="Active" {% if current_status == 'Active' %}selected{% endif %}>Active</option>
+              <option value="Pending Approval" {% if current_status == 'Pending Approval' %}selected{% endif %}>Pending Approval</option>
+              <option value="Completed" {% if current_status == 'Completed' %}selected{% endif %}>Completed</option>
             </select>
 
             <button class="btn-filter-reset" onclick="resetReportFilters()">Reset</button>
           </div>
         </div>
 
-        <!-- 5 Category Pill Tabs Required by User: Attendance, Academic, Student Progress, Batch, Fee -->
+        <!-- 6 Category Pill Tabs -->
         <div class="filter-tabs-row">
           <button class="pill-tab-btn active" onclick="switchReportCategory(this, 'all')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
@@ -195,8 +195,8 @@
         <div class="table-card-header">
           <div class="table-header-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><line x1="18" x1="20" x2="18" y2="10"/><line x1="12" x1="20" x2="12" y2="4"/><line x1="6" x1="20" x2="6" y2="14"/></svg>
-            <span id="reportTableHeading">Student Performance & Analytics Matrix</span>
-            <span class="table-records-count">{{ kpi.active_students }} Active Students</span>
+            <span id="reportTableHeading">Executive Overview & Student Directory</span>
+            <span class="table-records-count" id="reportTableCount">{{ kpi.active_students }} Active Students</span>
           </div>
 
           <div style="display: flex; gap: 8px;">
@@ -204,7 +204,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
               <span>Export CSV</span>
             </button>
-            <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="alert('Rendering printable PDF report...');">
+            <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="window.print();">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
               <span>Print PDF</span>
             </button>
@@ -212,80 +212,302 @@
         </div>
 
         <div class="table-scroll-container">
-            <table class="admin-data-table" id="reportsTable">
+
+          <!-- 1. Executive Overview Panel -->
+          <div class="tab-content-panel" id="panel-all" style="display: block;">
+            <table class="admin-data-table reports-table-element">
               <thead>
                 <tr>
-                  <th style="width: 250px;">Student & ID</th>
-                  <th>Batch / Cohort</th>
+                  <th style="width: 240px;">Student & ID</th>
+                  <th>Batch / Program</th>
                   <th>Status</th>
+                  <th>Attendance Rate</th>
+                  <th>Fee Standing</th>
                   <th>Enrollment Date</th>
-                  <th style="text-align: right; width: 130px;">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {% for student in students %}
-                <tr>
+                {% for item in student_reports %}
+                <tr data-program="{{ item.student.course }}" data-status="{{ item.student.status }}">
                   <td>
                     <div class="entity-cell">
-                      <div class="entity-avatar" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">{{ student.name|slice:":1"|upper }}</div>
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">{{ item.student.name|slice:":1"|upper }}</div>
                       <div class="entity-info">
-                        <span class="entity-name">{{ student.name }}</span>
-                        <span class="entity-sub">{{ student.student_id }}</span>
+                        <span class="entity-name">{{ item.student.name }}</span>
+                        <span class="entity-sub">{{ item.student.student_id }}</span>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <span class="font-mono-code">{{ student.batch.name|default:"Unassigned" }}</span>
+                    <span class="font-mono-code">{{ item.student.batch.name|default:"Unassigned" }}</span>
+                    <div style="font-size: 0.75rem; color: #64748b;">{{ item.student.course }}</div>
                   </td>
                   <td>
-                    <span class="badge-status-active">{{ student.status }}</span>
+                    <span class="badge-status-active">{{ item.student.status }}</span>
                   </td>
                   <td>
-                    <span style="color: var(--admin-text-muted); font-size: 0.875rem;">{{ student.join_date|date:"d M Y" }}</span>
+                    <strong style="color: #0f172a;">{{ item.att_pct }}%</strong>
+                    <span style="font-size: 0.78rem; color: #2563eb; font-weight: 700; display: block;">({{ item.att_ratio }})</span>
                   </td>
-                  <td style="text-align: right;">
-                    <div class="table-actions-cell" style="justify-content: flex-end;">
-                      <button title="View Full Report" onclick="alert('Viewing comprehensive performance report for {{ student.name|escapejs }}...');" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#eff6ff'; this.style.color='#3b82f6'; this.style.borderColor='#bfdbfe';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b'; this.style.borderColor='#e2e8f0';">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      </button>
-                    </div>
+                  <td>
+                    <span class="{{ item.fee_badge_class }}">{{ item.fee_status }}</span>
+                  </td>
+                  <td>
+                    <span style="color: var(--admin-text-muted); font-size: 0.875rem;">{{ item.student.join_date|date:"d M Y" }}</span>
                   </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="5" style="text-align: center; padding: 20px; color: #94a3b8;">No student reports found.</td>
+                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No student reports found.</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
 
+          <!-- 2. Attendance Reports Panel -->
+          <div class="tab-content-panel" id="panel-attendance" style="display: none;">
+            <table class="admin-data-table reports-table-element">
+              <thead>
+                <tr>
+                  <th style="width: 240px;">Student & ID</th>
+                  <th>Batch / Cohort</th>
+                  <th>Conducted Sessions</th>
+                  <th>Present Logs</th>
+                  <th>Absent Logs</th>
+                  <th>Attendance Rate</th>
+                  <th>Standing & Monthly Progress</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in student_reports %}
+                <tr data-program="{{ item.student.course }}" data-status="{{ item.student.status }}">
+                  <td>
+                    <div class="entity-cell">
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #0284c7, #0369a1);">{{ item.student.name|slice:":1"|upper }}</div>
+                      <div class="entity-info">
+                        <span class="entity-name">{{ item.student.name }}</span>
+                        <span class="entity-sub">{{ item.student.student_id }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="font-mono-code">{{ item.student.batch.name|default:"Unassigned" }}</span>
+                  </td>
+                  <td><strong>{{ item.att_total }} Conducted</strong></td>
+                  <td><span style="color: #16a34a; font-weight: 700;">{{ item.att_present }}</span></td>
+                  <td><span style="color: #dc2626; font-weight: 700;">{{ item.att_absent }}</span></td>
+                  <td>
+                    <strong style="font-size: 0.95rem; color: #0f172a;">{{ item.att_pct }}%</strong>
+                    <span style="font-size: 0.82rem; color: #2563eb; font-weight: 700; display: block;">({{ item.att_ratio }})</span>
+                  </td>
+                  <td>
+                    <span class="{{ item.att_badge_class }}">{{ item.att_standing }}</span>
+                    <span style="font-size: 0.75rem; color: #64748b; display: block; margin-top: 3px;" title="Monthly Progress (Present ÷ Total Scheduled)">Monthly Prog: <strong>{{ item.att_progress }}%</strong></span>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 20px; color: #94a3b8;">No attendance reports found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 3. Academic Performance Panel -->
+          <div class="tab-content-panel" id="panel-academic" style="display: none;">
+            <table class="admin-data-table reports-table-element">
+              <thead>
+                <tr>
+                  <th style="width: 240px;">Student & ID</th>
+                  <th>Batch / Cohort</th>
+                  <th>Assessments Taken</th>
+                  <th>Average Grade / Score</th>
+                  <th>Academic Standing</th>
+                  <th>Program Domain</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in student_reports %}
+                <tr data-program="{{ item.student.course }}" data-status="{{ item.student.status }}">
+                  <td>
+                    <div class="entity-cell">
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #16a34a, #15803d);">{{ item.student.name|slice:":1"|upper }}</div>
+                      <div class="entity-info">
+                        <span class="entity-name">{{ item.student.name }}</span>
+                        <span class="entity-sub">{{ item.student.student_id }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="font-mono-code">{{ item.student.batch.name|default:"Unassigned" }}</span>
+                  </td>
+                  <td><strong>{{ item.test_count }}</strong></td>
+                  <td><strong style="color: #2563eb; font-size: 0.95rem;">{{ item.avg_score }}%</strong></td>
+                  <td><span class="{{ item.acad_badge_class }}">{{ item.acad_grade }}</span></td>
+                  <td><span style="color: #475569; font-size: 0.85rem;">{{ item.student.course }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No academic performance reports found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 4. Student Progress & Mastery Panel -->
+          <div class="tab-content-panel" id="panel-progress" style="display: none;">
+            <table class="admin-data-table reports-table-element">
+              <thead>
+                <tr>
+                  <th style="width: 240px;">Student & ID</th>
+                  <th>Batch / Cohort</th>
+                  <th>Topics Completed</th>
+                  <th>Hands-on Labs</th>
+                  <th>Compute Env</th>
+                  <th>Curriculum Plan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in student_reports %}
+                <tr data-program="{{ item.student.course }}" data-status="{{ item.student.status }}">
+                  <td>
+                    <div class="entity-cell">
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #9333ea, #7e22ce);">{{ item.student.name|slice:":1"|upper }}</div>
+                      <div class="entity-info">
+                        <span class="entity-name">{{ item.student.name }}</span>
+                        <span class="entity-sub">{{ item.student.student_id }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="font-mono-code">{{ item.student.batch.name|default:"Unassigned" }}</span>
+                  </td>
+                  <td><strong>{{ item.student.topics_count|default:"12" }} Topics</strong></td>
+                  <td><span style="color: #059669; font-weight: 700;">{{ item.student.hands_on_labs|default:"4" }} Labs Completed</span></td>
+                  <td><span class="font-mono-code">{{ item.student.compute_env|default:"AWS Cloud9" }}</span></td>
+                  <td><span class="badge-status-active">{{ item.student.plan|default:"Placement Included" }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No student progress reports found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 5. Batch Clearance Panel -->
+          <div class="tab-content-panel" id="panel-batch" style="display: none;">
+            <table class="admin-data-table reports-table-element">
+              <thead>
+                <tr>
+                  <th style="width: 220px;">Batch Code & Name</th>
+                  <th>Program / Course</th>
+                  <th>Assigned Trainer / Mentor</th>
+                  <th>Enrolled / Active</th>
+                  <th>Scheduled Classes</th>
+                  <th>Clearance Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in batch_reports %}
+                <tr data-program="{{ item.batch.course }}" data-status="{{ item.batch.status }}">
+                  <td>
+                    <div class="entity-cell">
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #ea580c, #c2410c);">{{ item.batch.name|slice:":1"|upper }}</div>
+                      <div class="entity-info">
+                        <span class="entity-name" style="font-weight: 700;">{{ item.batch.name }}</span>
+                        <span class="entity-sub">{{ item.batch.timing }} Session</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span style="color: #334155; font-weight: 600;">{{ item.batch.course }}</span></td>
+                  <td><strong>{{ item.batch.trainer.name|default:"Unassigned Mentor" }}</strong></td>
+                  <td><strong>{{ item.enrolled }}</strong> Enrolled / <span style="color: #16a34a;">{{ item.active }} Active</span></td>
+                  <td><strong>{{ item.classes_count }}</strong> Classes</td>
+                  <td><span class="{{ item.badge_class }}">{{ item.clearance }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No batch clearance reports found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 6. Fee Dues & Aging Panel -->
+          <div class="tab-content-panel" id="panel-fee" style="display: none;">
+            <table class="admin-data-table reports-table-element">
+              <thead>
+                <tr>
+                  <th style="width: 240px;">Student & ID</th>
+                  <th>Batch / Cohort</th>
+                  <th>Total Paid (₹)</th>
+                  <th>Balance Due (₹)</th>
+                  <th>Last Payment Date</th>
+                  <th>Payment Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in student_reports %}
+                <tr data-program="{{ item.student.course }}" data-status="{{ item.student.status }}">
+                  <td>
+                    <div class="entity-cell">
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #059669, #047857);">{{ item.student.name|slice:":1"|upper }}</div>
+                      <div class="entity-info">
+                        <span class="entity-name">{{ item.student.name }}</span>
+                        <span class="entity-sub">{{ item.student.student_id }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="font-mono-code">{{ item.student.batch.name|default:"Unassigned" }}</span>
+                  </td>
+                  <td><strong style="color: #16a34a;">₹{{ item.fee_paid }}</strong></td>
+                  <td><strong style="color: {% if item.fee_due > 0 %}#dc2626{% else %}#64748b{% endif %};">₹{{ item.fee_due }}</strong></td>
+                  <td><span style="color: #64748b; font-size: 0.875rem;">{{ item.last_pmt_date|date:"d M Y" }}</span></td>
+                  <td><span class="{{ item.fee_badge_class }}">{{ item.fee_status }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No fee dues reports found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
         <!-- Table Pagination -->
         <div class="pagination-row">
-            <div>Showing <strong>{{ students.start_index|default:"0" }} - {{ students.end_index|default:"0" }}</strong> of <strong>{{ students.paginator.count|default:"0" }}</strong> students</div>
-            <div class="pagination-controls">
-              {% if students.has_previous %}
-              <button class="btn-page-nav" onclick="goToPage({{ students.previous_page_number }})">Previous</button>
-              {% else %}
-              <button class="btn-page-nav" disabled>Previous</button>
-              {% endif %}
+          <div>Showing <strong>{{ students.start_index|default:"0" }} - {{ students.end_index|default:"0" }}</strong> of <strong>{{ students.paginator.count|default:"0" }}</strong> records</div>
+          <div class="pagination-controls">
+            {% if students.has_previous %}
+            <button class="btn-page-nav" onclick="goToPage({{ students.previous_page_number }})">Previous</button>
+            {% else %}
+            <button class="btn-page-nav" disabled>Previous</button>
+            {% endif %}
 
-              {% for i in students.paginator.page_range %}
-                {% if students.number == i %}
-                  <button class="btn-page-nav active">{{ i }}</button>
-                {% else %}
-                  <button class="btn-page-nav" onclick="goToPage({{ i }})">{{ i }}</button>
-                {% endif %}
-              {% endfor %}
-
-              {% if students.has_next %}
-              <button class="btn-page-nav" onclick="goToPage({{ students.next_page_number }})">Next</button>
+            {% for i in students.paginator.page_range %}
+              {% if students.number == i %}
+                <button class="btn-page-nav active">{{ i }}</button>
               {% else %}
-              <button class="btn-page-nav" disabled>Next</button>
+                <button class="btn-page-nav" onclick="goToPage({{ i }})">{{ i }}</button>
               {% endif %}
-            </div>
+            {% endfor %}
+
+            {% if students.has_next %}
+            <button class="btn-page-nav" onclick="goToPage({{ students.next_page_number }})">Next</button>
+            {% else %}
+            <button class="btn-page-nav" disabled>Next</button>
+            {% endif %}
           </div>
-          
+        </div>
 
       </div>
 
@@ -304,7 +526,7 @@
       </button>
     </div>
 
-    <form onsubmit="event.preventDefault(); alert('Generating report... File will download automatically in 3 seconds.'); document.getElementById('generateReportModal').classList.remove('active');">
+    <form onsubmit="event.preventDefault(); alert('Compiling custom report... File download started!'); document.getElementById('generateReportModal').classList.remove('active');">
       <div class="modal-body-content">
         <div class="form-group-field">
           <label class="form-label-title">Report Category *</label>
@@ -322,11 +544,9 @@
             <label class="form-label-title">Scope / Target</label>
             <select class="form-select-box">
               <option value="all">All Batches (Institutional Summary)</option>
-              <option value="AI-09">Batch AI-09 (GenAI)</option>
-              <option value="CLOUD-04">Batch CLOUD-04</option>
-              <option value="AI-10">Batch AI-10</option>
-              <option value="FS-12">Batch FS-12</option>
-              <option value="DATA-06">Batch DATA-06</option>
+              {% for b in batch_reports %}
+              <option value="{{ b.batch.name }}">{{ b.batch.name }} ({{ b.batch.course }})</option>
+              {% endfor %}
             </select>
           </div>
 
@@ -378,30 +598,44 @@
 </div>
 
 <script>
-  // Switch category tabs and adjust report heading
+  // Switch category tabs and adjust report heading & visible table panel
   function switchReportCategory(btn, category) {
     document.querySelectorAll('.pill-tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
     const heading = document.getElementById('reportTableHeading');
     const titles = {
-      'all': 'Student Performance & Analytics Matrix',
-      'attendance': 'Attendance Records & Biometric Lecture Logs',
+      'all': 'Executive Overview & Student Directory',
+      'attendance': 'Attendance Records & Biometric Audit Log',
       'academic': 'Academic Curriculum Mastery & Grade Distributions',
-      'progress': 'Student Progress, Lab Submissions & Placement Readiness',
+      'progress': 'Student Progress, Lab Submissions & Mastery Dossier',
       'batch': 'Batch Clearance & Graduation Certification Status',
       'fee': 'Fee Realization, Installment Collection & Aging Schedule'
     };
     heading.textContent = titles[category] || titles['all'];
+
+    document.querySelectorAll('.tab-content-panel').forEach(panel => {
+      panel.style.display = 'none';
+    });
+
+    const targetPanel = document.getElementById('panel-' + category);
+    if (targetPanel) {
+      targetPanel.style.display = 'block';
+    }
+
+    filterReportsTable();
   }
 
-  // Live filter function for Reports table
+  // Live filter function for active Reports table panel
   function filterReportsTable() {
     const query = document.getElementById('reportSearchInput').value.toLowerCase().trim();
     const program = document.getElementById('programFilterSelect').value.toLowerCase();
     const status = document.getElementById('statusReportSelect').value.toLowerCase();
 
-    const rows = document.querySelectorAll('#reportsTable tbody tr');
+    const activePanel = document.querySelector('.tab-content-panel[style*="display: block"]') || document.getElementById('panel-all');
+    if (!activePanel) return;
+
+    const rows = activePanel.querySelectorAll('tbody tr');
     rows.forEach(row => {
       const text = row.innerText.toLowerCase();
       const rowProg = (row.getAttribute('data-program') || '').toLowerCase();
@@ -409,7 +643,7 @@
 
       const matchText = !query || text.includes(query);
       const matchProg = !program || rowProg.includes(program);
-      const matchStatus = !status || rowStatus === status;
+      const matchStatus = !status || rowStatus.includes(status);
 
       if (matchText && matchProg && matchStatus) {
         row.style.display = '';
@@ -420,17 +654,17 @@
   }
 
   document.getElementById('reportSearchInput').addEventListener('input', filterReportsTable);
-  document.getElementById('programFilterSelect').addEventListener('change', filterReportsTable);
-  document.getElementById('statusReportSelect').addEventListener('change', filterReportsTable);
 
   function resetReportFilters() {
     document.getElementById('reportSearchInput').value = '';
     document.getElementById('programFilterSelect').value = '';
     document.getElementById('statusReportSelect').value = '';
+    
     document.querySelectorAll('.pill-tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector('.pill-tab-btn:first-child').classList.add('active');
-    document.getElementById('reportTableHeading').textContent = 'Student Performance & Analytics Matrix';
-    filterReportsTable();
+    const firstTab = document.querySelector('.pill-tab-btn:first-child');
+    if (firstTab) firstTab.classList.add('active');
+
+    switchReportCategory(firstTab, 'all');
   }
 
   // Close modal when clicking on overlay background
@@ -441,23 +675,23 @@
   });
 </script>
 
-<script>
-    function updateFilters(params) {
-      const urlParams = new URLSearchParams(window.location.search);
-      for (const [key, value] of Object.entries(params)) {
-        if (value) urlParams.set(key, value);
-        else urlParams.delete(key);
-      }
-      urlParams.delete('page');
-      window.location.search = urlParams.toString();
-    }
 
-    function goToPage(page) {
-      const urlParams = new URLSearchParams(window.location.search);
-      urlParams.set('page', page);
-      window.location.search = urlParams.toString();
+<script>
+  function updateFilters(params) {
+    const urlParams = new URLSearchParams(window.location.search);
+    for (const [key, value] of Object.entries(params)) {
+      if (value) urlParams.set(key, value);
+      else urlParams.delete(key);
     }
-  </script>
+    urlParams.delete('page');
+    window.location.search = urlParams.toString();
+  }
+
+  function goToPage(page) {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('page', page);
+    window.location.search = urlParams.toString();
+  }
+</script>
 </body>
 </html>
-

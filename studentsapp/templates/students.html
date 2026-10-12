@@ -28,7 +28,7 @@
           <p>Manage your students, track progress and help them succeed!</p>
         </div>
         <div style="display: flex; gap: 10px;">
-          <button class="btn-export">
+          <button class="btn-export" onclick="exportStudents()">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export
           </button>
@@ -97,16 +97,58 @@
       <div class="filter-bar">
         <div class="search-box">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search by name, email, phone or ID...">
+          <input type="text" id="studentSearchInput" placeholder="Search by name, email, phone or ID..." value="{{ current_q }}">
         </div>
-        <select class="filter-select"><option>All Batches</option></select>
-        <select class="filter-select"><option>All Programs</option></select>
-        <select class="filter-select"><option>All Status</option></select>
-        <select class="filter-select"><option>All Payment Status</option></select>
-        <button class="btn-more-filters">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          More Filters
-        </button>
+        <select id="filterBatch" class="filter-select" onchange="applyFilters()">
+          <option value="">All Batches</option>
+          {% for b in batches %}
+          <option value="{{ b }}" {% if current_batch == b %}selected{% endif %}>{{ b }}</option>
+          {% endfor %}
+        </select>
+        <select id="filterProgram" class="filter-select" onchange="applyFilters()">
+          <option value="">All Programs</option>
+          {% for p in programs %}
+          <option value="{{ p }}" {% if current_program == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+        <select id="filterStatus" class="filter-select" onchange="applyFilters()">
+          <option value="">All Status</option>
+          {% for s in statuses %}
+          <option value="{{ s }}" {% if current_status == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <select id="filterPayment" class="filter-select" onchange="applyFilters()">
+          <option value="">All Payment Status</option>
+          {% for ps in payment_statuses %}
+          <option value="{{ ps }}" {% if current_payment_status == ps %}selected{% endif %}>{{ ps }}</option>
+          {% endfor %}
+        </select>
+        <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+          <button type="button" class="btn-more-filters" id="btnMoreFilters" onclick="toggleMoreFilters()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            More Filters
+          </button>
+          <button type="button" class="btn-clear-filters" id="btnClearFilters" onclick="clearAllFilters()">
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- More Filters Panel -->
+      <div id="moreFiltersPanel" class="more-filters-panel{% if not current_timing and not current_approval %} is-hidden{% endif %}">
+        <span style="font-size: 0.8125rem; font-weight: 600; color: #64748b;">More Filters:</span>
+        <select id="filterTiming" class="filter-select" onchange="applyFilters()">
+          <option value="">All Timings</option>
+          {% for t in timings %}
+          <option value="{{ t }}" {% if current_timing == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+        <select id="filterApproval" class="filter-select" onchange="applyFilters()">
+          <option value="">All Approval Status</option>
+          {% for a in approval_statuses %}
+          <option value="{{ a }}" {% if current_approval == a %}selected{% endif %}>{{ a }}</option>
+          {% endfor %}
+        </select>
       </div>
 
       <!-- Table -->
@@ -125,8 +167,11 @@
               <th>Parent Username</th>
               <th>Parent Password</th>
               <th>Batch</th>
+              <th>Batch Start Date</th>
+              <th>End Date</th>
               <th>Batch Timing</th>
               <th>Program</th>
+              <th>Plan</th>
               <th>Payment</th>
               <th>Status</th>
               <th>Join Date</th>
@@ -136,7 +181,22 @@
           </thead>
           <tbody>
               {% for student in students %}
-              <tr data-id="{{ student.student_id }}">
+              <tr data-id="{{ student.student_id }}"
+                  data-dob="{{ student.dob|default:'' }}"
+                  data-guardian-name="{{ student.guardian_name|default:'' }}"
+                  data-guardian-phone="{{ student.guardian_phone|default:'' }}"
+                  data-address="{{ student.address|default:'' }}"
+                  data-plan="{{ student.plan|default:'Placement Included' }}"
+                  data-payment-option="{{ student.payment_option|default:'Full Payment' }}"
+                  data-total-fee="{{ student.display_total_fee }}"
+                  data-amount-paid="{{ student.display_paid_amount }}"
+                  data-remaining-balance="{{ student.display_remaining_balance }}"
+                  data-installment-amount="{{ student.display_installment_amount }}"
+                  data-payment-status="{{ student.payment_status }}"
+                  data-batch="{{ student.batch.name|default:'' }}"
+                  data-batch-start="{{ student.batch_start_date|default:'-' }}"
+                  data-end-date="{{ student.completion_date|default:'-' }}"
+                  data-trainer="{{ student.trainer_name }}">
                   <td><input type="checkbox"></td>
                 <td>{{ forloop.counter }}</td>
                 <td>
@@ -148,24 +208,54 @@
                     </div>
                   </div>
                 </td>
-                <td>{{ student.email }}</td>
-                <td>{{ student.phone }}</td>
-                <td>{{ student.username|default:"-" }}</td>
-                <td><span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">{{ student.portal_password|default:"-" }}</span></td>
-                <td>{{ student.parent_username|default:"-" }}</td>
-                <td><span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">{{ student.parent_password|default:"-" }}</span></td>
-                <td {% if not student.batch %}style="color:var(--text-muted);"{% else %}style="font-weight:600;"{% endif %}>{{ student.batch.name|default:"-" }}</td>
-                  <td>{{ student.timing_preference|default:"-" }}</td>
-                <td>{{ student.course }}</td>
-                <td>
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-weight:600;">{{ student.amount }}</span>
-                    <span class="badge {{ student.payment_badge }}">{{ student.payment_status }}</span>
+                <td class="cell-email">{{ student.email }}</td>
+                <td class="cell-phone">{{ student.phone }}</td>
+                <td class="cell-username">{{ student.username|default:"-" }}</td>
+                <td class="cell-password"><span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">{{ student.portal_password|default:"-" }}</span></td>
+                <td class="cell-pusername">{{ student.parent_username|default:"-" }}</td>
+                <td class="cell-ppassword"><span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">{{ student.parent_password|default:"-" }}</span></td>
+                <td class="cell-batch">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                    <span class="batch-name-text" {% if not student.batch %}style="color:var(--text-muted);"{% else %}style="font-weight:600;"{% endif %}>{{ student.batch.name|default:"Not Assigned" }}</span>
+                    <button type="button" class="btn-change-batch" title="Change Batch" onclick="openChangeBatchModal(this)" style="background:none; border:1px solid #e2e8f0; border-radius:4px; padding:2px 5px; cursor:pointer; color:#475569; font-size:0.7rem; line-height:1; display:inline-flex; align-items:center;" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#1d4ed8';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#475569';">✏️</button>
                   </div>
                 </td>
-                <td>
+                <td class="cell-batch-start">{{ student.batch_start_date|default:"-" }}</td>
+                <td class="cell-end-date" style="font-weight:600; color:#1e293b;">{{ student.completion_date|default:"-" }}</td>
+                <td class="cell-timing">{{ student.timing_preference|default:"-" }}</td>
+                <td class="cell-program">{{ student.course }}</td>
+                <td class="cell-plan">{{ student.plan|default:"Placement Included" }}</td>
+                <td class="cell-payment" style="min-width: 175px;">
+                  {% if student.payment_option == '2 Installments' %}
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <span style="font-weight:700; color:#0f172a; font-size:0.85rem;">{{ student.display_paid_amount }}</span>
+                      <span class="badge {{ student.payment_badge }}" style="font-size:0.68rem; padding:2px 6px;">{{ student.payment_status }}</span>
+                    </div>
+                    <div style="font-size:0.72rem; color:#0284c7; font-weight:600;">
+                      2 Installments • {{ student.display_installment_amount }}/inst
+                    </div>
+                    <div style="font-size:0.7rem; color:#64748b;">
+                      Total: {{ student.display_total_fee }} • Due: {% if student.remaining_balance > 0 %}<strong style="color:#ef4444;">{{ student.display_remaining_balance }}</strong>{% else %}<strong style="color:#16a34a;">{{ student.display_remaining_balance }}</strong>{% endif %}
+                    </div>
+                  </div>
+                  {% else %}
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <span style="font-weight:700; color:#0f172a; font-size:0.85rem;">{{ student.display_paid_amount }}</span>
+                      <span class="badge {{ student.payment_badge }}" style="font-size:0.68rem; padding:2px 6px;">{{ student.payment_status }}</span>
+                    </div>
+                    <div style="font-size:0.72rem; color:#64748b;">
+                      <span>Full Payment</span> • Total: {{ student.display_total_fee }}
+                    </div>
+                  </div>
+                  {% endif %}
+                </td>
+                <td class="cell-status">
                   {% if student.status == 'Active' %}
                   <span class="status-badge status-active">Active</span>
+                  {% elif student.status == 'Pending Approval' %}
+                  <span class="status-badge" style="background:#fef3c7; color:#d97706;">Pending Approval</span>
                   {% elif student.status == 'Onboarding' %}
                   <span class="status-badge" style="background:#fef3c7; color:#d97706;">Onboarding</span>
                   {% elif student.status == 'Completed' %}
@@ -176,8 +266,8 @@
                   <span class="status-badge">{{ student.status }}</span>
                   {% endif %}
                 </td>
-                <td>{{ student.join_date }}</td>
-                <td style="text-align: center;">
+                <td class="cell-join-date">{{ student.join_date }}</td>
+                <td class="cell-approval" style="text-align: center;">
                   {% if student.approval_status == 'Pending' or not student.approval_status %}
                   <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
                     <span class="status-badge" style="background:#fef3c7; color:#d97706; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem;">Pending</span>
@@ -194,7 +284,7 @@
                   <span style="color:var(--text-muted); padding-left:30px;">-</span>
                   {% endif %}
                 </td>
-                <td style="text-align: center;">
+                <td class="cell-actions" style="text-align: center;">
                     <div class="action-icons" style="display: flex; justify-content: center; gap: 6px;">
                     <button title="View" onclick="openViewModal(this)" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" onmouseover="this.style.color='#0062eb'" onmouseout="this.style.color='var(--text-muted)'"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     <button title="Edit" onclick="openEditModal(this)" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='var(--text-muted)'"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
@@ -208,7 +298,7 @@
               </tr>
               {% empty %}
               <tr>
-                <td colspan="14" style="text-align: center; padding: 20px;">No students found.</td>
+                <td colspan="20" style="text-align: center; padding: 24px; color: var(--text-muted);">No students found.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -293,7 +383,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
           <div>
             <div style="font-size: 0.75rem; color: #64748b;">Date of Birth</div>
-            <div id="viewDob" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">10 Aug 2002</div>
+            <div id="viewDob" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">-</div>
           </div>
         </div>
 
@@ -302,19 +392,31 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
           <div>
             <div style="font-size: 0.75rem; color: #64748b;">Program</div>
-            <div id="viewProgram" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">AI / GenAI</div>
+            <div id="viewProgram" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">-</div>
           </div>
           <div>
             <div style="font-size: 0.75rem; color: #64748b;">Batch</div>
             <div id="viewBatch" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">-</div>
           </div>
           <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Batch Start Date</div>
+            <div id="viewBatchStart" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Completion / End Date</div>
+            <div id="viewEndDate" style="font-size: 0.85rem; color: #0f172a; font-weight: 600; margin-top: 4px;">-</div>
+          </div>
+          <div>
             <div style="font-size: 0.75rem; color: #64748b;">Join Date</div>
-            <div id="viewJoinDate" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">01 Sep 2026</div>
+            <div id="viewJoinDate" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Trainer</div>
+            <div id="viewTrainer" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">-</div>
           </div>
           <div>
             <div style="font-size: 0.75rem; color: #64748b;">Plan Selection</div>
-            <div id="viewPlan" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">Placement Included</div>
+            <div id="viewPlan" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">-</div>
           </div>
         </div>
 
@@ -323,26 +425,66 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
           <div>
             <div style="font-size: 0.75rem; color: #64748b;">Name</div>
-            <div id="viewParentName" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">Ramesh Kumar</div>
+            <div id="viewParentName" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">-</div>
           </div>
           <div>
             <div style="font-size: 0.75rem; color: #64748b;">Phone</div>
-            <div id="viewParentPhone" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">+91 98765 11111</div>
+            <div id="viewParentPhone" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 4px;">-</div>
           </div>
         </div>
 
         <!-- Address -->
         <h4 style="margin: 0 0 16px 0; color: #0f172a; font-size: 0.95rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">Address</h4>
-        <div style="margin-bottom: 8px;">
+        <div style="margin-bottom: 24px;">
           <div style="font-size: 0.75rem; color: #64748b;">Full Address</div>
-          <div id="viewAddress" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 6px; line-height: 1.5;">123 Tech Park, Phase 1, Bangalore, Karnataka</div>
+          <div id="viewAddress" style="font-size: 0.85rem; color: #1e293b; font-weight: 500; margin-top: 6px; line-height: 1.5;">-</div>
+        </div>
+
+        <!-- Payment & Fee Details -->
+        <h4 style="margin: 0 0 16px 0; color: #0f172a; font-size: 0.95rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Payment &amp; Fee Details</span>
+          <span id="viewPaymentOptionBadge" style="font-size:0.75rem; padding:3px 8px; border-radius:6px; background:#eff6ff; color:#0284c7; font-weight:700;">-</span>
+        </h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Payment Option</div>
+            <div id="viewPaymentOption" style="font-size: 0.85rem; color: #1e293b; font-weight: 600; margin-top: 4px;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Total Course Fee</div>
+            <div id="viewTotalFee" style="font-size: 0.85rem; color: #0f172a; font-weight: 700; margin-top: 4px;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Installment Breakdown</div>
+            <div id="viewInstallmentAmount" style="font-size: 0.85rem; color: #1e293b; font-weight: 600; margin-top: 4px;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Amount Paid</div>
+            <div id="viewAmountPaid" style="font-size: 0.85rem; color: #16a34a; font-weight: 700; margin-top: 4px;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Remaining Balance</div>
+            <div id="viewRemainingBalance" style="font-size: 0.85rem; color: #ef4444; font-weight: 700; margin-top: 4px;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Payment Status</div>
+            <div id="viewPaymentStatusDetail" style="font-size: 0.85rem; color: #1e293b; font-weight: 600; margin-top: 4px;">-</div>
+          </div>
+        </div>
+
+        <!-- Transaction History in View Modal -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:16px;">
+          <div style="font-size:0.75rem; font-weight:700; color:#475569; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Transaction History</div>
+          <div id="viewTransactionsList" style="font-size:0.8rem; color:#334155;">
+            <div style="color:#94a3b8; font-style:italic;">Loading transaction records...</div>
+          </div>
         </div>
       </div>
     </div>
     
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('viewModal')">Close</button>
-      <button class="btn-save" onclick="closeModal('viewModal'); if(document.getElementById('viewModal')._triggerBtn) { document.getElementById('viewModal')._triggerBtn.parentElement.querySelector('[title='Edit']').click(); }">Edit Student</button>
+      <button type="button" class="btn-cancel" onclick="closeModal('viewModal')">Close</button>
+      <button type="button" class="btn-save" onclick="editFromViewModal()">Edit Student</button>
     </div>
   </div>
 </div>
@@ -379,25 +521,100 @@
             <input type="text" id="editParentPassword" class="modal-input">
             
             <label>Batch</label>
-            <input type="text" id="editBatch" class="modal-input">
+            <select id="editBatch" class="modal-input modal-select">
+              <option value="">-- No Batch Assigned --</option>
+              {% for b in all_active_batches %}
+              <option value="{{ b.name }}">{{ b.name }} ({{ b.timing }}) — {{ b.current_students_count }}/10 Active</option>
+              {% endfor %}
+            </select>
             
             <label>Program / Course</label>
-            <input type="text" id="editProgram" class="modal-input">
+            <input type="text" id="editProgram" class="modal-input" value="Generative AI & LLMs" readonly style="background:#f8fafc; cursor:not-allowed;">
             
             <label>Status</label>
             <select id="editStatus" class="modal-input modal-select">
               <option value="Active">Active</option>
+              <option value="Pending Approval">Pending Approval</option>
               <option value="Onboarding">Onboarding</option>
               <option value="Completed">Completed</option>
               <option value="Dropped">Dropped</option>
               <option value="Blocked">Blocked</option>
             </select>
+
+            <label>Date of Birth</label>
+            <input type="text" id="editDob" class="modal-input" placeholder="e.g. 10 Aug 2002">
+
+            <label>Parent / Guardian Name</label>
+            <input type="text" id="editGuardianName" class="modal-input" placeholder="e.g. Ramesh Kumar">
+
+            <label>Parent / Guardian Phone</label>
+            <input type="text" id="editGuardianPhone" class="modal-input" placeholder="e.g. +91 98765 11111">
+
+            <label>Plan Selection</label>
+            <input type="text" id="editPlan" class="modal-input" placeholder="e.g. Placement Included">
+
+            <label>Full Address</label>
+            <textarea id="editAddress" class="modal-input" style="height: 60px; font-family: inherit; resize: vertical;" placeholder="e.g. 123 Tech Park, Bangalore"></textarea>
           </div>
         </form>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
       <button class="btn-save" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Batch Modal -->
+<div id="changeBatchModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content" style="max-width: 460px;">
+    <div class="modal-header">
+      <h2>Change Batch Assignment</h2>
+      <button class="close-btn" onclick="closeModal('changeBatchModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: #475569; font-size: 0.875rem; margin-bottom: 16px; line-height: 1.5;">
+        Assign or change batch for <strong id="changeBatchStudentName" style="color: #0f172a;"></strong> (<span id="changeBatchStudentId" style="font-family: monospace;"></span>).
+      </p>
+      <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Select Active Batch <span class="required-star">*</span></label>
+      <select id="changeBatchSelect" class="modal-input modal-select" style="width: 100%; box-sizing: border-box;" onchange="updateChangeBatchDetails()">
+        <option value="" data-name="-" data-timing="-" data-active="0" data-capacity="10" data-start="-" data-end="-" data-trainer="-" data-is-full="false">-- Remove Batch Assignment --</option>
+        {% for b in all_active_batches %}
+        <option value="{{ b.name }}"
+                data-name="{{ b.name }}"
+                data-timing="{{ b.timing }}{% if b.schedule_time %} ({{ b.schedule_time }}){% endif %}"
+                data-active="{{ b.current_students_count }}"
+                data-capacity="{{ b.capacity|default:10 }}"
+                data-start="{{ b.start_date|date:'d-M-Y'|default:'-' }}"
+                data-end="{{ b.completion_date|date:'d-M-Y'|default:'-' }}"
+                data-trainer="{{ b.trainer_name }}"
+                data-is-full="{% if b.current_students_count >= 10 or b.current_students_count >= b.capacity %}true{% else %}false{% endif %}">
+          {{ b.name }} ({{ b.timing }}) — {{ b.current_students_count }}/10 Active{% if b.current_students_count >= 10 or b.current_students_count >= b.capacity %} [FULL]{% endif %}
+        </option>
+        {% endfor %}
+      </select>
+
+      <!-- Real Batch Details Card -->
+      <div id="changeBatchDetailsCard" style="margin-top: 14px; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem; display: none;">
+        <div style="font-weight: 600; color: #0f172a; margin-bottom: 8px; font-size: 0.8125rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+          <span>Batch Details</span>
+          <span id="cbDetailStatusBadge" class="status-badge status-active" style="font-size: 0.7rem; padding: 2px 6px;">Active</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; color: #334155;">
+          <div><span style="color: #64748b; font-size: 0.75rem; display: block;">Batch Name</span><strong id="cbDetailName" style="color: #0f172a;">-</strong></div>
+          <div><span style="color: #64748b; font-size: 0.75rem; display: block;">Timing</span><span id="cbDetailTiming">-</span></div>
+          <div><span style="color: #64748b; font-size: 0.75rem; display: block;">Active Students / Capacity</span><span id="cbDetailCapacity" style="font-weight: 600;">-</span></div>
+          <div><span style="color: #64748b; font-size: 0.75rem; display: block;">Trainer</span><span id="cbDetailTrainer">-</span></div>
+          <div><span style="color: #64748b; font-size: 0.75rem; display: block;">Batch Start Date</span><span id="cbDetailStart">-</span></div>
+          <div><span style="color: #64748b; font-size: 0.75rem; display: block;">End Date</span><strong id="cbDetailEnd" style="color: #0f172a;">-</strong></div>
+        </div>
+      </div>
+
+      <div id="changeBatchError" style="display:none; color: #ef4444; font-size: 0.8125rem; margin-top: 10px; font-weight: 500; line-height: 1.4; padding: 8px 12px; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 4px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" onclick="closeModal('changeBatchModal')">Cancel</button>
+      <button type="button" class="btn-save" id="btnSaveBatchChange" onclick="saveBatchChange()">Update Batch</button>
     </div>
   </div>
 </div>
@@ -464,95 +681,460 @@ function closeModal(id) {
 }
 
 function openViewModal(btn) {
-  const row = btn.closest('tr');
-  document.getElementById('viewModal')._triggerBtn = btn;
+  if (btn) {
+    currentActionRow = btn.closest('tr');
+  }
+  if (!currentActionRow) return;
+  const row = currentActionRow;
+  const studentId = row.getAttribute('data-id');
+  document.getElementById('viewModal').setAttribute('data-student-id', studentId);
   
   document.getElementById('viewName').innerText = row.querySelector('.student-name').innerText;
-  document.getElementById('viewEmail').innerText = row.cells[3].innerText;
+  const emailCell = row.querySelector('.cell-email') || row.cells[3];
+  document.getElementById('viewEmail').innerText = emailCell ? emailCell.innerText : '-';
   document.getElementById('viewId').innerText = row.querySelector('.student-id').innerText;
-  document.getElementById('viewPhone').innerText = row.cells[4].innerText;
+  const phoneCell = row.querySelector('.cell-phone') || row.cells[4];
+  document.getElementById('viewPhone').innerText = phoneCell ? phoneCell.innerText : '-';
   
-  let batchText = row.cells[7].innerText.trim();
-  document.getElementById('viewBatch').innerText = (batchText === '-' || batchText === '') ? 'Not Assigned' : batchText;
+  const dob = row.getAttribute('data-dob');
+  document.getElementById('viewDob').innerText = (dob && dob !== 'None') ? dob : '-';
+
+  const batchText = row.getAttribute('data-batch') || (row.querySelector('.batch-name-text') ? row.querySelector('.batch-name-text').innerText.trim() : '');
+  document.getElementById('viewBatch').innerText = (batchText === '-' || batchText === '' || batchText === 'Not Assigned') ? 'Not Assigned' : batchText;
   
-  document.getElementById('viewProgram').innerText = row.cells[8].innerText;
-  document.getElementById('viewJoinDate').innerText = row.cells[11].innerText;
+  const batchStart = row.getAttribute('data-batch-start') || (row.querySelector('.cell-batch-start') ? row.querySelector('.cell-batch-start').innerText.trim() : '-');
+  document.getElementById('viewBatchStart').innerText = batchStart || '-';
+
+  const endDate = row.getAttribute('data-end-date') || (row.querySelector('.cell-end-date') ? row.querySelector('.cell-end-date').innerText.trim() : '-');
+  document.getElementById('viewEndDate').innerText = endDate || '-';
+
+  const progCell = row.querySelector('.cell-program');
+  document.getElementById('viewProgram').innerText = progCell ? progCell.innerText : "Generative AI & LLMs";
+  
+  const joinCell = row.querySelector('.cell-join-date');
+  document.getElementById('viewJoinDate').innerText = joinCell ? joinCell.innerText : '-';
+
+  const trainer = row.getAttribute('data-trainer');
+  const viewTrainerElem = document.getElementById('viewTrainer');
+  if (viewTrainerElem) {
+    viewTrainerElem.innerText = (trainer && trainer !== 'None') ? trainer : '-';
+  }
+
+  const plan = row.getAttribute('data-plan');
+  document.getElementById('viewPlan').innerText = (plan && plan !== 'None') ? plan : 'Placement Included';
+
+  const parentName = row.getAttribute('data-guardian-name');
+  const pUserCell = row.querySelector('.cell-pusername');
+  document.getElementById('viewParentName').innerText = (parentName && parentName !== 'None') ? parentName : (pUserCell && pUserCell.innerText !== '-' ? pUserCell.innerText : '-');
+
+  const parentPhone = row.getAttribute('data-guardian-phone');
+  document.getElementById('viewParentPhone').innerText = (parentPhone && parentPhone !== 'None') ? parentPhone : '-';
+
+  const address = row.getAttribute('data-address');
+  document.getElementById('viewAddress').innerText = (address && address !== 'None') ? address : '-';
+
   const avatarDiv = row.querySelector('.avatar');
   const viewAvatarContainer = document.getElementById('viewAvatarContainer');
-  viewAvatarContainer.style.backgroundColor = avatarDiv.style.backgroundColor;
-  viewAvatarContainer.innerText = avatarDiv.innerText;
+  if (avatarDiv && viewAvatarContainer) {
+    viewAvatarContainer.style.backgroundColor = avatarDiv.style.backgroundColor;
+    viewAvatarContainer.innerText = avatarDiv.innerText;
+  }
   
-  const paymentBadge = row.cells[9].querySelector('.badge');
+  const paymentBadge = row.querySelector('.cell-payment .badge');
   document.getElementById('viewPaymentBadge').innerHTML = paymentBadge ? paymentBadge.outerHTML : '<span style="color:var(--text-muted)">-</span>';
   
-  const statusBadge = row.cells[10].querySelector('.status-badge');
+  const statusBadge = row.querySelector('.cell-status .status-badge');
   document.getElementById('viewStatusBadge').innerHTML = statusBadge ? statusBadge.outerHTML : '<span style="color:var(--text-muted)">-</span>';
   
-  const approvalCell = row.cells[12];
-  if(approvalCell.querySelector('.status-badge')) {
+  const approvalCell = row.querySelector('.cell-approval');
+  if(approvalCell && approvalCell.querySelector('.status-badge')) {
     document.getElementById('viewApprovalBadge').innerHTML = approvalCell.querySelector('.status-badge').outerHTML;
-  } else if(approvalCell.querySelector('button')) {
+  } else if(approvalCell && approvalCell.querySelector('button')) {
     document.getElementById('viewApprovalBadge').innerHTML = '<span class="status-badge" style="background:#fef3c7; color:#d97706;">Pending Approval</span>';
   } else {
     document.getElementById('viewApprovalBadge').innerHTML = '<span class="status-badge status-active" style="background:#dcfce7; color:#16a34a;">Approved</span>';
+  }
+
+  // Populate Payment & Fee Details
+  const paymentOption = row.getAttribute('data-payment-option') || 'Full Payment';
+  const totalFee = row.getAttribute('data-total-fee') || '-';
+  const amountPaid = row.getAttribute('data-amount-paid') || '-';
+  const remainingBalance = row.getAttribute('data-remaining-balance') || '₹0';
+  const installmentAmt = row.getAttribute('data-installment-amount') || '-';
+  const paymentStatus = row.getAttribute('data-payment-status') || 'Paid';
+
+  const viewPaymentOptElem = document.getElementById('viewPaymentOption');
+  if (viewPaymentOptElem) viewPaymentOptElem.innerText = paymentOption;
+
+  const viewPaymentOptBadge = document.getElementById('viewPaymentOptionBadge');
+  if (viewPaymentOptBadge) {
+    viewPaymentOptBadge.innerText = paymentOption;
+    viewPaymentOptBadge.style.background = paymentOption === '2 Installments' ? '#eff6ff' : '#ecfdf5';
+    viewPaymentOptBadge.style.color = paymentOption === '2 Installments' ? '#0284c7' : '#059669';
+  }
+
+  const viewTotalFeeElem = document.getElementById('viewTotalFee');
+  if (viewTotalFeeElem) viewTotalFeeElem.innerText = totalFee;
+
+  const viewInstallmentAmtElem = document.getElementById('viewInstallmentAmount');
+  if (viewInstallmentAmtElem) {
+    viewInstallmentAmtElem.innerText = paymentOption === '2 Installments' ? `${installmentAmt} per installment (2 total)` : 'N/A (Full Payment)';
+  }
+
+  const viewAmountPaidElem = document.getElementById('viewAmountPaid');
+  if (viewAmountPaidElem) viewAmountPaidElem.innerText = amountPaid;
+
+  const viewRemainingBalanceElem = document.getElementById('viewRemainingBalance');
+  if (viewRemainingBalanceElem) viewRemainingBalanceElem.innerText = remainingBalance;
+
+  const viewPaymentStatusDetail = document.getElementById('viewPaymentStatusDetail');
+  if (viewPaymentStatusDetail) viewPaymentStatusDetail.innerText = paymentStatus;
+
+  // Real-time fetch transaction history
+  const txListElem = document.getElementById('viewTransactionsList');
+  if (txListElem) {
+    txListElem.innerHTML = '<div style="color:#94a3b8; font-style:italic;">Loading transaction records...</div>';
+    fetch(`/api/student/fees/data/${studentId}/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.payments && data.payments.length > 0) {
+          let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+          data.payments.forEach((p, idx) => {
+            const isPaid = p.status === 'Paid';
+            const badgeBg = isPaid ? '#dcfce7' : '#fef3c7';
+            const badgeColor = isPaid ? '#15803d' : '#b45309';
+            const badgeBorder = isPaid ? '#bbf7d0' : '#fde68a';
+            const amtStr = '₹' + Number(p.amount).toLocaleString();
+            const dateStr = p.payment_date || p.due_date || '-';
+            const labelStr = p.installment_name || (paymentOption === '2 Installments' ? (idx === 0 ? '1st Installment' : '2nd Installment') : 'Full Payment');
+
+            html += `
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:white; border:1px solid #e2e8f0; border-radius:6px; font-size:0.8rem;">
+                <div>
+                  <div style="font-weight:700; color:#0f172a;">${labelStr} • <span style="color:#0284c7;">${amtStr}</span></div>
+                  <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">
+                    Txn: <span style="font-family:monospace;">${p.transaction_id || '-'}</span> • Method: ${p.payment_method || 'Online'} • Date: ${dateStr}
+                  </div>
+                </div>
+                <div>
+                  <span style="font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:9999px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder};">${p.status}</span>
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+          txListElem.innerHTML = html;
+        } else {
+          txListElem.innerHTML = '<div style="color:#94a3b8; font-size:0.78rem;">No transaction records found.</div>';
+        }
+      })
+      .catch(err => {
+        txListElem.innerHTML = '<div style="color:#ef4444; font-size:0.78rem;">Unable to load transaction records.</div>';
+      });
   }
   
   document.getElementById('viewModal').style.display = 'flex';
 }
 
+function editFromViewModal() {
+  const vid = document.getElementById('viewModal').getAttribute('data-student-id');
+  if (vid) {
+    const row = document.querySelector(`tr[data-id="${vid}"]`);
+    if (row) currentActionRow = row;
+  }
+  closeModal('viewModal');
+  openEditModal();
+}
+
 function openEditModal(btn) {
-    currentActionRow = btn.closest('tr');
+    if (btn) {
+      currentActionRow = btn.closest('tr');
+    }
+    if (!currentActionRow) {
+      const vid = document.getElementById('viewModal').getAttribute('data-student-id');
+      if (vid) {
+        currentActionRow = document.querySelector(`tr[data-id="${vid}"]`);
+      }
+    }
+    if (!currentActionRow) return;
     document.getElementById('editName').value = currentActionRow.querySelector('.student-name').innerText;
-    document.getElementById('editEmail').value = currentActionRow.cells[3].innerText;
-    document.getElementById('editPhone').value = currentActionRow.cells[4].innerText;
-    document.getElementById('editUsername').value = currentActionRow.cells[5].innerText === '-' ? '' : currentActionRow.cells[5].innerText;
-    document.getElementById('editPassword').value = currentActionRow.cells[6].innerText === '-' ? '' : currentActionRow.cells[6].innerText;
-    document.getElementById('editParentUsername').value = currentActionRow.cells[7].innerText === '-' ? '' : currentActionRow.cells[7].innerText;
-    document.getElementById('editParentPassword').value = currentActionRow.cells[8].innerText === '-' ? '' : currentActionRow.cells[8].innerText;
-    document.getElementById('editBatch').value = currentActionRow.cells[9].innerText === '-' ? '' : currentActionRow.cells[9].innerText;
-    document.getElementById('editProgram').value = currentActionRow.cells[11].innerText;
-    document.getElementById('editStatus').value = currentActionRow.cells[13].innerText;
+    
+    const emailCell = currentActionRow.querySelector('.cell-email') || currentActionRow.cells[3];
+    document.getElementById('editEmail').value = emailCell ? emailCell.innerText : '';
+    
+    const phoneCell = currentActionRow.querySelector('.cell-phone') || currentActionRow.cells[4];
+    document.getElementById('editPhone').value = phoneCell ? phoneCell.innerText : '';
+    
+    const uCell = currentActionRow.querySelector('.cell-username');
+    document.getElementById('editUsername').value = (!uCell || uCell.innerText === '-') ? '' : uCell.innerText;
+
+    const pCell = currentActionRow.querySelector('.cell-password');
+    document.getElementById('editPassword').value = (!pCell || pCell.innerText === '-') ? '' : pCell.innerText;
+
+    const puCell = currentActionRow.querySelector('.cell-pusername');
+    document.getElementById('editParentUsername').value = (!puCell || puCell.innerText === '-') ? '' : puCell.innerText;
+
+    const ppCell = currentActionRow.querySelector('.cell-ppassword');
+    document.getElementById('editParentPassword').value = (!ppCell || ppCell.innerText === '-') ? '' : ppCell.innerText;
+
+    const rawBatch = currentActionRow.getAttribute('data-batch') || (currentActionRow.querySelector('.batch-name-text') ? currentActionRow.querySelector('.batch-name-text').innerText.trim() : '');
+    const editBatchSelect = document.getElementById('editBatch');
+    if (editBatchSelect) {
+      editBatchSelect.value = (rawBatch === '-' || rawBatch === 'Not Assigned') ? '' : rawBatch;
+      if (editBatchSelect.selectedIndex === -1) editBatchSelect.selectedIndex = 0;
+    }
+
+    document.getElementById('editProgram').value = "Generative AI & LLMs";
+    
+    const statusVal = currentActionRow.querySelector('.cell-status') ? currentActionRow.querySelector('.cell-status').innerText.trim() : '';
+    const editStatusSelect = document.getElementById('editStatus');
+    if (editStatusSelect) {
+      editStatusSelect.value = statusVal;
+      if (editStatusSelect.selectedIndex === -1) {
+        editStatusSelect.selectedIndex = 0;
+      }
+    }
+    
+    document.getElementById('editDob').value = currentActionRow.getAttribute('data-dob') || '';
+    document.getElementById('editGuardianName').value = currentActionRow.getAttribute('data-guardian-name') || '';
+    document.getElementById('editGuardianPhone').value = currentActionRow.getAttribute('data-guardian-phone') || '';
+    document.getElementById('editPlan').value = currentActionRow.getAttribute('data-plan') || '';
+    document.getElementById('editAddress').value = currentActionRow.getAttribute('data-address') || '';
     
     document.getElementById('editModal').style.display = 'flex';
-  }
+}
   
-  function saveEdit() {
-      if (!currentActionRow) return;
-      const studentId = currentActionRow.getAttribute('data-id');
-      const name = document.getElementById('editName').value;
-      const email = document.getElementById('editEmail').value;
-      const phone = document.getElementById('editPhone').value;
-      const username = document.getElementById('editUsername').value;
-      const password = document.getElementById('editPassword').value;
-      const parent_username = document.getElementById('editParentUsername').value;
-      const parent_password = document.getElementById('editParentPassword').value;
-      const batch = document.getElementById('editBatch').value;
-      const program = document.getElementById('editProgram').value;
-      const status = document.getElementById('editStatus').value;
-      
-      fetch(`/api/edit-student/${studentId}/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({name, email, phone, username, password, parent_username, parent_password, batch, program, status})
-      })
-      .then(res => res.json())
-      .then(data => {
-        if(data.success) {
-          currentActionRow.querySelector('.student-name').innerText = name;
-          currentActionRow.cells[3].innerText = email;
-          currentActionRow.cells[4].innerText = phone;
-          currentActionRow.cells[5].innerText = username || '-';
-          currentActionRow.cells[6].innerHTML = `<span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${password || '-'}</span>`;
-          currentActionRow.cells[7].innerText = parent_username || '-';
-          currentActionRow.cells[8].innerHTML = `<span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${parent_password || '-'}</span>`;
-          currentActionRow.cells[9].innerText = data.batch || '-';
-          currentActionRow.cells[11].innerText = program;
-          currentActionRow.cells[13].innerHTML = `<span class="status-badge" style="background:#e0f2fe; color:#0284c7;">${status}</span>`;
-          closeModal('editModal');
-          showToast('Student details updated.');
-        } else showToast(data.error || 'Error updating student.', 'error');
-      });
+function saveEdit() {
+    if (!currentActionRow) return;
+    const studentId = currentActionRow.getAttribute('data-id');
+    const name = document.getElementById('editName').value;
+    const email = document.getElementById('editEmail').value;
+    const phone = document.getElementById('editPhone').value;
+    const username = document.getElementById('editUsername').value;
+    const password = document.getElementById('editPassword').value;
+    const parent_username = document.getElementById('editParentUsername').value;
+    const parent_password = document.getElementById('editParentPassword').value;
+    const batch = document.getElementById('editBatch').value;
+    const program = document.getElementById('editProgram').value;
+    const status = document.getElementById('editStatus').value;
+    const dob = document.getElementById('editDob').value;
+    const guardian_name = document.getElementById('editGuardianName').value;
+    const guardian_phone = document.getElementById('editGuardianPhone').value;
+    const plan = document.getElementById('editPlan').value;
+    const address = document.getElementById('editAddress').value;
+    
+    fetch(`/api/edit-student/${studentId}/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({name, email, phone, username, password, parent_username, parent_password, batch, program, status, dob, guardian_name, guardian_phone, plan, address})
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.success) {
+        currentActionRow.querySelector('.student-name').innerText = name;
+        const eCell = currentActionRow.querySelector('.cell-email');
+        if (eCell) eCell.innerText = email;
+        const pCell = currentActionRow.querySelector('.cell-phone');
+        if (pCell) pCell.innerText = phone;
+        const uCell = currentActionRow.querySelector('.cell-username');
+        if (uCell) uCell.innerText = username || '-';
+        const pwCell = currentActionRow.querySelector('.cell-password');
+        if (pwCell) pwCell.innerHTML = `<span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${password || '-'}</span>`;
+        const puCell = currentActionRow.querySelector('.cell-pusername');
+        if (puCell) puCell.innerText = parent_username || '-';
+        const ppwCell = currentActionRow.querySelector('.cell-ppassword');
+        if (ppwCell) ppwCell.innerHTML = `<span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${parent_password || '-'}</span>`;
+        
+        const bText = currentActionRow.querySelector('.batch-name-text');
+        if (bText) {
+          bText.innerText = data.batch || 'Not Assigned';
+          bText.style.color = (data.batch && data.batch !== '-') ? '' : 'var(--text-muted)';
+          bText.style.fontWeight = (data.batch && data.batch !== '-') ? '600' : '';
+        }
+        const bStartCell = currentActionRow.querySelector('.cell-batch-start');
+        if (bStartCell) bStartCell.innerText = data.batch_start_date || '-';
+
+        const endCell = currentActionRow.querySelector('.cell-end-date');
+        if (endCell) endCell.innerText = data.end_date || '-';
+
+        currentActionRow.setAttribute('data-batch', (data.batch && data.batch !== '-') ? data.batch : '');
+        currentActionRow.setAttribute('data-batch-start', data.batch_start_date || '-');
+        currentActionRow.setAttribute('data-end-date', data.end_date || '-');
+        currentActionRow.setAttribute('data-trainer', data.trainer || 'Not Assigned');
+
+        const progCell = currentActionRow.querySelector('.cell-program');
+        if (progCell) progCell.innerText = program;
+
+        const statusCell = currentActionRow.querySelector('.cell-status');
+        if (statusCell) {
+          let badgeHtml = `<span class="status-badge">${status}</span>`;
+          if (status === 'Active') badgeHtml = '<span class="status-badge status-active">Active</span>';
+          else if (status === 'Pending Approval') badgeHtml = '<span class="status-badge" style="background:#fef3c7; color:#d97706;">Pending Approval</span>';
+          else if (status === 'Onboarding') badgeHtml = '<span class="status-badge" style="background:#fef3c7; color:#d97706;">Onboarding</span>';
+          else if (status === 'Completed') badgeHtml = '<span class="status-badge" style="background:#e0e7ff; color:#4338ca;">Completed</span>';
+          else if (status === 'Dropped') badgeHtml = '<span class="status-badge" style="background:#fee2e2; color:#ef4444;">Dropped</span>';
+          statusCell.innerHTML = badgeHtml;
+        }
+
+        currentActionRow.setAttribute('data-dob', dob);
+        currentActionRow.setAttribute('data-guardian-name', guardian_name);
+        currentActionRow.setAttribute('data-guardian-phone', guardian_phone);
+        currentActionRow.setAttribute('data-plan', plan);
+        currentActionRow.setAttribute('data-address', address);
+        closeModal('editModal');
+        showToast('Student details updated.');
+      } else {
+        showToast(data.error || 'Error updating student.', 'error');
+      }
+    });
+}
+
+function updateChangeBatchDetails() {
+  const sel = document.getElementById('changeBatchSelect');
+  const detailsCard = document.getElementById('changeBatchDetailsCard');
+  const errDiv = document.getElementById('changeBatchError');
+  const saveBtn = document.getElementById('btnSaveBatchChange');
+  if (!sel || !detailsCard) return;
+
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) {
+    detailsCard.style.display = 'none';
+    if (errDiv) {
+      errDiv.style.display = 'none';
+      errDiv.innerText = '';
+    }
+    if (saveBtn) saveBtn.disabled = false;
+    return;
   }
+
+  detailsCard.style.display = 'block';
+  const name = opt.getAttribute('data-name') || '-';
+  const timing = opt.getAttribute('data-timing') || '-';
+  const active = opt.getAttribute('data-active') || '0';
+  const cap = opt.getAttribute('data-capacity') || '10';
+  const start = opt.getAttribute('data-start') || '-';
+  const end = opt.getAttribute('data-end') || '-';
+  const trainer = opt.getAttribute('data-trainer') || '-';
+  const isFull = opt.getAttribute('data-is-full') === 'true';
+
+  const nameElem = document.getElementById('cbDetailName');
+  if (nameElem) nameElem.innerText = name;
+  const timingElem = document.getElementById('cbDetailTiming');
+  if (timingElem) timingElem.innerText = timing;
+  const capElem = document.getElementById('cbDetailCapacity');
+  if (capElem) capElem.innerText = `${active} / ${cap}`;
+  const startElem = document.getElementById('cbDetailStart');
+  if (startElem) startElem.innerText = start;
+  const endElem = document.getElementById('cbDetailEnd');
+  if (endElem) endElem.innerText = end;
+  const trainerElem = document.getElementById('cbDetailTrainer');
+  if (trainerElem) trainerElem.innerText = trainer;
+
+  const currentBatch = currentActionRow ? (currentActionRow.getAttribute('data-batch') || '') : '';
+  if (isFull && currentBatch !== opt.value) {
+    if (errDiv) {
+      errDiv.innerText = `This batch is full (${active}/${cap} active students). Please select another batch.`;
+      errDiv.style.display = 'block';
+    }
+    if (saveBtn) saveBtn.disabled = true;
+  } else {
+    if (errDiv) {
+      errDiv.style.display = 'none';
+      errDiv.innerText = '';
+    }
+    if (saveBtn) saveBtn.disabled = false;
+  }
+}
+
+function openChangeBatchModal(btn) {
+  if (btn) {
+    currentActionRow = btn.closest('tr');
+  }
+  if (!currentActionRow) return;
+  const name = currentActionRow.querySelector('.student-name').innerText;
+  const studentId = currentActionRow.getAttribute('data-id');
+  const currentBatch = currentActionRow.getAttribute('data-batch') || '';
+
+  document.getElementById('changeBatchStudentName').innerText = name;
+  document.getElementById('changeBatchStudentId').innerText = studentId;
+  const sel = document.getElementById('changeBatchSelect');
+  if (sel) {
+    sel.value = currentBatch;
+    if (sel.selectedIndex === -1) sel.selectedIndex = 0;
+  }
+  const errDiv = document.getElementById('changeBatchError');
+  if (errDiv) {
+    errDiv.style.display = 'none';
+    errDiv.innerText = '';
+  }
+  const saveBtn = document.getElementById('btnSaveBatchChange');
+  if (saveBtn) {
+    saveBtn.disabled = false;
+    saveBtn.innerText = 'Update Batch';
+  }
+  updateChangeBatchDetails();
+  document.getElementById('changeBatchModal').style.display = 'flex';
+}
+
+function saveBatchChange() {
+  if (!currentActionRow) return;
+  const studentId = currentActionRow.getAttribute('data-id');
+  const batchName = document.getElementById('changeBatchSelect').value;
+  const btn = document.getElementById('btnSaveBatchChange');
+  const errDiv = document.getElementById('changeBatchError');
+
+  btn.disabled = true;
+  btn.innerText = 'Updating...';
+  if (errDiv) errDiv.style.display = 'none';
+
+  fetch(`/api/edit-student/${studentId}/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ batch: batchName })
+  })
+  .then(res => res.json())
+  .then(data => {
+    btn.disabled = false;
+    btn.innerText = 'Update Batch';
+    if (data.success) {
+      const bText = currentActionRow.querySelector('.batch-name-text');
+      if (bText) {
+        bText.innerText = data.batch || 'Not Assigned';
+        bText.style.color = (data.batch && data.batch !== '-') ? '' : 'var(--text-muted)';
+        bText.style.fontWeight = (data.batch && data.batch !== '-') ? '600' : '';
+      }
+      const bStartCell = currentActionRow.querySelector('.cell-batch-start');
+      if (bStartCell) bStartCell.innerText = data.batch_start_date || '-';
+
+      const endCell = currentActionRow.querySelector('.cell-end-date');
+      if (endCell) endCell.innerText = data.end_date || '-';
+
+      currentActionRow.setAttribute('data-batch', (data.batch && data.batch !== '-') ? data.batch : '');
+      currentActionRow.setAttribute('data-batch-start', data.batch_start_date || '-');
+      currentActionRow.setAttribute('data-end-date', data.end_date || '-');
+      currentActionRow.setAttribute('data-trainer', data.trainer || 'Not Assigned');
+
+      closeModal('changeBatchModal');
+      showToast('Batch updated successfully.');
+    } else {
+      const errMsg = data.error || 'Failed to update batch.';
+      if (errDiv) {
+        errDiv.innerText = errMsg;
+        errDiv.style.display = 'block';
+      }
+      showToast(errMsg, 'error');
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.innerText = 'Update Batch';
+    if (errDiv) {
+      errDiv.innerText = 'Network error occurred.';
+      errDiv.style.display = 'block';
+    }
+    showToast('Network error occurred.', 'error');
+  });
+}
 
 function openBlockModal(btn) {
   currentActionRow = btn.closest('tr');
@@ -569,9 +1151,13 @@ function confirmBlock() {
       .then(res => res.json())
       .then(data => {
         if(data.success) {
-          currentActionRow.cells[13].innerHTML = '<span class="status-badge" style="background:#fee2e2; color:#ef4444;">Blocked</span>';
-          currentActionRow.cells[15].innerHTML = '<span class="status-badge" style="background:#fee2e2; color:#ef4444; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; display: inline-block;">Blocked</span>';
-          currentActionRow.cells[16].innerHTML = `<div class="action-icons" style="display: flex; justify-content: center; gap: 6px;">
+          const statusCell = currentActionRow.querySelector('.cell-status');
+          const approvalCell = currentActionRow.querySelector('.cell-approval');
+          const actionsCell = currentActionRow.querySelector('.cell-actions');
+
+          if (statusCell) statusCell.innerHTML = '<span class="status-badge" style="background:#fee2e2; color:#ef4444;">Blocked</span>';
+          if (approvalCell) approvalCell.innerHTML = '<span class="status-badge" style="background:#fee2e2; color:#ef4444; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; display: inline-block;">Blocked</span>';
+          if (actionsCell) actionsCell.innerHTML = `<div class="action-icons" style="display: flex; justify-content: center; gap: 6px;">
             <button title="View" onclick="openViewModal(this)" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
             <button title="Edit" onclick="openEditModal(this)" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
             <button title="Unblock" onclick="openUnblockModal(this)" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='var(--text-muted)'"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
@@ -597,9 +1183,13 @@ function confirmBlock() {
       .then(res => res.json())
       .then(data => {
         if(data.success) {
-          currentActionRow.cells[13].innerHTML = '<span class="status-badge" style="background:#dcfce7; color:#16a34a;">Active</span>';
-          currentActionRow.cells[15].innerHTML = '<span class="status-badge status-active" style="padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; display: inline-block;">Approved</span>';
-          currentActionRow.cells[16].innerHTML = `<div class="action-icons" style="display: flex; justify-content: center; gap: 6px;">
+          const statusCell = currentActionRow.querySelector('.cell-status');
+          const approvalCell = currentActionRow.querySelector('.cell-approval');
+          const actionsCell = currentActionRow.querySelector('.cell-actions');
+
+          if (statusCell) statusCell.innerHTML = '<span class="status-badge" style="background:#dcfce7; color:#16a34a;">Active</span>';
+          if (approvalCell) approvalCell.innerHTML = '<span class="status-badge status-active" style="padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; display: inline-block;">Approved</span>';
+          if (actionsCell) actionsCell.innerHTML = `<div class="action-icons" style="display: flex; justify-content: center; gap: 6px;">
             <button title="View" onclick="openViewModal(this)" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
             <button title="Edit" onclick="openEditModal(this)" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
             <button title="Block" onclick="openBlockModal(this)" style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-muted);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-muted)'"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
@@ -628,37 +1218,53 @@ function confirmBlock() {
   .then(data => {
     if(data.success) {
       const row = btn.closest('tr');
-      const approvalCell = row.cells[15];
-      const statusCell = row.cells[13];
-      const usernameCell = row.cells[5];
-      const passwordCell = row.cells[6];
-      const pUserCell = row.cells[7];
-      const pPassCell = row.cells[8];
-      const batchCell = row.cells[9];
+      const approvalCell = row.querySelector('.cell-approval');
+      const statusCell = row.querySelector('.cell-status');
+      const usernameCell = row.querySelector('.cell-username');
+      const passwordCell = row.querySelector('.cell-password');
+      const pUserCell = row.querySelector('.cell-pusername');
+      const pPassCell = row.querySelector('.cell-ppassword');
+      const batchText = row.querySelector('.batch-name-text');
+      const batchStartCell = row.querySelector('.cell-batch-start');
+      const endDateCell = row.querySelector('.cell-end-date');
       
-      approvalCell.innerHTML = '<span class="status-badge status-active" style="padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; display: inline-block;">Approved</span>';
-      statusCell.innerHTML = '<span class="status-badge status-active" style="background:#dcfce7; color:#16a34a;">Active</span>';
+      if (approvalCell) approvalCell.innerHTML = '<span class="status-badge status-active" style="padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; display: inline-block;">Approved</span>';
+      if (statusCell) statusCell.innerHTML = '<span class="status-badge status-active" style="background:#dcfce7; color:#16a34a;">Active</span>';
       
-      usernameCell.innerText = data.username;
-      passwordCell.innerHTML = `<span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${data.password}</span>`;
-      pUserCell.innerText = data.parent_username || "-";
-      pPassCell.innerHTML = data.parent_password ? `<span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${data.parent_password}</span>` : "-";
-      if (batchCell && data.batch) batchCell.innerText = data.batch;
+      if (usernameCell) usernameCell.innerText = data.username;
+      if (passwordCell) passwordCell.innerHTML = `<span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${data.password}</span>`;
+      if (pUserCell) pUserCell.innerText = data.parent_username || "-";
+      if (pPassCell) pPassCell.innerHTML = data.parent_password ? `<span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${data.parent_password}</span>` : "-";
+      
+      if (batchText && data.batch) {
+        batchText.innerText = data.batch;
+        batchText.style.color = "";
+        batchText.style.fontWeight = "600";
+      }
+      if (batchStartCell && data.batch_start_date) {
+        batchStartCell.innerText = data.batch_start_date;
+      }
+      if (endDateCell && data.end_date) {
+        endDateCell.innerText = data.end_date;
+      }
+
+      row.setAttribute('data-batch', data.batch || '');
+      row.setAttribute('data-batch-start', data.batch_start_date || '-');
+      row.setAttribute('data-end-date', data.end_date || '-');
       
       showToast('Student has been approved successfully. Credentials generated.');
     } else {
       btn.innerText = "Approve";
       btn.disabled = false;
-      if (data.error && data.error.includes('Batch is full')) {
-        document.getElementById('batchFullModal').style.display = 'flex';
-      } else {
-        showToast(data.error || 'Error approving student.', 'error');
-      }
+      const errorMsg = data.error || 'Error approving student.';
+      alert(errorMsg);
+      showToast(errorMsg, 'error');
     }
   })
   .catch(err => {
     btn.innerText = "Approve";
     btn.disabled = false;
+    alert('Network error.');
     showToast('Network error.', 'error');
   });
 }
@@ -672,14 +1278,14 @@ function rejectStudent(btn) {
     .then(res => res.json())
     .then(data => {
       if(data.success) {
-        const approvalCell = btn.closest('td');
-        const statusCell = row.cells[10];
-        approvalCell.innerHTML = '<span class="status-badge" style="background:#fee2e2; color:#ef4444;">Rejected</span>';
-        statusCell.innerHTML = '<span class="status-badge" style="background:#fee2e2; color:#ef4444;">Dropped</span>';
+        const approvalCell = row.querySelector('.cell-approval') || btn.closest('td');
+        const statusCell = row.querySelector('.cell-status');
+        if (approvalCell) approvalCell.innerHTML = '<span class="status-badge" style="background:#fee2e2; color:#ef4444;">Rejected</span>';
+        if (statusCell) statusCell.innerHTML = '<span class="status-badge" style="background:#fee2e2; color:#ef4444;">Dropped</span>';
         showToast('Student application rejected.', 'error');
       } else showToast('Error rejecting student.', 'error');
     });
-  }
+}
 
 function showToast(message, type='success') {
   const toast = document.createElement('div');
@@ -723,98 +1329,96 @@ function showToast(message, type='success') {
       });
   }
 
-</script>
-</body>
+  function applyFilters() {
+    const q = document.getElementById('studentSearchInput') ? document.getElementById('studentSearchInput').value.trim() : '';
+    const batch = document.getElementById('filterBatch') ? document.getElementById('filterBatch').value : '';
+    const program = document.getElementById('filterProgram') ? document.getElementById('filterProgram').value : '';
+    const status = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : '';
+    const payment = document.getElementById('filterPayment') ? document.getElementById('filterPayment').value : '';
+    const timing = document.getElementById('filterTiming') ? document.getElementById('filterTiming').value : '';
+    const approval = document.getElementById('filterApproval') ? document.getElementById('filterApproval').value : '';
 
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (batch) params.set('batch', batch);
+    if (program) params.set('program', program);
+    if (status) params.set('status', status);
+    if (payment) params.set('payment_status', payment);
+    if (timing) params.set('timing', timing);
+    if (approval) params.set('approval', approval);
 
-</html>
+    const queryString = params.toString();
+    window.location.href = window.location.pathname + (queryString ? '?' + queryString : '');
+  }
 
+  function clearAllFilters() {
+    window.location.href = window.location.pathname;
+  }
 
+  function toggleMoreFilters() {
+    const panel = document.getElementById('moreFiltersPanel');
+    if (!panel) return;
+    panel.classList.toggle('is-hidden');
+  }
 
+  function exportStudents() {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.delete('page');
+    window.location.href = '/api/export-students/?' + urlParams.toString();
+  }
 
+  document.addEventListener('DOMContentLoaded', () => {
+    const sInput = document.getElementById('studentSearchInput');
+    if (sInput) {
+      sInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyFilters();
+        }
+      });
+    }
 
-
-
-
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
     // Smooth Pagination
     document.addEventListener('click', function(e) {
-        // Check if a pagination link was clicked
-        const link = e.target.closest('.pagination a');
-        if (link) {
-            e.preventDefault();
-            let url = link.getAttribute('href');
-            
-            // Preserve existing query parameters (search, filter) when paginating
-            const currentUrl = new URL(window.location.href);
-            const targetUrl = new URL(url, window.location.href);
-            currentUrl.searchParams.forEach((val, key) => {
-                if(key !== 'page') {
-                    targetUrl.searchParams.set(key, val);
-                }
-            });
-            url = targetUrl.toString();
-            
-            // Optional: You could show a quick loading opacity here
-            document.querySelector('.table-responsive').style.opacity = '0.5';
-            
-            fetch(url)
-                .then(response => response.text())
-                .then(htmlStr => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlStr, 'text/html');
-                    
-                    // Replace tbody
-                    const newTbody = doc.querySelector('tbody');
-                    if (newTbody) {
-                        document.querySelector('tbody').innerHTML = newTbody.innerHTML;
-                    }
-                    
-                    // Replace footer
-                    const newFooter = doc.querySelector('.table-footer');
-                    if (newFooter) {
-                        document.querySelector('.table-footer').innerHTML = newFooter.innerHTML;
-                    }
-                    
-                    // Restore opacity
-                    document.querySelector('.table-responsive').style.opacity = '1';
-                    
-                    // Update URL bar without reloading
-                    window.history.pushState({path: url}, '', url);
-                })
-                .catch(err => {
-                    console.error("Pagination error:", err);
-                    window.location.href = url; // fallback
-                });
-        }
+      const link = e.target.closest('.pagination a');
+      if (link) {
+        e.preventDefault();
+        let url = link.getAttribute('href');
+        const currentUrl = new URL(window.location.href);
+        const targetUrl = new URL(url, window.location.href);
+        currentUrl.searchParams.forEach((val, key) => {
+          if(key !== 'page') {
+            targetUrl.searchParams.set(key, val);
+          }
+        });
+        url = targetUrl.toString();
+        
+        const responsiveTable = document.querySelector('.table-responsive');
+        if (responsiveTable) responsiveTable.style.opacity = '0.5';
+        
+        fetch(url)
+          .then(response => response.text())
+          .then(htmlStr => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlStr, 'text/html');
+            const newTbody = doc.querySelector('tbody');
+            if (newTbody) {
+              document.querySelector('tbody').innerHTML = newTbody.innerHTML;
+            }
+            const newFooter = doc.querySelector('.table-footer');
+            if (newFooter) {
+              document.querySelector('.table-footer').innerHTML = newFooter.innerHTML;
+            }
+            if (responsiveTable) responsiveTable.style.opacity = '1';
+            window.history.pushState({path: url}, '', url);
+          })
+          .catch(err => {
+            console.error("Pagination error:", err);
+            window.location.href = url;
+          });
+      }
     });
-});
-
-  function openAddModal() {
-    document.getElementById('addForm').reset();
-    document.getElementById('addModal').style.display = 'flex';
-  }
-
-  function saveAdd() {
-      const student_id = document.getElementById('addStudentId').value;
-      const name = document.getElementById('addName').value;
-      const email = document.getElementById('addEmail').value;
-      const phone = document.getElementById('addPhone').value;
-      fetch('/api/add-student/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({student_id, name, email, phone})
-      })
-      .then(res => res.json())
-      .then(data => {
-        if(data.success) {
-          closeModal('addModal');
-          showToast('Student added successfully.');
-          setTimeout(() => window.location.reload(), 1000);
-        } else showToast(data.error || 'Error adding student.', 'error');
-      });
-  }
-
+  });
 </script>
+</body>
+</html>

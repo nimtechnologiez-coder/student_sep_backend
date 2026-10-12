@@ -95,7 +95,7 @@
       </li>
 
       <!-- 5. Curriculum -->
-      <li class="nav-item {% if active_page == 'academic' or active_page == 'mentor_academic' %}active{% endif %}">
+      <li class="nav-item {% if active_page == 'academic' or active_page == 'curriculum' or active_page == 'mentor_academic' %}active{% endif %}">
         <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_academic' %}{% else %}{% url 'academic' %}{% endif %}" class="nav-link">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -147,8 +147,9 @@
       </li>
 
       <!-- 9. Reports -->
-      <li class="nav-item {% if active_page == 'reports' or active_page == 'mentor_reports' %}active{% endif %}">
-        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_reports' %}{% else %}{% url 'reports' %}{% endif %}" class="nav-link">
+      {% if role != 'mentor' and not is_mentor %}
+      <li class="nav-item {% if active_page == 'reports' %}active{% endif %}">
+        <a href="{% url 'reports' %}" class="nav-link">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" x2="18" y1="20" y2="10"/>
@@ -162,6 +163,7 @@
           </span>
         </a>
       </li>
+      {% endif %}
 
       <!-- Navigation Item 10 (Admin only) -->
       {% if role != 'mentor' and not is_mentor %}
@@ -193,7 +195,7 @@
             </svg>
           </span>
           <span class="nav-label">Notifications</span>
-          <span class="nav-badge-red">5</span>
+          <span class="nav-badge-red" id="sidebarNotifBadge">{{ unread_notifications_count|default:0 }}</span>
         </a>
       </li>
 
@@ -225,3 +227,37 @@
     </div>
   
   </aside>
+
+  <script>
+    (function() {
+      function updateAllNotifBadges(count) {
+        var cnt = parseInt(count, 10);
+        if (isNaN(cnt) || cnt < 0) cnt = 0;
+        var sbBadge = document.getElementById('sidebarNotifBadge');
+        if (sbBadge) {
+          sbBadge.textContent = cnt;
+        }
+        document.querySelectorAll('.header-notif-badge').forEach(function(el) {
+          el.textContent = cnt;
+        });
+      }
+
+      function syncNotificationCount() {
+        fetch('/api/notifications/unread-count/')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data && typeof data.unread_count === 'number') {
+              updateAllNotifBadges(data.unread_count);
+            }
+          })
+          .catch(function() {});
+      }
+
+      window.syncNotificationCount = syncNotificationCount;
+      window.updateAllNotifBadges = updateAllNotifBadges;
+
+      setInterval(syncNotificationCount, 5000);
+      window.addEventListener('notificationsUpdated', syncNotificationCount);
+    })();
+  </script>
+

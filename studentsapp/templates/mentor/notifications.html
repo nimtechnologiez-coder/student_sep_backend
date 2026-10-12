@@ -264,12 +264,7 @@
       </svg>
     </div>
     <div>
-      <div class="mentor-stat-value" id="kpiQuestions">
-        {% with questions_count=0 %}
-          {% for n in notifications %}{% if n.direction == 'question' %}{% endif %}{% endfor %}
-          {{ notifications|length }}
-        {% endwith %}
-      </div>
+      <div class="mentor-stat-value" id="kpiQuestions">{{ questions_count|default:0 }}</div>
       <div class="mentor-stat-label">Student Questions</div>
     </div>
   </div>
@@ -311,16 +306,16 @@
       All ({{ notifications|length }})
     </button>
     <button class="btn-table-sm secondary notif-tab" onclick="filterNotifs('question', this);">
-      Student Questions
+      Student Questions ({{ questions_count|default:0 }})
     </button>
     <button class="btn-table-sm secondary notif-tab" onclick="filterNotifs('sent', this);">
-      Sent Messages
+      Sent Messages ({{ sent_count|default:0 }})
     </button>
     <button class="btn-table-sm secondary notif-tab" onclick="filterNotifs('admin', this);">
-      Admin Notices
+      Admin Notices ({{ admin_count|default:0 }})
     </button>
     <button class="btn-table-sm secondary notif-tab" onclick="filterNotifs('unread', this);">
-      Unread Only
+      Unread Only ({{ unread_notifications_count|default:0 }})
     </button>
   </div>
 
@@ -721,10 +716,39 @@
     }
   }
 
+  function updateBadgeCounts(count) {
+    const safeCount = Math.max(0, parseInt(count) || 0);
+    const sidebarBadge = document.getElementById('mentorSidebarMsgBadge');
+    if (sidebarBadge) {
+      sidebarBadge.textContent = safeCount;
+      if (safeCount > 0) {
+        sidebarBadge.style.background = '#ef4444';
+        sidebarBadge.style.opacity = '1';
+      } else {
+        sidebarBadge.style.background = '#64748b';
+        sidebarBadge.style.opacity = '0.6';
+      }
+    }
+    const bellBadge = document.getElementById('mentorBellBadge');
+    if (bellBadge) {
+      bellBadge.textContent = safeCount;
+      if (safeCount <= 0) {
+        bellBadge.style.display = 'none';
+      } else {
+        bellBadge.style.display = 'flex';
+      }
+    }
+    const tabs = document.querySelectorAll('#notifFilterTabs button');
+    if (tabs && tabs[4]) {
+      tabs[4].textContent = `Unread Only (${safeCount})`;
+    }
+  }
+
   // 7. Toggle Read State (API integration)
   async function toggleReadState(notifId, btnEl) {
     const card = btnEl.closest('.notif-card');
     const currentRead = card.getAttribute('data-read');
+    const action = currentRead === 'unread' ? 'read' : 'unread';
 
     try {
       const res = await fetch(`/api/mentor/mark-notification-read/${notifId}/`, {
@@ -732,20 +756,24 @@
         headers: {
           'Content-Type': 'application/json',
           'X-CSRFToken': getCookie('csrftoken')
-        }
+        },
+        body: JSON.stringify({ action: action })
       });
       const data = await res.json();
       if (data.success) {
-        if (currentRead === 'unread') {
+        if (action === 'read') {
           card.setAttribute('data-read', 'read');
           card.classList.remove('notif-unread');
           btnEl.textContent = 'Mark Unread';
           const newBadge = card.querySelector('.badge-rose');
-          if (newBadge && newBadge.textContent === 'New') newBadge.remove();
+          if (newBadge) newBadge.remove();
         } else {
           card.setAttribute('data-read', 'unread');
           card.classList.add('notif-unread');
           btnEl.textContent = 'Mark Read';
+        }
+        if (typeof data.unread_count !== 'undefined') {
+          updateBadgeCounts(data.unread_count);
         }
       }
     } catch (err) {
@@ -773,6 +801,10 @@
         setTimeout(() => {
           card.remove();
           filterNotifsList();
+          // Refresh count
+          fetch('/api/mentor/notification-count/')
+            .then(r => r.json())
+            .then(d => { if (d.success) updateBadgeCounts(d.unread_count); });
         }, 200);
       } else {
         alert('Could not delete notification: ' + (data.error || 'Unknown error'));
@@ -783,28 +815,32 @@
   }
 
   // 9. Mark All Notifications as Read
-  function markAllNotificationsRead() {
-    const cards = document.querySelectorAll('.notif-card[data-read="unread"]');
-    cards.forEach(async (card) => {
-      const id = card.getAttribute('data-id');
-      const toggleBtn = card.querySelectorAll('button')[1];
-      if (id) {
-        fetch(`/api/mentor/mark-notification-read/${id}/`, {
-          method: 'POST',
-          headers: { 'X-CSRFToken': getCookie('csrftoken') }
+  async function markAllNotificationsRead() {
+    try {
+      const res = await fetch('/api/mentor/mark-all-notifications-read/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+      });
+      const data = await res.json();
+      if (data.success) {
+        const cards = document.querySelectorAll('.notif-card');
+        cards.forEach((card) => {
+          card.setAttribute('data-read', 'read');
+          card.classList.remove('notif-unread');
+          const toggleBtn = card.querySelectorAll('button')[1];
+          if (toggleBtn) toggleBtn.textContent = 'Mark Unread';
+          const newBadge = card.querySelector('.badge-rose');
+          if (newBadge) newBadge.remove();
         });
+        updateBadgeCounts(0);
       }
-      card.setAttribute('data-read', 'read');
-      card.classList.remove('notif-unread');
-      if (toggleBtn) toggleBtn.textContent = 'Mark Unread';
-      const newBadge = card.querySelector('.badge-rose');
-      if (newBadge && newBadge.textContent === 'New') newBadge.remove();
-    });
-    alert('All visible notifications marked as read.');
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  // 10. Open Detail Modal
-  function openNotifDetail(id, title, message, dateStr, fromStr, direction) {
+  // 10. Open Detail Modal & Mark Notification as Read
+  async function openNotifDetail(id, title, message, dateStr, fromStr, direction) {
     document.getElementById('readMsgTitle').textContent = title;
     document.getElementById('readMsgBody').textContent = message;
     document.getElementById('readMsgDate').textContent = dateStr;
@@ -824,11 +860,30 @@
 
     document.getElementById('readMsgModal').classList.add('active');
 
-    // Mark as read in backend
-    fetch(`/api/mentor/mark-notification-read/${id}/`, {
-      method: 'POST',
-      headers: { 'X-CSRFToken': getCookie('csrftoken') }
-    });
+    // Update card in UI immediately
+    const card = document.querySelector(`.notif-card[data-id="${id}"]`);
+    if (card && card.getAttribute('data-read') === 'unread') {
+      card.setAttribute('data-read', 'read');
+      card.classList.remove('notif-unread');
+      const newBadge = card.querySelector('.badge-rose');
+      if (newBadge) newBadge.remove();
+      const toggleBtn = card.querySelectorAll('button')[1];
+      if (toggleBtn) toggleBtn.textContent = 'Mark Unread';
+    }
+
+    // Mark as read in backend and update badges
+    try {
+      const res = await fetch(`/api/mentor/mark-notification-read/${id}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+      });
+      const data = await res.json();
+      if (data.success && typeof data.unread_count !== 'undefined') {
+        updateBadgeCounts(data.unread_count);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   function closeReadMsgModal() {

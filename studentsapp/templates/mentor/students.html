@@ -265,6 +265,60 @@
     box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
   }
 
+  .filter-date-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 12px;
+  }
+
+  .filter-date-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  .filter-date-input-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .filter-date-input-wrap label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    white-space: nowrap;
+  }
+
+  .filter-date-input-wrap input[type="date"] {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-size: 0.8125rem;
+    color: #1e293b;
+    outline: none;
+    font-family: inherit;
+    background: #f8fafc;
+    cursor: pointer;
+  }
+
+  .filter-date-input-wrap input[type="date"]:focus {
+    border-color: #0284c7;
+    background: #ffffff;
+  }
+
+  .filter-date-sep {
+    color: #94a3b8;
+    font-weight: 600;
+  }
+
   .quick-attendance-inline-actions {
     display: inline-flex;
     align-items: center;
@@ -1105,18 +1159,12 @@
   <div class="page-header-row">
     <div class="page-title-box">
       <h1>Students Management</h1>
-      <p>Monitor student progress and easily record attendance</p>
+      <p>Monitor student progress and attendance overview</p>
     </div>
     <div class="page-header-actions">
-      <!-- Easy Attendance Mark Header Action Button -->
-      <button type="button" class="btn-mark-attendance-header" onclick="openAttendanceModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        Mark Attendance
-      </button>
-
-      <button type="button" class="btn-export-csv" onclick="showToast('Exporting student roster to CSV...')">
+      <button type="button" class="btn-export-csv" onclick="exportFilteredStudents()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Export
+        Export Excel
       </button>
     </div>
   </div>
@@ -1211,23 +1259,37 @@
         <input type="text" id="studentSearchInput" placeholder="Search by student name, ID, or email..." onkeyup="filterStudentTable()">
       </div>
 
+      <!-- Batch Filter Dropdown: Real database batch name and timing -->
       <div class="filter-select-box">
         <select id="batchFilterSelect" onchange="onBatchSelectChange()">
           <option value="">All Batches</option>
           {% for b in batches %}
-            <option value="{{ b.name }}">{{ b.name }}</option>
+            <option value="{{ b.name }}">{{ b.name }} &mdash; {{ b.timing|default:'Morning' }}</option>
           {% endfor %}
         </select>
       </div>
 
-      <div class="filter-select-box">
+      <!-- Course Filter: Only real database course -->
+      <div class="filter-select-box" style="min-width: 200px;">
         <select id="courseFilterSelect" onchange="filterStudentTable()">
-          <option value="">All Courses</option>
-          <option value="Gen AI">Gen AI</option>
-          <option value="Generative AI & LLMs">Generative AI &amp; LLMs</option>
-          <option value="Full Stack AI Developer">Full Stack AI Developer</option>
-          <option value="Data Science & AI">Data Science &amp; AI</option>
+          {% for c in courses %}
+            <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
         </select>
+      </div>
+
+      <!-- Date Filter: Start Date & End Date (Join Date) -->
+      <div class="filter-date-group">
+        <span class="filter-date-title">Join Date:</span>
+        <div class="filter-date-input-wrap">
+          <label for="startDateFilter">From</label>
+          <input type="date" id="startDateFilter" onchange="filterStudentTable()" title="Filter by Start Join Date">
+        </div>
+        <span class="filter-date-sep">&ndash;</span>
+        <div class="filter-date-input-wrap">
+          <label for="endDateFilter">To</label>
+          <input type="date" id="endDateFilter" onchange="filterStudentTable()" title="Filter by End Join Date">
+        </div>
       </div>
 
       <button type="button" class="btn-clear-filters" onclick="resetStudentFilters()">
@@ -1249,14 +1311,20 @@
             <th>BATCH</th>
             <th>COURSE</th>
             <th>ATTENDANCE RATE</th>
-            <th style="text-align: center;">CLASSES (P / L / A)</th>
+            <th style="text-align: center;">ATTENDANCE</th>
             <th>JOINED DATE</th>
             <th style="text-align: center;">ACTIONS</th>
           </tr>
         </thead>
         <tbody id="studentTableBody">
           {% for student in students %}
-          <tr data-name="{{ student.name|lower }}" data-id="{{ student.student_id|lower }}" data-batch="{{ student.batch.name }}" data-course="{{ student.course|default:'Gen AI' }}" data-rate="{{ student.attendance_rate }}">
+          <tr data-name="{{ student.name|lower }}" 
+              data-id="{{ student.student_id|lower }}" 
+              data-student-id="{{ student.student_id }}" 
+              data-batch="{{ student.batch.name }}" 
+              data-course="{{ student.course|default:'Generative AI & LLMs' }}" 
+              data-rate="{{ student.attendance_rate }}"
+              data-join-date="{{ student.join_date|date:'Y-m-d' }}">
             <td class="checkbox-col-cell">
               <input type="checkbox" class="student-row-check">
             </td>
@@ -1273,18 +1341,57 @@
                 </div>
               </div>
             </td>
-            <td><span class="batch-badge">{{ student.batch.name }}</span></td>
-            <td>{{ student.course|default:"Gen AI" }}</td>
             <td>
-              <div class="attendance-cell-wrap">
-                <div class="attendance-progress-bg">
-                  <div class="attendance-progress-fill" style="width: {{ student.attendance_rate }}%; background: #16a34a;"></div>
+              {% if student.batch %}
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <span class="batch-badge" style="width: fit-content;">{{ student.batch.name }}</span>
+                  <span style="font-size: 0.75rem; font-weight: 600; color: #475569;">{{ student.batch.name }} &mdash; {{ student.batch.timing|default:"Morning" }}</span>
                 </div>
-                <span class="attendance-pct-text">{{ student.attendance_rate }}%</span>
-              </div>
+              {% else %}
+                <span style="color: #94a3b8; font-size: 0.8125rem;">&mdash;</span>
+              {% endif %}
+            </td>
+            <td>{{ student.course|default:"Generative AI & LLMs" }}</td>
+            <td>
+              {% if student.has_attendance %}
+                <div class="attendance-cell-wrap">
+                  <div class="attendance-progress-bg">
+                    <div class="attendance-progress-fill" style="width: {{ student.attendance_rate }}%; background: {% if student.attendance_rate >= 75 %}#16a34a{% else %}#dc2626{% endif %};"></div>
+                  </div>
+                  <span class="attendance-pct-text" style="font-size: 0.9375rem; font-weight: 800; color: {% if student.attendance_rate >= 75 %}#16a34a{% else %}#dc2626{% endif %};">{{ student.attendance_rate }}%</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 3px;">{{ student.attendance_ratio }}</div>
+              {% else %}
+                <span style="display: inline-block; padding: 4px 10px; background: #f1f5f9; color: #64748b; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">No attendance recorded</span>
+              {% endif %}
             </td>
             <td style="text-align: center;">
-              <span class="classes-summary-pill">{{ student.classes_summary }}</span>
+              {% if student.has_attendance %}
+                <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center;">
+                  <span style="display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; background: #dcfce7; color: #15803d;" title="Present">
+                    🟢 {{ student.present_count }} Present
+                  </span>
+                  <span style="display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; background: #fee2e2; color: #b91c1c;" title="Absent">
+                    🔴 {{ student.absent_count }} Absent
+                  </span>
+                  {% if student.leave_count > 0 %}
+                  <span style="display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; background: #ede9fe; color: #5b21b6;" title="Leave">
+                    🟣 {{ student.leave_count }} Leave
+                  </span>
+                  {% else %}
+                  <span style="display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; background: #f1f5f9; color: #64748b;" title="Leave">
+                    0 Leave
+                  </span>
+                  {% endif %}
+                </div>
+                <div style="font-size: 0.6875rem; color: #64748b; font-weight: 600; margin-top: 4px;">
+                  Total: {{ student.conducted_count }} recorded class{{ student.conducted_count|pluralize:"es" }}
+                </div>
+              {% else %}
+                <span style="display: inline-block; padding: 4px 10px; background: #f1f5f9; color: #64748b; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">
+                  No attendance recorded
+                </span>
+              {% endif %}
             </td>
             <td class="date-cell">{{ student.join_date|date:"d M Y"|default:"28 Sep 2026" }}</td>
             <td>
@@ -1300,6 +1407,11 @@
             </td>
           </tr>
           {% endfor %}
+          <tr id="noResultsRow" style="display: none;">
+            <td colspan="8" style="text-align: center; color: #64748b; padding: 32px; font-weight: 500;">
+              No students match the selected filter criteria.
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1332,80 +1444,15 @@
 </div>
 
 <!-- =========================================================================
-     5. CLASS-WISE ATTENDANCE MODAL (Scheduled Class & Batch Flow)
-     ========================================================================= -->
-<div class="attendance-modal-backdrop" id="classAttendanceModal">
-  <div class="attendance-modal-box" style="max-width: 680px;">
-    <div class="attendance-modal-header">
-      <div>
-        <h3 class="attendance-modal-title">Mark Class Attendance</h3>
-        <p class="attendance-modal-subtitle">Record class-wise attendance for each scheduled session in the 6-month course</p>
-      </div>
-      <button type="button" class="modal-close-btn" onclick="closeAttendanceModal()">&times;</button>
-    </div>
-
-    <!-- Step 1 & 2: Batch and Class Schedule Dropdowns -->
-    <div style="padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-      <div>
-        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px;">1. Select Batch</label>
-        <select id="modalBatchSelect" onchange="onModalBatchChange()" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; font-weight: 500; background: #ffffff; outline: none;">
-          {% for b in batches %}
-            <option value="{{ b.id }}">{{ b.name }} ({{ b.timing|default:'Morning' }})</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px;">2. Scheduled Class</label>
-        <select id="modalClassSelect" onchange="onModalClassChange()" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; font-weight: 500; background: #ffffff; outline: none;">
-          <option value="">Loading scheduled classes...</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Quick Info & Action Header -->
-    <div class="attendance-modal-controls" style="padding: 12px 24px; border-bottom: 1px solid #e2e8f0;">
-      <div id="modalClassInfoBadge" style="font-size: 0.8125rem; font-weight: 600; color: #0284c7; display: flex; align-items: center; gap: 6px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-        <span id="modalClassDateTopic">Select a scheduled class</span>
-      </div>
-
-      <div style="display: flex; gap: 8px;">
-        <button type="button" class="btn-quick-mark-all" onclick="modalSetAllStatus('Present')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          Mark All Present
-        </button>
-      </div>
-    </div>
-
-    <!-- Student Roster for Class -->
-    <div class="attendance-modal-body" id="modalClassRosterList" style="max-height: 380px; overflow-y: auto; padding: 16px 24px;">
-      <!-- Populated via fetch -->
-    </div>
-
-    <!-- Modal Footer with Real Summary and Save Button -->
-    <div class="attendance-modal-footer">
-      <div class="attendance-summary-pills">
-        <span class="summary-pill-p" id="modalSummaryPresent">0 Present</span>
-        <span class="summary-pill-l" id="modalSummaryLeave">0 Leave</span>
-        <span class="summary-pill-a" id="modalSummaryAbsent">0 Absent</span>
-      </div>
-      <button type="button" class="attendance-save-btn" id="btnSaveAttendance" onclick="saveClassAttendance()">
-        Save Attendance
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- =========================================================================
      6. TOAST NOTIFICATION
      ========================================================================= -->
 <div class="toast-notification" id="attendanceToast">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-  <span id="toastMessage">Attendance recorded successfully!</span>
+  <span id="toastMessage">Notification</span>
 </div>
 
 <!-- =========================================================================
-     7. STUDENT PROFILE & 6-MONTH CLASS-WISE HISTORY MODAL
+     7. STUDENT PROFILE & CLASS-WISE HISTORY MODAL (READ-ONLY)
      ========================================================================= -->
 <div class="student-detail-modal-backdrop" id="studentDetailModal">
   <div class="student-detail-box" style="max-width: 650px; max-height: 90vh; display: flex; flex-direction: column;">
@@ -1413,30 +1460,30 @@
     
     <div class="detail-hero-section" style="margin-bottom: 16px;">
       <div class="detail-avatar-large" id="modalAvatarWrap" style="background: #7c3aed; color: #ffffff;">
-        <span id="modalAvatarInitials">S2</span>
+        <span id="modalAvatarInitials">--</span>
       </div>
       <div>
-        <h2 class="detail-name-title" id="modalStudentName">Student 25</h2>
-        <span class="detail-id-badge" id="modalStudentID">STU025</span>
+        <h2 class="detail-name-title" id="modalStudentName">--</h2>
+        <span class="detail-id-badge" id="modalStudentID">--</span>
       </div>
     </div>
 
-    <!-- 6-Month Realtime Attendance Metrics Banner -->
+    <!-- Realtime Database Attendance Metrics Banner (Read-Only) -->
     <div class="detail-stats-banner" style="grid-template-columns: repeat(4, 1fr); padding: 12px; margin-bottom: 16px;">
       <div>
-        <div class="stat-banner-num" id="modalAttPct" style="color: #16a34a;">85%</div>
+        <div class="stat-banner-num" id="modalAttPct" style="color: #16a34a;">--</div>
         <div class="stat-banner-lbl">Attendance Rate</div>
       </div>
       <div>
-        <div class="stat-banner-num" id="modalTotalClasses">13</div>
+        <div class="stat-banner-num" id="modalTotalClasses">--</div>
         <div class="stat-banner-lbl">Total Classes</div>
       </div>
       <div>
-        <div class="stat-banner-num" id="modalPresentCount" style="color: #16a34a;">11</div>
+        <div class="stat-banner-num" id="modalPresentCount" style="color: #16a34a;">--</div>
         <div class="stat-banner-lbl">Present</div>
       </div>
       <div>
-        <div class="stat-banner-num" id="modalLeaveAbsentCount" style="color: #dc2626;">2</div>
+        <div class="stat-banner-num" id="modalLeaveAbsentCount" style="color: #dc2626;">--</div>
         <div class="stat-banner-lbl">Leave / Absent</div>
       </div>
     </div>
@@ -1445,13 +1492,13 @@
       <div class="detail-item-col">
         <div class="detail-item-label">Batch</div>
         <div class="detail-item-val" id="modalStudentBatch" style="display: flex; align-items: center;">
-          <span id="modalStudentBatchText">jjhjfghh</span>
+          <span id="modalStudentBatchText">--</span>
           <button onclick="document.getElementById('modalStudentBatchEdit').style.display='flex'; this.style.display='none';" style="margin-left: 8px; font-size: 0.75rem; color: #0284c7; background: none; border: none; cursor: pointer;">Edit</button>
         </div>
         <div id="modalStudentBatchEdit" style="display: none; margin-top: 6px; align-items: center;">
           <select id="modalStudentBatchSelect" style="padding: 4px; font-size: 0.8125rem; border-radius: 4px; border: 1px solid #cbd5e1;">
             {% for b in batches_data %}
-            <option value="{{ b.id }}">{{ b.name }}</option>
+            <option value="{{ b.id }}">{{ b.name }} &mdash; {{ b.timing }}</option>
             {% endfor %}
           </select>
           <button onclick="saveStudentBatch()" style="margin-left: 6px; font-size: 0.75rem; color: #16a34a; background: none; border: none; cursor: pointer; font-weight: 600;">Save</button>
@@ -1538,25 +1585,43 @@
     filterStudentTable();
   }
 
-  // Client-side filtering & Pagination
+  // Client-side filtering & Pagination: Search + Batch + Course + Start Date + End Date
   function filterStudentTable() {
-    const query = document.getElementById('studentSearchInput').value.toLowerCase().trim();
-    const courseFilter = document.getElementById('courseFilterSelect').value;
+    const query = (document.getElementById('studentSearchInput') ? document.getElementById('studentSearchInput').value : '').toLowerCase().trim();
+    const courseFilter = (document.getElementById('courseFilterSelect') ? document.getElementById('courseFilterSelect').value : '').toLowerCase().trim();
+    const startDate = (document.getElementById('startDateFilter') ? document.getElementById('startDateFilter').value : '').trim();
+    const endDate = (document.getElementById('endDateFilter') ? document.getElementById('endDateFilter').value : '').trim();
 
     const rows = document.querySelectorAll('#studentTableBody tr');
     let visibleCount = 0;
+    let totalCount = 0;
 
     rows.forEach(row => {
+      if (row.id === 'noResultsRow' || !row.hasAttribute('data-name')) return;
+      totalCount++;
+
       const name = (row.getAttribute('data-name') || '').toLowerCase();
       const id = (row.getAttribute('data-id') || '').toLowerCase();
       const batch = row.getAttribute('data-batch') || '';
-      const course = row.getAttribute('data-course') || '';
+      const course = (row.getAttribute('data-course') || '').toLowerCase();
+      const joinDate = row.getAttribute('data-join-date') || '';
 
       const matchQuery = !query || name.includes(query) || id.includes(query);
       const matchBatch = !activeBatchFilter || batch === activeBatchFilter;
       const matchCourse = !courseFilter || course.includes(courseFilter);
 
-      if (matchQuery && matchBatch && matchCourse) {
+      let matchDate = true;
+      if (startDate && joinDate) {
+        if (joinDate < startDate) matchDate = false;
+      }
+      if (endDate && joinDate) {
+        if (joinDate > endDate) matchDate = false;
+      }
+      if ((startDate || endDate) && !joinDate) {
+        matchDate = false;
+      }
+
+      if (matchQuery && matchBatch && matchCourse && matchDate) {
         row.style.display = '';
         visibleCount++;
       } else {
@@ -1564,20 +1629,54 @@
       }
     });
 
+    const noResults = document.getElementById('noResultsRow');
+    if (noResults) {
+      noResults.style.display = (visibleCount === 0 && totalCount > 0) ? '' : 'none';
+    }
+
     const info = document.getElementById('paginationInfo');
     if (info) {
-      if (query || activeBatchFilter || courseFilter) {
-        info.innerText = `Showing ${visibleCount} of ${rows.length} students (filtered)`;
+      if (query || activeBatchFilter || startDate || endDate) {
+        info.innerText = `Showing ${visibleCount} of ${totalCount} students (filtered)`;
       } else {
-        info.innerText = `Showing ${rows.length > 0 ? 1 : 0} to ${visibleCount} of ${visibleCount} students`;
+        info.innerText = `Showing ${totalCount > 0 ? 1 : 0} to ${visibleCount} of ${totalCount} students`;
       }
     }
   }
 
   function resetStudentFilters() {
-    document.getElementById('studentSearchInput').value = '';
-    document.getElementById('courseFilterSelect').value = '';
+    if (document.getElementById('studentSearchInput')) document.getElementById('studentSearchInput').value = '';
+    if (document.getElementById('startDateFilter')) document.getElementById('startDateFilter').value = '';
+    if (document.getElementById('endDateFilter')) document.getElementById('endDateFilter').value = '';
+    if (document.getElementById('batchFilterSelect')) document.getElementById('batchFilterSelect').value = '';
     selectBatchTab('', document.querySelector('.batch-tab-pill[data-batch=""]'));
+  }
+
+  function exportFilteredStudents() {
+    const visibleRows = Array.from(document.querySelectorAll('#studentTableBody tr'))
+      .filter(r => r.id !== 'noResultsRow' && r.style.display !== 'none' && r.getAttribute('data-student-id'));
+
+    if (visibleRows.length === 0) {
+      showToast('No students match the selected filter criteria to export.');
+      return;
+    }
+
+    const studentIds = visibleRows.map(r => r.getAttribute('data-student-id')).join(',');
+    const query = (document.getElementById('studentSearchInput') ? document.getElementById('studentSearchInput').value : '').trim();
+    const startDate = (document.getElementById('startDateFilter') ? document.getElementById('startDateFilter').value : '').trim();
+    const endDate = (document.getElementById('endDateFilter') ? document.getElementById('endDateFilter').value : '').trim();
+    const course = (document.getElementById('courseFilterSelect') ? document.getElementById('courseFilterSelect').value : '').trim();
+
+    const params = new URLSearchParams();
+    params.append('student_ids', studentIds);
+    if (query) params.append('q', query);
+    if (activeBatchFilter) params.append('batch', activeBatchFilter);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    if (course) params.append('course', course);
+
+    showToast('Exporting filtered student roster to Excel...');
+    window.location.href = `/api/mentor/export-students/?${params.toString()}`;
   }
 
   function toggleSelectAll(master) {
@@ -1590,183 +1689,7 @@
   }
 
   // =========================================================================
-  // CLASS-WISE ATTENDANCE MODAL FLOW
-  // =========================================================================
-  function openAttendanceModal() {
-    const modal = document.getElementById('classAttendanceModal');
-    modal.classList.add('open');
-    onModalBatchChange();
-  }
-
-  function closeAttendanceModal() {
-    document.getElementById('classAttendanceModal').classList.remove('open');
-  }
-
-  async function onModalBatchChange() {
-    const batchSelect = document.getElementById('modalBatchSelect');
-    if (!batchSelect || !batchSelect.value) return;
-
-    modalActiveBatchId = batchSelect.value;
-    const classSelect = document.getElementById('modalClassSelect');
-    classSelect.innerHTML = '<option value="">Loading scheduled classes...</option>';
-
-    try {
-      const res = await fetch(`/api/mentor/batch-classes/${modalActiveBatchId}/`);
-      const data = await res.json();
-      if (data.status === 'success' && data.classes && data.classes.length > 0) {
-        classSelect.innerHTML = '';
-        data.classes.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c.id;
-          opt.textContent = `${c.date_str} - ${c.subject}`;
-          classSelect.appendChild(opt);
-        });
-        onModalClassChange();
-      } else {
-        classSelect.innerHTML = '<option value="">No classes found for this batch</option>';
-        document.getElementById('modalClassRosterList').innerHTML = '<div style="text-align: center; color: #64748b; padding: 24px;">No classes scheduled for this batch.</div>';
-        updateModalSummaryPills();
-      }
-    } catch (err) {
-      console.error(err);
-      classSelect.innerHTML = '<option value="">Error loading classes</option>';
-    }
-  }
-
-  async function onModalClassChange() {
-    const classSelect = document.getElementById('modalClassSelect');
-    if (!classSelect || !classSelect.value) return;
-
-    modalActiveClassId = classSelect.value;
-    const rosterContainer = document.getElementById('modalClassRosterList');
-    rosterContainer.innerHTML = '<div style="text-align: center; color: #64748b; padding: 24px;">Loading student roster...</div>';
-
-    try {
-      const res = await fetch(`/api/mentor/class-attendance/${modalActiveClassId}/`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        const cls = data.class;
-        document.getElementById('modalClassDateTopic').textContent = `${cls.date_str} • ${cls.subject} (${cls.batch_name})`;
-
-        modalStudentsList = data.students || [];
-        modalRosterState = {};
-
-        rosterContainer.innerHTML = '';
-        modalStudentsList.forEach(s => {
-          modalRosterState[s.student_id] = s.status || 'Present';
-
-          const item = document.createElement('div');
-          item.className = 'roster-mark-item';
-          item.style.display = 'flex';
-          item.style.alignItems = 'center';
-          item.style.justifyContent = 'space-between';
-          item.style.padding = '10px 14px';
-          item.style.background = '#ffffff';
-          item.style.border = '1px solid #e2e8f0';
-          item.style.borderRadius = '10px';
-          item.style.marginBottom = '8px';
-
-          item.innerHTML = `
-            <div class="roster-student-info" style="display: flex; align-items: center; gap: 12px;">
-              <div class="student-avatar" style="width: 34px; height: 34px; font-size: 0.8rem; background: ${s.avatar_color || '#7c3aed'}; color: #ffffff;">
-                ${s.initials || s.name.substring(0, 2)}
-              </div>
-              <div>
-                <div style="font-weight: 600; font-size: 0.875rem; color: #0f172a;">${s.name}</div>
-                <div style="font-size: 0.75rem; color: #64748b;">${s.student_id} &bull; ${cls.batch_name}</div>
-              </div>
-            </div>
-            <div class="quick-attendance-toggle-wrap" data-student="${s.student_id}">
-              <button type="button" class="pill-att-btn p-btn ${modalRosterState[s.student_id] === 'Present' ? 'active' : ''}" title="Present" onclick="modalSetStudentStatus('${s.student_id}', 'Present')">P</button>
-              <button type="button" class="pill-att-btn l-btn ${modalRosterState[s.student_id] === 'Leave' ? 'active' : ''}" title="Leave" onclick="modalSetStudentStatus('${s.student_id}', 'Leave')">L</button>
-              <button type="button" class="pill-att-btn a-btn ${modalRosterState[s.student_id] === 'Absent' ? 'active' : ''}" title="Absent" onclick="modalSetStudentStatus('${s.student_id}', 'Absent')">A</button>
-            </div>
-          `;
-          rosterContainer.appendChild(item);
-        });
-
-        updateModalSummaryPills();
-      }
-    } catch (err) {
-      console.error(err);
-      rosterContainer.innerHTML = '<div style="text-align: center; color: #dc2626; padding: 24px;">Failed to load class attendance.</div>';
-    }
-  }
-
-  function modalSetStudentStatus(studentId, status) {
-    modalRosterState[studentId] = status;
-    const wrap = document.querySelector(`.quick-attendance-toggle-wrap[data-student="${studentId}"]`);
-    if (wrap) {
-      wrap.querySelectorAll('.pill-att-btn').forEach(b => b.classList.remove('active'));
-      if (status === 'Present') wrap.querySelector('.p-btn')?.classList.add('active');
-      if (status === 'Leave') wrap.querySelector('.l-btn')?.classList.add('active');
-      if (status === 'Absent') wrap.querySelector('.a-btn')?.classList.add('active');
-    }
-    updateModalSummaryPills();
-  }
-
-  function modalSetAllStatus(status) {
-    modalStudentsList.forEach(s => {
-      modalSetStudentStatus(s.student_id, status);
-    });
-  }
-
-  function updateModalSummaryPills() {
-    let p = 0, l = 0, a = 0;
-    Object.values(modalRosterState).forEach(st => {
-      if (st === 'Present') p++;
-      else if (st === 'Leave') l++;
-      else if (st === 'Absent') a++;
-    });
-    document.getElementById('modalSummaryPresent').textContent = `${p} Present`;
-    document.getElementById('modalSummaryLeave').textContent = `${l} Leave`;
-    document.getElementById('modalSummaryAbsent').textContent = `${a} Absent`;
-  }
-
-  async function saveClassAttendance() {
-    if (!modalActiveClassId) {
-      alert("Please select a valid scheduled class.");
-      return;
-    }
-
-    const saveBtn = document.getElementById('btnSaveAttendance');
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
-
-    try {
-      const res = await fetch('/api/mentor/save-class-attendance/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({
-          class_id: modalActiveClassId,
-          records: modalRosterState
-        })
-      });
-
-      const data = await res.json();
-      if (data.status === 'success') {
-        showToast("Class attendance saved successfully!");
-        closeAttendanceModal();
-        setTimeout(() => {
-          window.location.reload();
-        }, 800);
-      } else {
-        alert(data.message || "Failed to save attendance.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error saving attendance.");
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Save Attendance';
-    }
-  }
-
-  // =========================================================================
-  // STUDENT 6-MONTH PROFILE VIEW MODAL FLOW
+  // STUDENT PROFILE VIEW MODAL FLOW (READ-ONLY)
   // =========================================================================
   async function openStudentViewModal(studentId) {
     const modal = document.getElementById('studentDetailModal');
@@ -1780,7 +1703,7 @@
       const data = await res.json();
       if (data.status === 'success') {
         document.getElementById('modalStudentName').textContent = data.name;
-        document.getElementById('modalStudentBatchText').textContent = data.batch;
+        document.getElementById('modalStudentBatchText').textContent = data.batch_display || data.batch || '--';
         document.getElementById('modalStudentCourse').textContent = data.course;
         
         // Reset edit state
@@ -1789,13 +1712,15 @@
         if(editBtn) editBtn.style.display = 'inline-block';
         // Pre-select current batch in dropdown if possible
         const batchSelect = document.getElementById('modalStudentBatchSelect');
-        for(let opt of batchSelect.options) {
-          if(opt.text === data.batch) {
-            batchSelect.value = opt.value;
-            break;
+        if (batchSelect) {
+          for(let opt of batchSelect.options) {
+            if((data.batch_id && opt.value == data.batch_id) || opt.text.startsWith(data.batch)) {
+              batchSelect.value = opt.value;
+              break;
+            }
           }
         }
-        document.getElementById('modalAvatarInitials').textContent = data.name.substring(0, 2).toUpperCase();
+        document.getElementById('modalAvatarInitials').textContent = (data.name || 'S').substring(0, 2).toUpperCase();
 
         document.getElementById('modalAttPct').textContent = `${data.overall_percentage}%`;
         document.getElementById('modalTotalClasses').textContent = data.total_classes;
@@ -1815,9 +1740,12 @@
             if (h.status === 'Present') {
               pillBg = '#f0fdf4';
               pillColor = '#16a34a';
-            } else if (h.status === 'Leave') {
+            } else if (h.status === 'Late') {
               pillBg = '#fef3c7';
               pillColor = '#d97706';
+            } else if (h.status === 'Leave') {
+              pillBg = '#ede9fe';
+              pillColor = '#5b21b6';
             } else if (h.status === 'Absent') {
               pillBg = '#fee2e2';
               pillColor = '#dc2626';
@@ -1853,15 +1781,12 @@
 
   // Outside click & ESC listeners
   window.addEventListener('click', function(e) {
-    const classModal = document.getElementById('classAttendanceModal');
-    if (e.target === classModal) closeAttendanceModal();
     const detailModal = document.getElementById('studentDetailModal');
     if (e.target === detailModal) closeStudentViewModal();
   });
 
   window.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      closeAttendanceModal();
       closeStudentViewModal();
     }
   });

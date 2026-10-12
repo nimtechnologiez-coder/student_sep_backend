@@ -62,37 +62,19 @@
   <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
     <div>
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-        <span class="badge-pill badge-blue">{{ task.id }}</span>
+        <span class="badge-pill badge-blue">Task #{{ task.id }}</span>
         <span class="badge-pill badge-slate">{{ task.category }}</span>
-        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">{{ task.module_code }}: {{ task.module_title }}</span>
+        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">{{ task.module_code }}</span>
       </div>
       <h1 style="font-size: 1.35rem; font-weight: 800; color: #0a1b39; margin: 0 0 6px;">{{ task.title }}</h1>
       <p style="font-size: 0.84375rem; color: #475569; margin: 0 0 10px; max-width: 850px; line-height: 1.45;">
-        {{ task.objective }}
+        {{ task.description|default:"No description or instructions provided." }}
       </p>
       <div style="display: flex; gap: 16px; font-size: 0.75rem; color: #64748b; font-weight: 600;">
-        <span>📅 Due Date: <strong style="color: #0f172a;">{{ task.due_date }}</strong></span>
-        <span>🎯 Maximum Marks: <strong style="color: #0062eb;">{{ task.max_marks }} Points</strong></span>
+        <span>📅 Due Date: <strong style="color: #0f172a;">{{ task.due_date|date:"d M Y"|default:task.due_date }}</strong></span>
+        <span>🎯 Maximum Marks: <strong style="color: #0062eb;">{{ task.max_marks }} Marks</strong></span>
+        <span>👥 Assigned: <strong style="color: #7c3aed;">{{ task.assigned_display }}</strong></span>
       </div>
-    </div>
-
-    <div>
-      <button class="btn-nim-primary" onclick="openEvalModal('Arjun Kumar', 'NIM-2026-0482', 94);">
-        <span>Evaluate Next Submission</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Rubric Criteria Box -->
-  <div style="margin-top: 18px; background: #ffffff; border: 1px solid var(--nim-border); border-radius: 10px; padding: 14px 18px;">
-    <h4 style="margin: 0 0 8px; font-size: 0.8125rem; font-weight: 800; color: #0a1b39;">Rubric Evaluation Criteria:</h4>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 0.78125rem;">
-      {% for r in task.rubric_items %}
-      <div style="background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
-        <div style="font-weight: 700; color: #0f172a;">{{ r.criterion }}</div>
-        <div style="color: #0062eb; font-weight: 700; font-size: 0.72rem;">Max: {{ r.max }} Points</div>
-      </div>
-      {% endfor %}
     </div>
   </div>
 </div>
@@ -124,6 +106,25 @@
               {{ s.student.name }}
             </a>
             <div style="font-size: 0.71875rem; color: #64748b;">{{ s.student.student_id }}</div>
+            {% if s.submission_url %}
+              <div style="margin-top: 5px;">
+                <a href="{{ s.submission_url }}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #2563eb; font-weight: 600; text-decoration: none;">
+                  🔗 Project Link
+                </a>
+              </div>
+            {% endif %}
+            {% if s.file %}
+              <div style="margin-top: 4px;">
+                <a href="{{ s.file.url }}" target="_blank" download style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #059669; font-weight: 600; text-decoration: none;">
+                  📁 {{ s.file_name|default:"Deliverable File" }} {% if s.file_size %}({{ s.file_size }}){% endif %}
+                </a>
+              </div>
+            {% endif %}
+            {% if s.submission_text %}
+              <div style="font-size: 0.75rem; color: #475569; margin-top: 4px; font-style: italic; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                Notes: {{ s.submission_text }}
+              </div>
+            {% endif %}
           </td>
           <td>
             <span style="font-size: 0.78125rem; font-weight: 600; color: #475569;">{{ s.submitted_at|date:"M d, Y h:i A" }}</span>
@@ -163,6 +164,11 @@
                 Ping Student
               </button>
             {% endif %}
+          </td>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="text-align: center; color: #64748b; padding: 32px; font-weight: 500;">
+            No submissions received yet for this task.
           </td>
         </tr>
         {% endfor %}

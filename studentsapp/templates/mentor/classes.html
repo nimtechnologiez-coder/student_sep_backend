@@ -1374,6 +1374,76 @@
     box-shadow: 0 0 0 3px rgba(0, 119, 130, 0.12);
   }
 
+  /* In-Modal Red Error Alert Banner */
+  .modal-error-banner {
+    display: none;
+    align-items: flex-start;
+    gap: 10px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    color: #991b1b;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.45;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.1);
+  }
+
+  /* 12-Hour Custom Time Picker Wrapper */
+  .time-12h-picker-wrap {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 5px 8px;
+    transition: all 0.15s ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .time-12h-picker-wrap:focus-within {
+    border-color: #007782;
+    box-shadow: 0 0 0 3px rgba(0, 119, 130, 0.12);
+  }
+
+  .time-12h-sel {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
+    padding: 2px 2px;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: 4px;
+  }
+
+  .time-12h-sel:focus {
+    background: #f1f5f9;
+  }
+
+  .time-12h-sel.ampm-sel {
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-weight: 700;
+    color: #007782;
+    margin-left: auto;
+  }
+
+  .time-sep {
+    font-weight: 700;
+    color: #64748b;
+    user-select: none;
+    padding: 0 1px;
+  }
+
   /* Live Student Preview Card in Modal */
   .student-card-preview-section {
     margin-top: 18px;
@@ -1515,6 +1585,69 @@
 
   .btn-modal-submit:hover {
     background: #00606b;
+  }
+
+  /* Curriculum Module & Topic Edit Buttons */
+  .btn-curriculum-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #0284c7;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    line-height: 1.2;
+  }
+
+  .btn-curriculum-edit:hover {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+  }
+
+  .btn-curriculum-edit svg {
+    flex-shrink: 0;
+  }
+
+  /* Curriculum Module/Topic Sub-Modal Backdrop & Box */
+  .curriculum-submodal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10020;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .curriculum-submodal-backdrop.open {
+    display: flex;
+  }
+
+  .curriculum-submodal-box {
+    background: #ffffff;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    animation: modalScaleIn 0.18s ease-out;
   }
 
 
@@ -2206,19 +2339,25 @@
                 <span>{{ item.batch.students.count|default:"0" }} Students enrolled</span>
               </div>
 
-              {% if item.is_completed %}
-                <span style="font-size: 0.6875rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 3px 8px; border-radius: 6px;">Ended</span>
-              {% elif item.meeting_link %}
-                <a href="{{ item.meeting_link }}" target="_blank" class="btn-today-join" title="Join Live Classroom">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                  Join
-                </a>
-              {% else %}
-                <button type="button" class="btn-today-join" onclick="triggerStartClass('{{ item.batch.name|escapejs }}', '{{ item.subject|escapejs }}')">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                  Start
+              <div style="display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" class="btn-today-edit" title="Edit Class" onclick="openEditClassModal({{ item.id }})" style="padding: 4px 8px; font-size: 0.6875rem; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #0284c7; display: inline-flex; align-items: center; gap: 3px; cursor: pointer;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  Edit
                 </button>
-              {% endif %}
+                {% if item.is_completed %}
+                  <span style="font-size: 0.6875rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 3px 8px; border-radius: 6px;">Ended</span>
+                {% elif item.meeting_link %}
+                  <a href="{{ item.meeting_link }}" target="_blank" class="btn-today-join" title="Join Live Classroom">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    Join
+                  </a>
+                {% else %}
+                  <button type="button" class="btn-today-join" onclick="triggerStartClass('{{ item.batch.name|escapejs }}', '{{ item.subject|escapejs }}')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    Start
+                  </button>
+                {% endif %}
+              </div>
             </div>
           </div>
         {% empty %}
@@ -2233,65 +2372,7 @@
         </div>
       </div>
 
-      <!-- Widget 3: Quick Actions -->
-      <div class="widget-card">
-        <div class="widget-header-row">
-          <div class="widget-title-wrap">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            <span>Quick Actions</span>
-          </div>
-        </div>
 
-        <div class="quick-actions-list">
-          <!-- Create Class -->
-          <a href="javascript:void(0)" class="quick-action-tile tile-create" onclick="openAddClassModal()">
-            <div class="tile-icon-circle">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </div>
-            <div class="tile-text-col">
-              <span class="tile-title">Create Class</span>
-              <span class="tile-sub">Schedule new live online class</span>
-            </div>
-            <span class="tile-arrow-icon">&rarr;</span>
-          </a>
-
-          <!-- Upload Material -->
-          <a href="javascript:void(0)" class="quick-action-tile tile-upload" onclick="triggerUploadMaterial()">
-            <div class="tile-icon-circle">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            </div>
-            <div class="tile-text-col">
-              <span class="tile-title">Upload Material</span>
-              <span class="tile-sub">Share syllabus notes &amp; slides</span>
-            </div>
-            <span class="tile-arrow-icon">&rarr;</span>
-          </a>
-
-          <!-- Start Live Class -->
-          <a href="javascript:void(0)" class="quick-action-tile tile-live" onclick="triggerStartClass('GenAI-Gamma', 'Live Room')">
-            <div class="tile-icon-circle">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-            </div>
-            <div class="tile-text-col">
-              <span class="tile-title">Start Live Class</span>
-              <span class="tile-sub">Launch interactive meeting room</span>
-            </div>
-            <span class="tile-arrow-icon">&rarr;</span>
-          </a>
-
-          <!-- View Schedule -->
-          <a href="#calendar" class="quick-action-tile tile-schedule">
-            <div class="tile-icon-circle">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </div>
-            <div class="tile-text-col">
-              <span class="tile-title">View Schedule</span>
-              <span class="tile-sub">Browse calendar timetable</span>
-            </div>
-            <span class="tile-arrow-icon">&rarr;</span>
-          </a>
-        </div>
-      </div>
 
     </div>
 
@@ -2351,10 +2432,19 @@
     <!-- Form Fields -->
     <form id="addClassForm" onsubmit="event.preventDefault(); submitAddClass();">
       <input type="hidden" id="editClassId" value="">
+
+      <!-- In-Modal Red Error Alert Banner -->
+      <div id="modalClassError" class="modal-error-banner" style="display: none;"></div>
       <!-- 1. Curriculum Module Dropdown -->
       <div class="modal-form-row">
         <div class="form-group-field">
-          <label class="form-group-label">Curriculum Module *</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="form-group-label" style="margin-bottom: 0;">Curriculum Module *</label>
+            <button type="button" class="btn-curriculum-edit" id="btnEditCurriculumModule" onclick="openEditModuleModalFromClasses()" title="Edit Selected Curriculum Module">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span>Edit Module</span>
+            </button>
+          </div>
           <select class="form-group-select" id="inpClassModule" onchange="onModuleChange()" required>
             <option value="">-- All Modules / Select Topic --</option>
             {% for m in course_modules %}
@@ -2365,7 +2455,13 @@
 
         <!-- 2. Curriculum Topic Dropdown (Filtered by Module or Grouped) -->
         <div class="form-group-field">
-          <label class="form-group-label">Topic / Class *</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="form-group-label" style="margin-bottom: 0;">Topic / Class *</label>
+            <button type="button" class="btn-curriculum-edit" id="btnEditCurriculumTopic" onclick="openEditTopicModalFromClasses()" title="Edit Selected Topic">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span>Edit Topic</span>
+            </button>
+          </div>
           <select class="form-group-select" id="inpClassTopic" onchange="onTopicChange()" required>
             <option value="">-- Select Topic / Class --</option>
           </select>
@@ -2413,12 +2509,50 @@
 
         <div class="form-group-field">
           <label class="form-group-label">Start Time *</label>
-          <input type="time" class="form-group-input" id="inpClassStartTime" value="10:00" required onchange="calculateDurationAndSync()">
+          <input type="hidden" id="inpClassStartTime" value="10:00">
+          <div class="time-12h-picker-wrap">
+            <select id="inpClassStartHour" class="time-12h-sel" onchange="updateStart24From12()">
+              <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+              <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+              <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+              <option value="10" selected>10</option><option value="11">11</option><option value="12">12</option>
+            </select>
+            <span class="time-sep">:</span>
+            <select id="inpClassStartMin" class="time-12h-sel" onchange="updateStart24From12()">
+              <option value="00" selected>00</option><option value="05">05</option><option value="10">10</option>
+              <option value="15">15</option><option value="20">20</option><option value="25">25</option>
+              <option value="30">30</option><option value="35">35</option><option value="40">40</option>
+              <option value="45">45</option><option value="50">50</option><option value="55">55</option>
+            </select>
+            <select id="inpClassStartAmpm" class="time-12h-sel ampm-sel" onchange="updateStart24From12()">
+              <option value="AM" selected>AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group-field">
           <label class="form-group-label">End Time *</label>
-          <input type="time" class="form-group-input" id="inpClassEndTime" value="11:30" required onchange="calculateDurationAndSync()">
+          <input type="hidden" id="inpClassEndTime" value="11:30">
+          <div class="time-12h-picker-wrap">
+            <select id="inpClassEndHour" class="time-12h-sel" onchange="updateEnd24From12()">
+              <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+              <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+              <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+              <option value="10">10</option><option value="11" selected>11</option><option value="12">12</option>
+            </select>
+            <span class="time-sep">:</span>
+            <select id="inpClassEndMin" class="time-12h-sel" onchange="updateEnd24From12()">
+              <option value="00">00</option><option value="05">05</option><option value="10">10</option>
+              <option value="15">15</option><option value="20">20</option><option value="25">25</option>
+              <option value="30" selected>30</option><option value="35">35</option><option value="40">40</option>
+              <option value="45">45</option><option value="50">50</option><option value="55">55</option>
+            </select>
+            <select id="inpClassEndAmpm" class="time-12h-sel ampm-sel" onchange="updateEnd24From12()">
+              <option value="AM" selected>AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group-field">
@@ -2427,18 +2561,22 @@
         </div>
       </div>
 
-      <!-- 6. Delivery Mode (Online Class Only) & Meeting Link -->
+      <!-- 6. Class Type & Meeting Link / Room -->
       <div class="modal-form-row">
         <div class="form-group-field">
           <label class="form-group-label">Class Type *</label>
-          <input type="text" class="form-group-input" id="inpClassMode" value="Online Class" readonly style="background: #f1f5f9; cursor: not-allowed; font-weight: 600; color: #007782;">
+          <select class="form-group-select" id="inpClassMode" onchange="syncPreview()" required>
+            <option value="Online">Online Class</option>
+            <option value="Offline">Offline Class</option>
+          </select>
         </div>
 
         <div class="form-group-field">
           <label class="form-group-label">Meeting Link / Room *</label>
-          <input type="url" class="form-group-input" id="inpClassLink" required
+          <input type="text" class="form-group-input" id="inpClassLink" required
                  value=""
-                 placeholder="https://meet.google.com/abc-defg-hij">
+                 placeholder="https://meet.google.com/abc-defg-hij or Room 101"
+                 oninput="syncPreview()">
         </div>
       </div>
 
@@ -2503,12 +2641,111 @@
     </form>
   </div>
 </div>
+
+<!-- =========================================================================
+     EDIT CURRICULUM MODULE SUB-MODAL (SYNCED WITH ADMIN CURRICULUM)
+     ========================================================================= -->
+<div class="curriculum-submodal-backdrop" id="modalEditCurriculumModule">
+  <div class="curriculum-submodal-box">
+    <div class="add-class-modal-header" style="margin-bottom: 16px; padding-bottom: 12px;">
+      <div>
+        <h3 class="add-class-modal-title" style="font-size: 1.15rem;">Edit Curriculum Module</h3>
+        <p class="add-class-modal-subtitle">Update module details. Any changes will immediately update the database &amp; reflect in Admin Curriculum.</p>
+      </div>
+      <button type="button" class="btn-more-dots" onclick="closeEditModuleModalFromClasses()" style="font-size: 1.4rem; line-height: 1;">&times;</button>
+    </div>
+
+    <form id="editModuleFromClassesForm" onsubmit="event.preventDefault(); submitEditModuleFromClasses();">
+      <input type="hidden" id="editModalModuleId" value="">
+
+      <div class="modal-form-row">
+        <div class="form-group-field" style="max-width: 130px;">
+          <label class="form-group-label">Module Order *</label>
+          <input type="number" min="1" class="form-group-input" id="editModalModuleOrder" required>
+        </div>
+        <div class="form-group-field">
+          <label class="form-group-label">Module Name / Title *</label>
+          <input type="text" class="form-group-input" id="editModalModuleName" placeholder="e.g. AI Fundamentals" required>
+        </div>
+      </div>
+
+      <div class="modal-form-row full" style="margin-bottom: 18px;">
+        <div class="form-group-field">
+          <label class="form-group-label">Description &amp; Syllabus Overview</label>
+          <textarea class="form-group-textarea" id="editModalModuleDesc" rows="3" placeholder="Overview of this module..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeEditModuleModalFromClasses()">Cancel</button>
+        <button type="submit" class="btn-modal-submit" id="btnSaveModuleFromClasses">Save &amp; Reflect in Admin</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================================================
+     EDIT TOPIC SUB-MODAL (SYNCED WITH ADMIN CURRICULUM & CLASSES)
+     ========================================================================= -->
+<div class="curriculum-submodal-backdrop" id="modalEditCurriculumTopic">
+  <div class="curriculum-submodal-box">
+    <div class="add-class-modal-header" style="margin-bottom: 16px; padding-bottom: 12px;">
+      <div>
+        <h3 class="add-class-modal-title" style="font-size: 1.15rem;">Edit Topic / Class</h3>
+        <p class="add-class-modal-subtitle">Update topic details. Any changes will immediately update the database &amp; reflect in Admin Curriculum and schedules.</p>
+      </div>
+      <button type="button" class="btn-more-dots" onclick="closeEditTopicModalFromClasses()" style="font-size: 1.4rem; line-height: 1;">&times;</button>
+    </div>
+
+    <form id="editTopicFromClassesForm" onsubmit="event.preventDefault(); submitEditTopicFromClasses();">
+      <input type="hidden" id="editModalTopicId" value="">
+
+      <div class="modal-form-row full">
+        <div class="form-group-field">
+          <label class="form-group-label">Topic / Class Name *</label>
+          <input type="text" class="form-group-input" id="editModalTopicName" placeholder="e.g. AI vs ML vs Deep Learning" required>
+        </div>
+      </div>
+
+      <div class="modal-form-row three-col">
+        <div class="form-group-field">
+          <label class="form-group-label">Order *</label>
+          <input type="number" min="1" class="form-group-input" id="editModalTopicOrder" required>
+        </div>
+        <div class="form-group-field">
+          <label class="form-group-label">Duration</label>
+          <input type="text" class="form-group-input" id="editModalTopicDuration" placeholder="e.g. 90 Mins" value="90 Mins">
+        </div>
+        <div class="form-group-field">
+          <label class="form-group-label">Status</label>
+          <select class="form-group-select" id="editModalTopicStatus">
+            <option value="Active" selected>Active</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-form-row full" style="margin-bottom: 18px;">
+        <div class="form-group-field">
+          <label class="form-group-label">Description &amp; Syllabus Overview *</label>
+          <textarea class="form-group-textarea" id="editModalTopicDesc" rows="3" placeholder="Topic description, key points, exercises..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeEditTopicModalFromClasses()">Cancel</button>
+        <button type="submit" class="btn-modal-submit" id="btnSaveTopicFromClasses">Save &amp; Reflect in Admin</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
   // Injected Admin Curriculum Modules & Topics
   const curriculumModules = {{ modules_json|safe }};
+  const loggedInMentorName = "{{ user_name|default:'Mentor'|escapejs }}";
   // Injected Class Schedules for dynamic calendar
   const calendarClasses = {{ calendar_classes_json|safe }};
 
@@ -2619,6 +2856,121 @@
     return `${String(h).padStart(2, '0')}:${m}`;
   }
 
+  function set12HourStartFrom24(t24) {
+    if (!t24) t24 = '10:00';
+    const parts = t24.split(':');
+    let h = parseInt(parts[0], 10) || 0;
+    let m = parts[1] ? String(parts[1]).padStart(2, '0') : '00';
+    let ampm = h >= 12 ? 'PM' : 'AM';
+    let h12 = h % 12 || 12;
+
+    const hSelect = document.getElementById('inpClassStartHour');
+    const mSelect = document.getElementById('inpClassStartMin');
+    const pSelect = document.getElementById('inpClassStartAmpm');
+
+    if (hSelect) hSelect.value = String(h12).padStart(2, '0');
+    if (mSelect) mSelect.value = m;
+    if (pSelect) pSelect.value = ampm;
+
+    const startInp = document.getElementById('inpClassStartTime');
+    if (startInp) startInp.value = `${String(h).padStart(2, '0')}:${m}`;
+  }
+
+  function set12HourEndFrom24(t24) {
+    if (!t24) t24 = '11:30';
+    const parts = t24.split(':');
+    let h = parseInt(parts[0], 10) || 0;
+    let m = parts[1] ? String(parts[1]).padStart(2, '0') : '00';
+    let ampm = h >= 12 ? 'PM' : 'AM';
+    let h12 = h % 12 || 12;
+
+    const hSelect = document.getElementById('inpClassEndHour');
+    const mSelect = document.getElementById('inpClassEndMin');
+    const pSelect = document.getElementById('inpClassEndAmpm');
+
+    if (hSelect) hSelect.value = String(h12).padStart(2, '0');
+    if (mSelect) mSelect.value = m;
+    if (pSelect) pSelect.value = ampm;
+
+    const endInp = document.getElementById('inpClassEndTime');
+    if (endInp) endInp.value = `${String(h).padStart(2, '0')}:${m}`;
+  }
+
+  function updateStart24From12() {
+    const hSelect = document.getElementById('inpClassStartHour');
+    const mSelect = document.getElementById('inpClassStartMin');
+    const pSelect = document.getElementById('inpClassStartAmpm');
+    if (!hSelect || !mSelect || !pSelect) return;
+
+    let h = parseInt(hSelect.value, 10);
+    const m = mSelect.value;
+    const ampm = pSelect.value;
+
+    if (ampm === 'PM' && h < 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+
+    const t24 = `${String(h).padStart(2, '0')}:${m}`;
+    const startInp = document.getElementById('inpClassStartTime');
+    if (startInp) startInp.value = t24;
+
+    // Auto-adjust End Time if End Time is before or equal to Start Time
+    const endInp = document.getElementById('inpClassEndTime');
+    if (endInp && endInp.value) {
+      const [sH, sM] = t24.split(':').map(Number);
+      const [eH, eM] = endInp.value.split(':').map(Number);
+      const sMins = sH * 60 + sM;
+      const eMins = eH * 60 + eM;
+
+      if (eMins <= sMins) {
+        let newEMins = sMins + 90;
+        if (newEMins >= 24 * 60) newEMins = 24 * 60 - 1;
+        const newEH = Math.floor(newEMins / 60);
+        const newEM = newEMins % 60;
+        const newET24 = `${String(newEH).padStart(2, '0')}:${String(newEM).padStart(2, '0')}`;
+        set12HourEndFrom24(newET24);
+      }
+    }
+
+    calculateDurationAndSync();
+  }
+
+  function updateEnd24From12() {
+    const hSelect = document.getElementById('inpClassEndHour');
+    const mSelect = document.getElementById('inpClassEndMin');
+    const pSelect = document.getElementById('inpClassEndAmpm');
+    if (!hSelect || !mSelect || !pSelect) return;
+
+    let h = parseInt(hSelect.value, 10);
+    const m = mSelect.value;
+    let ampm = pSelect.value;
+
+    const startInp = document.getElementById('inpClassStartTime');
+    if (startInp && startInp.value) {
+      const [sH, sM] = startInp.value.split(':').map(Number);
+      const sMins = sH * 60 + sM;
+
+      let tempH = h;
+      if (ampm === 'PM' && tempH < 12) tempH += 12;
+      if (ampm === 'AM' && tempH === 12) tempH = 0;
+      let eMins = tempH * 60 + parseInt(m, 10);
+
+      // Auto switch End Time AM/PM to PM if Start Time is PM and current End Time range is invalid
+      if (eMins <= sMins && ampm === 'AM' && sH >= 12) {
+        pSelect.value = 'PM';
+        ampm = 'PM';
+      }
+    }
+
+    if (ampm === 'PM' && h < 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+
+    const t24 = `${String(h).padStart(2, '0')}:${m}`;
+    const endInp = document.getElementById('inpClassEndTime');
+    if (endInp) endInp.value = t24;
+
+    calculateDurationAndSync();
+  }
+
   function calculateDurationAndSync() {
     const startInp = document.getElementById('inpClassStartTime');
     const endInp = document.getElementById('inpClassEndTime');
@@ -2634,15 +2986,36 @@
         if (diff > 0) {
           durInp.value = `${diff} Mins`;
         } else {
-          durInp.value = 'Invalid range';
+          durInp.value = 'Invalid';
         }
       }
     }
     syncPreview();
   }
 
+  function showModalError(msg) {
+    const errEl = document.getElementById('modalClassError');
+    if (errEl) {
+      errEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0; color:#dc2626; margin-top: 1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${msg}</span>`;
+      errEl.style.display = 'flex';
+      const modalBox = document.querySelector('.add-class-modal-box');
+      if (modalBox) modalBox.scrollTop = 0;
+    } else {
+      alert(msg);
+    }
+  }
+
+  function clearModalError() {
+    const errEl = document.getElementById('modalClassError');
+    if (errEl) {
+      errEl.innerText = '';
+      errEl.style.display = 'none';
+    }
+  }
+
   // Open Modal for Scheduling a New Class
   function openAddClassModal(defaultDate = null) {
+    clearModalError();
     document.getElementById('editClassId').value = '';
     const titleEl = document.querySelector('.add-class-modal-title');
     if (titleEl) titleEl.innerText = 'Schedule New Class';
@@ -2660,10 +3033,25 @@
     }
 
     const startInp = document.getElementById('inpClassStartTime');
-    if (startInp && !startInp.value) startInp.value = '10:00';
+    const defaultStart = (startInp && startInp.value) ? startInp.value : '10:00';
+    set12HourStartFrom24(defaultStart);
 
     const endInp = document.getElementById('inpClassEndTime');
-    if (endInp && !endInp.value) endInp.value = '11:30';
+    const defaultEnd = (endInp && endInp.value) ? endInp.value : '11:30';
+    set12HourEndFrom24(defaultEnd);
+
+    const trainerInp = document.getElementById('inpClassTrainer');
+    if (trainerInp) {
+      trainerInp.value = loggedInMentorName || 'Mentor';
+    }
+
+    const descInp = document.getElementById('inpClassDesc');
+    if (descInp) descInp.value = '';
+    const linkInp = document.getElementById('inpClassLink');
+    if (linkInp) linkInp.value = '';
+
+    const modeSelect = document.getElementById('inpClassMode');
+    if (modeSelect) modeSelect.value = 'Online';
 
     calculateDurationAndSync();
 
@@ -2680,12 +3068,13 @@
 
   // Open Modal for Editing an Existing Class
   async function openEditClassModal(classId) {
+    clearModalError();
     try {
       showToast('Loading class details...');
       const res = await fetch(`/api/mentor/edit-class/${classId}/`);
       const data = await res.json();
       if (!data.success) {
-        alert(data.error || 'Failed to load class details.');
+        showModalError(data.error || 'Failed to load class details.');
         return;
       }
 
@@ -2694,54 +3083,70 @@
 
       // Update Modal Header & CTA
       const titleEl = document.querySelector('.add-class-modal-title');
-      if (titleEl) titleEl.innerText = 'Edit Scheduled Class';
+      if (titleEl) titleEl.innerText = 'Edit Class';
       const subEl = document.querySelector('.add-class-modal-subtitle');
       if (subEl) subEl.innerText = 'Update class topic, schedule timing, or meeting link.';
       const submitBtn = document.querySelector('.btn-modal-submit');
-      if (submitBtn) submitBtn.innerText = 'Update & Save Class';
+      if (submitBtn) submitBtn.innerText = 'Update Class';
 
-      // Populate Form Fields
+      // 1. Module
       const modSelect = document.getElementById('inpClassModule');
       if (modSelect && cls.module_id) {
         modSelect.value = cls.module_id;
       }
 
-      populateTopicDropdown(cls.module_id);
+      // 2. Topics for Module & preselect Topic ID
+      populateTopicDropdown(cls.module_id, cls.topic_id);
 
       const topicSelect = document.getElementById('inpClassTopic');
       if (topicSelect && cls.topic_id) {
         topicSelect.value = cls.topic_id;
       }
 
+      // 3. Batch
       const batchSelect = document.getElementById('inpClassBatch');
       if (batchSelect && cls.batch_id) {
         batchSelect.value = cls.batch_id;
       }
 
+      // 4. Faculty Trainer / Mentor
       const trainerInp = document.getElementById('inpClassTrainer');
-      if (trainerInp && cls.trainer_name) trainerInp.value = cls.trainer_name;
+      if (trainerInp) {
+        const safeTrainer = (cls.trainer_name && String(cls.trainer_name).trim().toLowerCase() !== 'undefined' && String(cls.trainer_name).trim().toLowerCase() !== 'null') ? cls.trainer_name : (loggedInMentorName || 'Mentor');
+        trainerInp.value = safeTrainer;
+      }
 
+      // 5. Date
       const dateInp = document.getElementById('inpClassDate');
-      if (dateInp && cls.date) dateInp.value = cls.date;
-
-      const startInp = document.getElementById('inpClassStartTime');
-      if (startInp) {
-        startInp.value = cls.start_time_24 || convert12to24(cls.start_time);
+      if (dateInp) {
+        dateInp.removeAttribute('min');
+        if (cls.date) dateInp.value = cls.date;
       }
 
-      const endInp = document.getElementById('inpClassEndTime');
-      if (endInp) {
-        endInp.value = cls.end_time_24 || convert12to24(cls.end_time);
-      }
+      // 6. Start & End Time
+      const startTimeVal = cls.start_time_24 || cls.start_time || convert12to24(cls.start_time);
+      set12HourStartFrom24(startTimeVal);
 
+      const endTimeVal = cls.end_time_24 || cls.end_time || convert12to24(cls.end_time);
+      set12HourEndFrom24(endTimeVal);
+
+      // 7. Duration
       const durInp = document.getElementById('inpClassDuration');
       if (durInp && cls.duration) durInp.value = cls.duration;
 
+      // 8. Description
       const descInp = document.getElementById('inpClassDesc');
       if (descInp && cls.description) descInp.value = cls.description;
 
+      // 9. Class Type
+      const modeSelect = document.getElementById('inpClassMode');
+      if (modeSelect) {
+        modeSelect.value = (cls.mode && cls.mode.toLowerCase().includes('offline')) ? 'Offline' : 'Online';
+      }
+
+      // 10. Meeting Link / Room
       const linkInp = document.getElementById('inpClassLink');
-      if (linkInp && cls.meeting_link) linkInp.value = cls.meeting_link;
+      if (linkInp) linkInp.value = cls.meeting_link || '';
 
       calculateDurationAndSync();
 
@@ -2755,12 +3160,13 @@
   }
 
   function closeAddClassModal() {
+    clearModalError();
     const m = document.getElementById('addClassModal');
     if (m) m.classList.remove('open');
   }
 
   // Populate Topics based on Selected Module (or all if none)
-  function populateTopicDropdown(selectedModId) {
+  function populateTopicDropdown(selectedModId, defaultTopicId = null) {
     const topicSelect = document.getElementById('inpClassTopic');
     if (!topicSelect) return;
     topicSelect.innerHTML = '';
@@ -2772,11 +3178,13 @@
         selectedMod.topics.forEach((t) => {
           const opt = document.createElement('option');
           opt.value = t.id;
-          opt.text = `${t.order}. ${t.name}`;
-          opt.dataset.name = t.name;
+          const orderPrefix = (t.order !== undefined && t.order !== null && t.order !== '' && String(t.order).toLowerCase() !== 'undefined') ? `${t.order}. ` : '';
+          const topicName = (t.name && String(t.name).toLowerCase() !== 'undefined') ? t.name : 'Topic';
+          opt.text = `${orderPrefix}${topicName}`;
+          opt.dataset.name = topicName;
           opt.dataset.moduleId = selectedMod.id;
-          opt.dataset.desc = t.description || '';
-          opt.dataset.duration = t.duration || '90 Mins';
+          opt.dataset.desc = (t.description && String(t.description).toLowerCase() !== 'undefined') ? t.description : '';
+          opt.dataset.duration = (t.duration && String(t.duration).toLowerCase() !== 'undefined') ? t.duration : '90 Mins';
           topicSelect.appendChild(opt);
         });
       } else {
@@ -2794,15 +3202,18 @@
       curriculumModules.forEach((m) => {
         if (m.topics && m.topics.length > 0) {
           const optgroup = document.createElement('optgroup');
-          optgroup.label = m.name;
+          const modOrderPrefix = (m.order !== undefined && m.order !== null && m.order !== '' && String(m.order).toLowerCase() !== 'undefined') ? `Module ${m.order}: ` : '';
+          optgroup.label = `${modOrderPrefix}${m.name || 'Module'}`;
           m.topics.forEach((t) => {
             const opt = document.createElement('option');
             opt.value = t.id;
-            opt.text = `${t.order}. ${t.name}`;
-            opt.dataset.name = t.name;
+            const orderPrefix = (t.order !== undefined && t.order !== null && t.order !== '' && String(t.order).toLowerCase() !== 'undefined') ? `${t.order}. ` : '';
+            const topicName = (t.name && String(t.name).toLowerCase() !== 'undefined') ? t.name : 'Topic';
+            opt.text = `${orderPrefix}${topicName}`;
+            opt.dataset.name = topicName;
             opt.dataset.moduleId = m.id;
-            opt.dataset.desc = t.description || '';
-            opt.dataset.duration = t.duration || '90 Mins';
+            opt.dataset.desc = (t.description && String(t.description).toLowerCase() !== 'undefined') ? t.description : '';
+            opt.dataset.duration = (t.duration && String(t.duration).toLowerCase() !== 'undefined') ? t.duration : '90 Mins';
             optgroup.appendChild(opt);
           });
           topicSelect.appendChild(optgroup);
@@ -2810,7 +3221,9 @@
       });
     }
 
-    if (topicSelect.options.length > 0) {
+    if (defaultTopicId) {
+      topicSelect.value = defaultTopicId;
+    } else if (topicSelect.options.length > 0) {
       topicSelect.selectedIndex = 0;
     }
     onTopicChange();
@@ -2831,8 +3244,12 @@
     if (topicSelect && topicSelect.selectedIndex >= 0) {
       const opt = topicSelect.options[topicSelect.selectedIndex];
       if (opt && opt.value) {
-        if (opt.dataset && opt.dataset.desc && descInp) descInp.value = opt.dataset.desc;
-        if (opt.dataset && opt.dataset.duration && durInp) durInp.value = opt.dataset.duration;
+        if (opt.dataset && descInp) {
+          descInp.value = (opt.dataset.desc && opt.dataset.desc !== 'undefined') ? opt.dataset.desc : '';
+        }
+        if (opt.dataset && durInp) {
+          durInp.value = (opt.dataset.duration && opt.dataset.duration !== 'undefined') ? opt.dataset.duration : '90 Mins';
+        }
         if (opt.dataset && opt.dataset.moduleId && modSelect && modSelect.value !== String(opt.dataset.moduleId)) {
           modSelect.value = opt.dataset.moduleId;
         }
@@ -2853,19 +3270,22 @@
     let title = 'Select Module & Topic above';
     if (topicSelect && topicSelect.selectedIndex >= 0 && topicSelect.options[topicSelect.selectedIndex].value) {
       const opt = topicSelect.options[topicSelect.selectedIndex];
-      title = opt.dataset.name || opt.text;
+      const optName = opt.dataset && opt.dataset.name ? opt.dataset.name : opt.text;
+      if (optName && optName !== 'undefined') {
+        title = optName;
+      }
     }
 
-    const desc = descInp && descInp.value.trim() ? descInp.value.trim() : 'Class syllabus overview will appear here...';
+    const desc = (descInp && descInp.value.trim() && descInp.value.trim() !== 'undefined') ? descInp.value.trim() : 'Class syllabus overview will appear here...';
     let batch = 'Select a Batch';
     if (batchSelect && batchSelect.options && batchSelect.selectedIndex >= 0 && batchSelect.options[batchSelect.selectedIndex].value) {
       batch = batchSelect.options[batchSelect.selectedIndex].text;
     }
-    const trainer = trainerInp && trainerInp.value.trim() ? trainerInp.value.trim() : 'Mentor';
+    let trainer = (trainerInp && trainerInp.value.trim() && trainerInp.value.trim().toLowerCase() !== 'undefined' && trainerInp.value.trim().toLowerCase() !== 'null') ? trainerInp.value.trim() : (loggedInMentorName || 'Mentor');
     const sTime = startInp && startInp.value ? formatTime12H(startInp.value) : '10:00 AM';
     const eTime = endInp && endInp.value ? formatTime12H(endInp.value) : '11:30 AM';
     const time = `${sTime} – ${eTime}`;
-    const dur = durInp && durInp.value.trim() ? durInp.value.trim() : '90 Mins';
+    const dur = (durInp && durInp.value.trim() && durInp.value.trim() !== 'undefined') ? durInp.value.trim() : '90 Mins';
 
     const pTitle = document.getElementById('prevClassTitle');
     const pDesc = document.getElementById('prevClassDesc');
@@ -2873,13 +3293,246 @@
     const pTrainer = document.getElementById('prevTrainer');
     const pTimeDur = document.getElementById('prevTimeDur');
     const pMode = document.getElementById('prevMode');
+    const modeSelect = document.getElementById('inpClassMode');
+    const modeVal = (modeSelect && modeSelect.value) ? modeSelect.value : 'Online';
 
     if (pTitle) pTitle.innerText = title;
     if (pDesc) pDesc.innerText = desc;
     if (pBatch) pBatch.innerText = batch;
     if (pTrainer) pTrainer.innerText = trainer;
     if (pTimeDur) pTimeDur.innerText = `${time} (${dur})`;
-    if (pMode) pMode.innerText = 'Online Class';
+    if (pMode) pMode.innerText = (modeVal && modeVal.includes('Offline')) ? 'Offline Class' : 'Online Class';
+  }
+
+  // =========================================================================
+  // EDIT CURRICULUM MODULE & TOPIC DIRECTLY FROM CLASSES MODAL (SYNCED TO ADMIN)
+  // =========================================================================
+  function openEditModuleModalFromClasses() {
+    const modSelect = document.getElementById('inpClassModule');
+    const selectedModId = modSelect ? modSelect.value : '';
+    if (!selectedModId) {
+      showToast('Please select a Curriculum Module first to edit.');
+      return;
+    }
+    const mod = curriculumModules.find(m => String(m.id) === String(selectedModId));
+    if (!mod) {
+      showToast('Module details not found.');
+      return;
+    }
+
+    document.getElementById('editModalModuleId').value = mod.id;
+    document.getElementById('editModalModuleOrder').value = mod.order || 1;
+    document.getElementById('editModalModuleName').value = mod.name || '';
+    document.getElementById('editModalModuleDesc').value = mod.description || '';
+
+    const sub = document.getElementById('modalEditCurriculumModule');
+    if (sub) sub.classList.add('open');
+  }
+
+  function closeEditModuleModalFromClasses() {
+    const sub = document.getElementById('modalEditCurriculumModule');
+    if (sub) sub.classList.remove('open');
+  }
+
+  async function submitEditModuleFromClasses() {
+    const modId = document.getElementById('editModalModuleId').value;
+    const name = document.getElementById('editModalModuleName').value.trim();
+    const order = parseInt(document.getElementById('editModalModuleOrder').value, 10) || 1;
+    const desc = document.getElementById('editModalModuleDesc').value.trim();
+
+    if (!modId) {
+      showToast('Module ID missing.');
+      return;
+    }
+    if (!name) {
+      alert('Module name is required.');
+      return;
+    }
+
+    const saveBtn = document.getElementById('btnSaveModuleFromClasses');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerText = 'Saving...';
+    }
+
+    try {
+      const res = await fetch(`/api/admin/curriculum/edit-module/${modId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ name: name, order: order, description: desc })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        const mod = curriculumModules.find(m => String(m.id) === String(modId));
+        if (mod) {
+          mod.name = name;
+          mod.order = order;
+          mod.description = desc;
+          if (mod.topics) {
+            mod.topics.forEach(t => {
+              t.moduleName = name;
+              t.moduleOrder = order;
+            });
+          }
+        }
+
+        const modSelect = document.getElementById('inpClassModule');
+        if (modSelect) {
+          for (let i = 0; i < modSelect.options.length; i++) {
+            if (modSelect.options[i].value === String(modId)) {
+              modSelect.options[i].text = `Module ${order}: ${name}`;
+              break;
+            }
+          }
+        }
+
+        const currentTopVal = document.getElementById('inpClassTopic')?.value;
+        populateTopicDropdown(modId, currentTopVal);
+
+        closeEditModuleModalFromClasses();
+        showToast('Module updated! Changes saved to database & reflected in Admin.');
+      } else {
+        alert(data.message || 'Failed to update module.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error while saving module.');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save & Reflect in Admin';
+      }
+    }
+  }
+
+  function openEditTopicModalFromClasses() {
+    const topicSelect = document.getElementById('inpClassTopic');
+    const selectedTopId = topicSelect ? topicSelect.value : '';
+    if (!selectedTopId) {
+      showToast('Please select a Topic / Class first to edit.');
+      return;
+    }
+
+    let foundTopic = null;
+    for (const m of curriculumModules) {
+      const t = (m.topics || []).find(item => String(item.id) === String(selectedTopId));
+      if (t) {
+        foundTopic = t;
+        break;
+      }
+    }
+
+    if (!foundTopic) {
+      showToast('Topic details not found.');
+      return;
+    }
+
+    document.getElementById('editModalTopicId').value = foundTopic.id;
+    document.getElementById('editModalTopicName').value = foundTopic.name || '';
+    document.getElementById('editModalTopicOrder').value = foundTopic.order || 1;
+    document.getElementById('editModalTopicDuration').value = foundTopic.duration || '90 Mins';
+    document.getElementById('editModalTopicStatus').value = foundTopic.status || 'Active';
+    document.getElementById('editModalTopicDesc').value = foundTopic.description || '';
+
+    const sub = document.getElementById('modalEditCurriculumTopic');
+    if (sub) sub.classList.add('open');
+  }
+
+  function closeEditTopicModalFromClasses() {
+    const sub = document.getElementById('modalEditCurriculumTopic');
+    if (sub) sub.classList.remove('open');
+  }
+
+  async function submitEditTopicFromClasses() {
+    const topId = document.getElementById('editModalTopicId').value;
+    const name = document.getElementById('editModalTopicName').value.trim();
+    const order = parseInt(document.getElementById('editModalTopicOrder').value, 10) || 1;
+    const duration = document.getElementById('editModalTopicDuration').value.trim() || '90 Mins';
+    const status = document.getElementById('editModalTopicStatus').value || 'Active';
+    const desc = document.getElementById('editModalTopicDesc').value.trim();
+
+    if (!topId) {
+      showToast('Topic ID missing.');
+      return;
+    }
+    if (!name) {
+      alert('Topic name is required.');
+      return;
+    }
+
+    const saveBtn = document.getElementById('btnSaveTopicFromClasses');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerText = 'Saving...';
+    }
+
+    try {
+      const res = await fetch(`/api/admin/curriculum/edit-topic/${topId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          name: name,
+          order: order,
+          description: desc,
+          duration: duration,
+          status: status
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        for (const m of curriculumModules) {
+          const t = (m.topics || []).find(item => String(item.id) === String(topId));
+          if (t) {
+            t.name = name;
+            t.order = order;
+            t.description = desc;
+            t.duration = duration;
+            t.status = status;
+            break;
+          }
+        }
+
+        const topicSelect = document.getElementById('inpClassTopic');
+        if (topicSelect) {
+          for (let i = 0; i < topicSelect.options.length; i++) {
+            const opt = topicSelect.options[i];
+            if (opt.value === String(topId)) {
+              opt.text = `${order}. ${name}`;
+              opt.dataset.name = name;
+              opt.dataset.desc = desc;
+              opt.dataset.duration = duration;
+              break;
+            }
+          }
+        }
+
+        const descInp = document.getElementById('inpClassDesc');
+        if (descInp) descInp.value = desc;
+        const durInp = document.getElementById('inpClassDuration');
+        if (durInp && durInp.value !== 'Invalid') durInp.value = duration;
+
+        syncPreview();
+
+        closeEditTopicModalFromClasses();
+        showToast('Topic updated! Changes saved to database & reflected in Admin.');
+      } else {
+        alert(data.message || 'Failed to update topic.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error while saving topic.');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save & Reflect in Admin';
+      }
+    }
   }
 
   function getCookie(name) {
@@ -2898,6 +3551,7 @@
   }
 
   async function submitAddClass() {
+    clearModalError();
     const editClassId = document.getElementById('editClassId').value;
     const modSelect = document.getElementById('inpClassModule');
     const topicSelect = document.getElementById('inpClassTopic');
@@ -2905,7 +3559,7 @@
     const topicId = topicSelect ? topicSelect.value : '';
 
     if (!topicId) {
-      alert('Please select a Topic / Class.');
+      showModalError('Please select a Topic / Class.');
       return;
     }
 
@@ -2917,49 +3571,56 @@
     const batchId = batchSelect ? batchSelect.value : '';
     const batchName = batchSelect && batchSelect.options && batchSelect.selectedIndex >= 0 ? batchSelect.options[batchSelect.selectedIndex].text : 'General Batch';
 
+    const trainerInp = document.getElementById('inpClassTrainer');
+    const trainerVal = (trainerInp && trainerInp.value.trim() && trainerInp.value.trim().toLowerCase() !== 'undefined' && trainerInp.value.trim().toLowerCase() !== 'null') ? trainerInp.value.trim() : (loggedInMentorName || 'Mentor');
+
     const classDate = document.getElementById('inpClassDate') ? document.getElementById('inpClassDate').value : '';
     const startTime = document.getElementById('inpClassStartTime') ? document.getElementById('inpClassStartTime').value : '';
     const endTime = document.getElementById('inpClassEndTime') ? document.getElementById('inpClassEndTime').value : '';
     const duration = document.getElementById('inpClassDuration') ? document.getElementById('inpClassDuration').value.trim() : '90 Mins';
     const description = document.getElementById('inpClassDesc') ? document.getElementById('inpClassDesc').value.trim() : '';
+    const modeSelect = document.getElementById('inpClassMode');
+    const modeVal = (modeSelect && modeSelect.value) ? modeSelect.value : 'Online';
     const link = document.getElementById('inpClassLink') ? document.getElementById('inpClassLink').value.trim() : '';
 
     // FRONTEND VALIDATION
     if (!classDate) {
-      alert('Please select a Class Date.');
+      showModalError('Please select a Class Date.');
       return;
     }
     if (!startTime) {
-      alert('Please select a Start Time.');
+      showModalError('Please select a Start Time.');
       return;
     }
     if (!endTime) {
-      alert('Please select an End Time.');
+      showModalError('Please select an End Time.');
       return;
     }
 
-    // 1. Past date check
+    // 1. Past date check (enforced strictly for new classes)
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    if (classDate < todayStr) {
-      alert('Cannot schedule a class for a past date.');
-      return;
-    }
-
-    // 2. Today + Start time check
-    if (classDate === todayStr) {
-      const curHH = String(now.getHours()).padStart(2, '0');
-      const curMM = String(now.getMinutes()).padStart(2, '0');
-      const curTimeStr = `${curHH}:${curMM}`;
-      if (startTime < curTimeStr) {
-        alert("Start Time cannot be in the past for today's classes.");
+    if (!editClassId) {
+      if (classDate < todayStr) {
+        showModalError('Cannot schedule a class for a past date.');
         return;
+      }
+
+      // 2. Today + Start time check
+      if (classDate === todayStr) {
+        const curHH = String(now.getHours()).padStart(2, '0');
+        const curMM = String(now.getMinutes()).padStart(2, '0');
+        const curTimeStr = `${curHH}:${curMM}`;
+        if (startTime < curTimeStr) {
+          showModalError("Start Time cannot be in the past for today's classes.");
+          return;
+        }
       }
     }
 
     // 3. Start time < End time
     if (startTime >= endTime) {
-      alert('Start Time must be before End Time.');
+      showModalError('Start Time must be before End Time.');
       return;
     }
 
@@ -2968,12 +3629,14 @@
       topic_id: topicId,
       subject: topicName,
       batch_id: batchId,
+      trainer: trainerVal,
+      trainer_name: trainerVal,
       date: classDate,
       start_time: startTime,
       end_time: endTime,
       duration: duration,
       description: description,
-      mode: 'Online',
+      mode: modeVal,
       meeting_link: link
     };
 
@@ -2998,13 +3661,14 @@
           window.location.reload();
         }, 600);
       } else {
-        alert(data.error || 'Failed to save class.');
+        showModalError(data.error || 'Failed to save class.');
       }
     } catch (err) {
       console.error(err);
-      alert('Error connecting to server while saving class.');
+      showModalError('Error connecting to server while saving class.');
     }
   }
+
 
   async function confirmDeleteClass(classId, subject) {
     if (!confirm(`Are you sure you want to delete this scheduled class?\n"${subject}"`)) {

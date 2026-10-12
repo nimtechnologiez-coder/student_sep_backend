@@ -1099,7 +1099,7 @@
               <line x1="8" x2="8" y1="2" y2="6" />
               <line x1="3" x2="21" y1="10" y2="10" />
             </svg>
-            <span>Mon, 24 Sep 2026</span>
+            <span id="headerDynamicDate">{% now "D, d M Y" %}</span>
           </div>
 
           <a href="{% url 'notifications' %}" class="header-notif-btn" title="Notifications">
@@ -1107,7 +1107,7 @@
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
               <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
             </svg>
-            <span class="header-notif-badge">3</span>
+            <span class="header-notif-badge" id="headerNotifBadge">{{ unread_notifications_count|default:0 }}</span>
           </a>
 
           <div class="header-user-profile" title="Admin Account">
@@ -1693,8 +1693,9 @@
           return;
         }
 
+        const isPhaseExpanded = phase.expanded || (query.length > 0);
         const phaseCard = document.createElement('div');
-        phaseCard.className = `phase-card ${phase.expanded ? 'expanded' : ''}`;
+        phaseCard.className = `phase-card ${isPhaseExpanded ? 'expanded' : ''}`;
         phaseCard.id = `phase-card-${phase.id}`;
 
         // Status badge styling
@@ -1788,8 +1789,9 @@
               return;
             }
 
+            const isModExpanded = mod.expanded || (query.length > 0);
             const modCard = document.createElement('div');
-            modCard.className = `module-card ${mod.expanded ? 'expanded' : ''}`;
+            modCard.className = `module-card ${isModExpanded ? 'expanded' : ''}`;
             modCard.id = `card-${mod.id}`;
 
             // Module Header
@@ -1931,6 +1933,15 @@
         phaseCard.appendChild(phaseBody);
         container.appendChild(phaseCard);
       });
+
+      if (query && container.children.length === 0) {
+        container.innerHTML = `
+          <div style="background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 48px; text-align: center; color: #64748b;">
+            <h3 style="margin: 0 0 8px; color: #0f172a; font-weight: 700;">No curriculum items match "${filterText}"</h3>
+            <p style="margin: 0; font-size: 0.875rem;">Try adjusting your search query or clear the search input.</p>
+          </div>
+        `;
+      }
 
       updateCounters();
     }

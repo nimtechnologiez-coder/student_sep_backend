@@ -286,6 +286,12 @@
         <span>Students</span>
       </a>
 
+      <!-- 4. Daily Attendance -->
+      <a href="{% url 'mentor_attendance' %}" class="nav-item {% if active_page == 'mentor_attendance' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Attendance</span>
+      </a>
+
       <!-- 4. Curriculum -->
       <a href="{% url 'mentor_curriculum' %}" class="nav-item {% if active_page == 'mentor_curriculum' %}active{% endif %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -298,19 +304,14 @@
         <span>Tasks &amp; Evaluations</span>
       </a>
 
-      <!-- 6. Reports -->
-      <a href="{% url 'mentor_reports' %}" class="nav-item {% if active_page == 'mentor_reports' %}active{% endif %}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span>Reports</span>
-      </a>
 
       <!-- 7. Messages -->
-      <a href="{% url 'mentor_notifications' %}" class="nav-item {% if active_page == 'mentor_messages' %}active{% endif %}" style="display: flex; justify-content: space-between; align-items: center;">
+      <a href="{% url 'mentor_notifications' %}" class="nav-item {% if active_page == 'mentor_messages' or active_page == 'mentor_notifications' %}active{% endif %}" style="display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 14px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span>Messages</span>
         </div>
-        <span style="background: #ef4444; color: #ffffff; font-size: 10px; font-weight: 800; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;">3</span>
+        <span style="background: {% if unread_notifications_count > 0 %}#ef4444{% else %}#64748b; opacity: 0.6;{% endif %}; color: #ffffff; font-size: 10px; font-weight: 800; border-radius: 50%; min-width: 18px; height: 18px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center;" id="mentorSidebarMsgBadge">{{ unread_notifications_count|default:0 }}</span>
       </a>
 
       <!-- Divider -->

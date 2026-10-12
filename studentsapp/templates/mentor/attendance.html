@@ -1,0 +1,849 @@
+{% extends 'mentor/base.html' %}
+{% load static %}
+
+{% block title %}Daily Attendance Management - Mentor Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+  .att-page-canvas {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 32px 60px;
+  }
+
+  /* Top Page Header Flex Row */
+  .att-top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 22px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .att-page-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.025em;
+    margin: 0 0 4px;
+    line-height: 1.2;
+  }
+
+  .att-page-subtitle {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* Header Right Date Selector */
+  .att-date-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 6px 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .att-date-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.03em;
+  }
+
+  .att-date-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #007782;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Scheduled Class Cards / Tabs Grid */
+  .session-tabs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .session-tab-card {
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    user-select: none;
+  }
+
+  .session-tab-card:hover {
+    border-color: #99f6e4;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 119, 130, 0.08);
+  }
+
+  .session-tab-card.active {
+    border-color: #007782 !important;
+    background: #f0fdfa !important;
+    box-shadow: 0 4px 14px rgba(0, 119, 130, 0.15) !important;
+  }
+
+  .session-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .session-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .session-badge {
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.71875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .session-badge.morning { background: #fef3c7; color: #b45309; }
+  .session-badge.afternoon { background: #e0f2fe; color: #0369a1; }
+  .session-badge.evening { background: #f3e8ff; color: #6b21a8; }
+
+  .session-batch-name {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 4px;
+  }
+
+  .session-card-meta {
+    font-size: 0.78125rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .session-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Active Batch Summary & Control Toolbar */
+  .att-toolbar-card {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  }
+
+  .att-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .batch-active-heading {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .att-stats-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-pill {
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 0.78125rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-pill.present { background: #dcfce7; color: #15803d; }
+  .stat-pill.late { background: #fef3c7; color: #b45309; }
+  .stat-pill.leave { background: #ede9fe; color: #5b21b6; }
+  .stat-pill.absent { background: #fee2e2; color: #b91c1c; }
+  .stat-pill.total { background: #f1f5f9; color: #475569; }
+
+  .att-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-mark-all-present {
+    padding: 8px 16px;
+    background: #ffffff;
+    color: #007782;
+    border: 1.5px solid #99f6e4;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-mark-all-present:hover {
+    background: #f0fdfa;
+    border-color: #007782;
+  }
+
+  .btn-save-att {
+    padding: 8px 20px;
+    background: #007782;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.84375rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 119, 130, 0.25);
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-save-att:hover {
+    background: #00606b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 119, 130, 0.3);
+  }
+
+  /* Student Attendance List Container */
+  .student-att-list-card {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 14px;
+    padding: 10px 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+  }
+
+  .student-att-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease;
+    gap: 16px;
+  }
+
+  .student-att-row:last-child {
+    border-bottom: none;
+  }
+
+  .student-att-row:hover {
+    background: #f8fafc;
+  }
+
+  .student-info-col {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .student-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .student-name-wrap {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .student-name {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .student-id {
+    font-size: 0.78125rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  /* Present / Absent Toggle Buttons Group */
+  .att-toggle-group {
+    display: flex;
+    align-items: center;
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .toggle-btn {
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .toggle-btn.btn-present.active {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+  }
+
+  .toggle-btn.btn-late.active {
+    background: #f59e0b !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3);
+  }
+
+  .toggle-btn.btn-leave.active {
+    background: #6366f1 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
+  }
+
+  .toggle-btn.btn-absent.active {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+  }
+
+  .status-chip {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    min-width: 68px;
+    text-align: center;
+  }
+
+  .status-chip.present { background: #dcfce7; color: #15803d; }
+  .status-chip.late { background: #fef3c7; color: #b45309; }
+  .status-chip.leave { background: #ede9fe; color: #5b21b6; }
+  .status-chip.absent { background: #fee2e2; color: #b91c1c; }
+  .status-chip.unmarked { background: #f1f5f9; color: #64748b; }
+
+  .empty-students-notice {
+    padding: 40px 20px;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 900px) {
+    .session-tabs-grid {
+      grid-template-columns: 1fr;
+    }
+    .att-page-canvas {
+      padding: 16px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="att-page-canvas">
+  <!-- Top Page Header -->
+  <div class="att-top-header">
+    <div>
+      <h1 class="att-page-title">Daily Attendance Management</h1>
+      <p class="att-page-subtitle">Select a batch session, toggle student presence, and save daily attendance day-wise.</p>
+    </div>
+
+    <!-- Date Picker Filter -->
+    <div class="att-date-wrap">
+      <span class="att-date-label">Date:</span>
+      <input type="date" id="attendanceDate" class="att-date-input" value="{{ selected_date }}" onchange="onAttendanceDateChange(this.value)">
+    </div>
+  </div>
+
+  <!-- Scheduled Class Cards / Tabs for Selected Date -->
+  <div class="session-tabs-grid" id="classTabsGrid">
+    {% for c in classes_data %}
+    <div class="session-tab-card {% if forloop.first %}active{% endif %}" id="tabClass{{ c.id }}" data-class-id="{{ c.id }}" onclick="switchClass(this.dataset.classId)">
+      <div class="session-card-header">
+        <div class="session-title-wrap">
+          <span>{{ c.icon }}</span> {{ c.subject }}
+        </div>
+        <span class="session-badge {{ c.session_lower }}">{{ c.session }}</span>
+      </div>
+      <div class="session-batch-name">{{ c.batch_name }}</div>
+      <div class="session-card-meta">
+        <div class="session-meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>{{ c.student_count }} Students</span>
+        </div>
+        <div class="session-meta-item" style="font-weight: 700;">
+          {% if c.has_attendance %}
+            <span style="color: #16a34a;">● Recorded ({{ c.present_count }} P / {{ c.absent_count }} A)</span>
+          {% elif c.is_available %}
+            <span style="color: #16a34a;">● Available ({{ c.schedule_time }})</span>
+          {% elif c.status_code == 'BEFORE' %}
+            <span style="color: #d97706;">⏰ Starts at {{ c.start_time }}</span>
+          {% else %}
+            <span style="color: #64748b;">🔒 Closed</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="no-classes-card" style="grid-column: 1 / -1; background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 14px; padding: 48px 24px; text-align: center;">
+      <div style="font-size: 2.2rem; margin-bottom: 10px;">📅</div>
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 6px;">
+        {% if is_today %}No classes scheduled for today{% else %}No classes scheduled for {{ selected_date_display }}{% endif %}
+      </h3>
+      <p style="font-size: 0.875rem; color: #64748b; margin: 0;">
+        No ClassSchedule records exist in the database for this date.
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Active Class Toolbar & Summary Bar -->
+  <div class="att-toolbar-card">
+    <div class="att-toolbar-left">
+      <div class="batch-active-heading" id="lblActiveClassHeading">
+        {% if total_classes > 0 %}Select a Scheduled Class above{% else %}No classes scheduled for today{% endif %}
+      </div>
+      <div class="att-stats-pills">
+        <span class="stat-pill present">🟢 Present: <strong id="lblPresentCount">{{ kpi.present }}</strong></span>
+        <span class="stat-pill late">🟡 Late: <strong id="lblLateCount">{{ kpi.late|default:0 }}</strong></span>
+        <span class="stat-pill leave">🟣 Leave: <strong id="lblLeaveCount">{{ kpi.leave|default:0 }}</strong></span>
+        <span class="stat-pill absent">🔴 Absent: <strong id="lblAbsentCount">{{ kpi.absent }}</strong></span>
+        <span class="stat-pill total">📊 Total: <strong id="lblTotalCount">{{ kpi.total }}</strong></span>
+      </div>
+    </div>
+
+    <div class="att-toolbar-right">
+      <button type="button" class="btn-mark-all-present" onclick="markAllPresent()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Mark All Present
+      </button>
+      <button type="button" class="btn-save-att" id="btnSaveAttendance" onclick="saveClassAttendance()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Attendance
+      </button>
+    </div>
+  </div>
+
+  <!-- Student Attendance List Container -->
+  <div class="student-att-list-card" id="studentAttListContainer">
+    <div class="empty-students-notice">
+      {% if total_classes > 0 %}Loading students...{% else %}{% if is_today %}No classes scheduled for today{% else %}No classes scheduled for {{ selected_date_display }}{% endif %}{% endif %}
+    </div>
+  <div id="classesDataJson" style="display:none;">{{ classes_json|safe }}</div>
+  <div id="metaAttendance" style="display:none;" data-is-today="{% if is_today %}true{% else %}false{% endif %}" data-date-display="{{ selected_date_display }}"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const _metaEl = document.getElementById('metaAttendance');
+  const classesData = JSON.parse(document.getElementById('classesDataJson')?.textContent || '[]');
+  const isToday = _metaEl?.dataset.isToday === 'true';
+  const selectedDateDisplay = _metaEl?.dataset.dateDisplay || '';
+  let activeClassObj = classesData.length > 0 ? classesData[0] : null;
+
+  function onAttendanceDateChange(dateVal) {
+    if (!dateVal) return;
+    window.location.href = `/mentor/attendance/?date=${dateVal}`;
+  }
+
+  function initScheduledClasses() {
+    if (classesData.length > 0) {
+      const firstAvail = classesData.find(c => c.is_available) || classesData[0];
+      switchClass(firstAvail.id);
+    } else {
+      activeClassObj = null;
+      renderActiveClassStudents();
+    }
+  }
+
+  function switchClass(classId) {
+    const numericId = Number(classId);
+    const match = classesData.find(c => c.id === numericId);
+    activeClassObj = match || null;
+
+    document.querySelectorAll('.session-tab-card').forEach(c => c.classList.remove('active'));
+    const tabEl = document.getElementById(`tabClass${classId}`);
+    if (tabEl) tabEl.classList.add('active');
+
+    renderActiveClassStudents();
+  }
+
+  function renderActiveClassStudents() {
+    const container = document.getElementById('studentAttListContainer');
+    const headingEl = document.getElementById('lblActiveClassHeading');
+    const btnMarkAll = document.querySelector('.btn-mark-all-present');
+    const btnSave = document.getElementById('btnSaveAttendance');
+    if (!container) return;
+
+    if (!activeClassObj) {
+      const emptyMsg = isToday ? 'No classes scheduled for today' : `No classes scheduled for ${selectedDateDisplay}`;
+      if (headingEl) headingEl.innerHTML = `<span>${emptyMsg}</span>`;
+      container.innerHTML = `<div class="empty-students-notice" style="padding: 48px 20px; font-weight: 600;">${emptyMsg}</div>`;
+      if (btnMarkAll) { btnMarkAll.disabled = true; btnMarkAll.style.opacity = '0.5'; btnMarkAll.style.cursor = 'not-allowed'; }
+      if (btnSave) { btnSave.disabled = true; btnSave.style.opacity = '0.5'; btnSave.style.cursor = 'not-allowed'; }
+      updateSummaryCounts();
+      return;
+    }
+
+    if (!activeClassObj.students || activeClassObj.students.length === 0) {
+      if (headingEl) headingEl.innerHTML = `<span>${activeClassObj.subject}</span> <span class="session-badge ${activeClassObj.session_lower}">${activeClassObj.batch_name}</span> <span class="session-badge" style="background: #f1f5f9; color: #64748b;">0 Students</span>`;
+      container.innerHTML = `<div class="empty-students-notice" style="padding: 40px 20px;">No active students assigned to this scheduled class.</div>`;
+      if (btnMarkAll) { btnMarkAll.disabled = true; btnMarkAll.style.opacity = '0.5'; btnMarkAll.style.cursor = 'not-allowed'; }
+      if (btnSave) { btnSave.disabled = true; btnSave.style.opacity = '0.5'; btnSave.style.cursor = 'not-allowed'; }
+      updateSummaryCounts();
+      return;
+    }
+
+    const isAvailable = !!activeClassObj.is_available;
+    const hasAttendance = !!activeClassObj.has_attendance;
+
+    if (headingEl) {
+      let statusBadgeHtml = '';
+      if (hasAttendance) {
+        statusBadgeHtml = `<span class="session-badge" style="background: #dcfce7; color: #15803d;">Recorded (${activeClassObj.schedule_time})</span>`;
+      } else if (isAvailable) {
+        statusBadgeHtml = `<span class="session-badge" style="background: #dcfce7; color: #15803d;">Active (${activeClassObj.schedule_time})</span>`;
+      } else {
+        statusBadgeHtml = `<span class="session-badge" style="background: #f1f5f9; color: #64748b;">${activeClassObj.status_message}</span>`;
+      }
+      headingEl.innerHTML = `<span>${activeClassObj.subject}</span> <span class="session-badge ${activeClassObj.session_lower}">${activeClassObj.batch_name}</span> ${statusBadgeHtml}`;
+    }
+
+    if (btnMarkAll) {
+      btnMarkAll.disabled = !isAvailable;
+      btnMarkAll.style.opacity = isAvailable ? '1' : '0.5';
+      btnMarkAll.style.cursor = isAvailable ? 'pointer' : 'not-allowed';
+    }
+    if (btnSave) {
+      btnSave.disabled = !isAvailable;
+      btnSave.style.opacity = isAvailable ? '1' : '0.5';
+      btnSave.style.cursor = isAvailable ? 'pointer' : 'not-allowed';
+    }
+
+    let html = '';
+
+    // Notice banner
+    if (!isAvailable) {
+      if (hasAttendance) {
+        html += `
+          <div style="margin: 16px 24px; padding: 12px 16px; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; color: #007782; font-weight: 700; font-size: 0.875rem; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Attendance recorded for this class (${activeClassObj.schedule_time})
+          </div>
+        `;
+      } else {
+        html += `
+          <div style="margin: 16px 24px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #64748b; font-weight: 700; font-size: 0.875rem; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            ${activeClassObj.time_notice}
+          </div>
+        `;
+      }
+    } else {
+      html += `
+        <div style="margin: 16px 24px; padding: 10px 16px; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; color: #007782; font-weight: 700; font-size: 0.875rem; display: flex; align-items: center; gap: 8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Attendance session is open (${activeClassObj.schedule_time})
+        </div>
+      `;
+    }
+
+    activeClassObj.students.forEach(st => {
+      const isPresent = st.status === 'Present';
+      const isLate = st.status === 'Late';
+      const isLeave = st.status === 'Leave';
+      const isAbsent = st.status === 'Absent';
+      const disabledAttr = isAvailable ? '' : 'disabled';
+      const btnStyle = isAvailable ? '' : 'style="opacity: 0.5; cursor: not-allowed;"';
+
+      let chipClass = 'status-chip unmarked';
+      let chipText = 'NOT MARKED';
+      if (isPresent) {
+        chipClass = 'status-chip present';
+        chipText = 'PRESENT';
+      } else if (isLate) {
+        chipClass = 'status-chip late';
+        chipText = 'LATE';
+      } else if (isLeave) {
+        chipClass = 'status-chip leave';
+        chipText = 'LEAVE';
+      } else if (isAbsent) {
+        chipClass = 'status-chip absent';
+        chipText = 'ABSENT';
+      }
+
+      html += `
+        <div class="student-att-row" id="row-st-${st.id}">
+          <div class="student-info-col">
+            <div class="student-avatar" style="background: ${st.avatar_color || '#007782'};">
+              ${st.initials || 'ST'}
+            </div>
+            <div class="student-name-wrap">
+              <span class="student-name">${st.name}</span>
+              <span class="student-id">ID: ${st.student_id}</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="att-toggle-group">
+              <button type="button" class="toggle-btn btn-present ${isPresent ? 'active' : ''}" ${disabledAttr} ${btnStyle} onclick="setStudentStatus(${st.id}, 'Present')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                Present
+              </button>
+              <button type="button" class="toggle-btn btn-late ${isLate ? 'active' : ''}" ${disabledAttr} ${btnStyle} onclick="setStudentStatus(${st.id}, 'Late')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Late
+              </button>
+              <button type="button" class="toggle-btn btn-leave ${isLeave ? 'active' : ''}" ${disabledAttr} ${btnStyle} onclick="setStudentStatus(${st.id}, 'Leave')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Leave
+              </button>
+              <button type="button" class="toggle-btn btn-absent ${isAbsent ? 'active' : ''}" ${disabledAttr} ${btnStyle} onclick="setStudentStatus(${st.id}, 'Absent')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Absent
+              </button>
+            </div>
+
+            <span class="${chipClass}" id="chip-st-${st.id}">
+              ${chipText}
+            </span>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+    updateSummaryCounts();
+  }
+
+  function setStudentStatus(studentDbId, status) {
+    if (!activeClassObj || !activeClassObj.is_available || !activeClassObj.students) return;
+
+    const st = activeClassObj.students.find(s => s.id === studentDbId);
+    if (st) {
+      st.status = status;
+    }
+
+    const row = document.getElementById(`row-st-${studentDbId}`);
+    if (row) {
+      const btnP = row.querySelector('.btn-present');
+      const btnLt = row.querySelector('.btn-late');
+      const btnLv = row.querySelector('.btn-leave');
+      const btnA = row.querySelector('.btn-absent');
+      const chip = document.getElementById(`chip-st-${studentDbId}`);
+
+      [btnP, btnLt, btnLv, btnA].forEach(b => { if (b) b.classList.remove('active'); });
+
+      if (status === 'Present') {
+        if (btnP) btnP.classList.add('active');
+        if (chip) { chip.className = 'status-chip present'; chip.innerText = 'PRESENT'; }
+      } else if (status === 'Late') {
+        if (btnLt) btnLt.classList.add('active');
+        if (chip) { chip.className = 'status-chip late'; chip.innerText = 'LATE'; }
+      } else if (status === 'Leave') {
+        if (btnLv) btnLv.classList.add('active');
+        if (chip) { chip.className = 'status-chip leave'; chip.innerText = 'LEAVE'; }
+      } else if (status === 'Absent') {
+        if (btnA) btnA.classList.add('active');
+        if (chip) { chip.className = 'status-chip absent'; chip.innerText = 'ABSENT'; }
+      }
+    }
+    updateSummaryCounts();
+  }
+
+  function markAllPresent() {
+    if (!activeClassObj || !activeClassObj.is_available || !activeClassObj.students) return;
+    activeClassObj.students.forEach(st => {
+      st.status = 'Present';
+      setStudentStatus(st.id, 'Present');
+    });
+    if (typeof showToast === 'function') {
+      showToast('Marked all students as Present!');
+    }
+  }
+
+  function updateSummaryCounts() {
+    let p = 0;
+    let lt = 0;
+    let lv = 0;
+    let a = 0;
+    let tot = 0;
+
+    if (activeClassObj && activeClassObj.students) {
+      tot = activeClassObj.students.length;
+      activeClassObj.students.forEach(s => {
+        if (s.status === 'Present') p++;
+        else if (s.status === 'Late') lt++;
+        else if (s.status === 'Leave') lv++;
+        else if (s.status === 'Absent') a++;
+      });
+      activeClassObj.present_count = p;
+      activeClassObj.late_count = lt;
+      activeClassObj.leave_count = lv;
+      activeClassObj.absent_count = a;
+    }
+
+    const lblP = document.getElementById('lblPresentCount');
+    const lblLt = document.getElementById('lblLateCount');
+    const lblLv = document.getElementById('lblLeaveCount');
+    const lblA = document.getElementById('lblAbsentCount');
+    const lblT = document.getElementById('lblTotalCount');
+
+    if (lblP) lblP.innerText = p;
+    if (lblLt) lblLt.innerText = lt;
+    if (lblLv) lblLv.innerText = lv;
+    if (lblA) lblA.innerText = a;
+    if (lblT) lblT.innerText = tot;
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue || '';
+  }
+
+  async function saveClassAttendance() {
+    if (!activeClassObj || !activeClassObj.is_available) {
+      alert(activeClassObj ? activeClassObj.time_notice : 'Attendance is not available for this class.');
+      return;
+    }
+
+    if (!activeClassObj.students || activeClassObj.students.length === 0) {
+      alert('No students to save in this class.');
+      return;
+    }
+
+    const dateVal = document.getElementById('attendanceDate').value;
+    const records = activeClassObj.students.map(s => ({
+      student_id: s.id,
+      status: s.status || 'Present'
+    }));
+
+    const payload = {
+      class_id: activeClassObj.id,
+      batch_id: activeClassObj.batch_id,
+      date: dateVal,
+      attendance: records
+    };
+
+    const saveBtn = document.getElementById('btnSaveAttendance');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerText = 'Saving...';
+    }
+
+    try {
+      const res = await fetch('/api/mentor/save-daily-attendance/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        activeClassObj.has_attendance = true;
+        const tabMeta = document.querySelector(`#tabClass${activeClassObj.id} .session-card-meta .session-meta-item:last-child`);
+        if (tabMeta) {
+          let recSummary = `${activeClassObj.present_count} P`;
+          if (activeClassObj.late_count) recSummary += ` / ${activeClassObj.late_count} L`;
+          if (activeClassObj.leave_count) recSummary += ` / ${activeClassObj.leave_count} Lv`;
+          recSummary += ` / ${activeClassObj.absent_count} A`;
+          tabMeta.innerHTML = `<span style="color: #16a34a;">● Recorded (${recSummary})</span>`;
+        }
+        if (typeof showToast === 'function') {
+          showToast(data.message || 'Attendance saved successfully!');
+        } else {
+          alert(data.message || 'Attendance saved successfully!');
+        }
+      } else {
+        alert(data.error || 'Failed to save attendance.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error while saving attendance.');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = !activeClassObj.is_available;
+        saveBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Attendance`;
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initScheduledClasses();
+  });
+</script>
+{% endblock %}
