@@ -2814,17 +2814,27 @@ def mentor_notifications(request):
     return render(request, 'mentor/notifications.html', context)
 
 def login_view(request):
+    # If user is already authenticated and visits login page, redirect to their dashboard
+    if request.method == 'GET':
+        appuser_role = str(request.session.get('appuser_role', '')).lower()
+        if appuser_role == 'mentor':
+            return redirect('mentor_dashboard')
+        if (request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)) or appuser_role in ('admin', 'administrator') or str(request.session.get('role', '')).lower() in ('admin', 'administrator'):
+            return redirect('dashboard')
+
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
-        print(f"DEBUG LOGIN: username='{username}', password='{password}'")
         role = request.POST.get('role', 'admin') # if they selected a role in the UI
         
         # 1. Check Django Superuser
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            if user.is_superuser:
+            if user.is_superuser or user.is_staff:
                 login(request, user)
+                request.session['role'] = 'Admin'
+                request.session['appuser_role'] = 'Admin'
+                request.session['appuser_name'] = user.get_full_name() or user.username
                 return redirect('dashboard')
             else:
                 return render(request, 'login.html', {'error': 'Only administrators can access the admin control center.'})
@@ -2835,12 +2845,11 @@ def login_view(request):
                 student = Student.objects.get(parent_username=username, parent_password=password)
                 request.session['parent_student_id'] = student.student_id
                 request.session['role'] = 'Parent'
-                # Redirect to a generic place or parent portal
-                return redirect('students') # Temporary redirect for parent
+                return redirect('students')
             except Student.DoesNotExist:
                 return render(request, 'login.html', {'error': 'Invalid username or password.'})
 
-        # 3. Check AppUser (Mentor/Accountant)
+        # 3. Check AppUser (Mentor/Admin/Accountant)
         try:
             appuser = AppUser.objects.get(username=username, portal_password=password)
             if appuser.status.lower() == 'blocked':
@@ -2853,6 +2862,9 @@ def login_view(request):
             
             if appuser.role.lower() == 'mentor':
                 return redirect('mentor_dashboard')
+            elif appuser.role.lower() in ('admin', 'administrator'):
+                request.session['role'] = 'Admin'
+                return redirect('dashboard')
             else:
                 return render(request, 'login.html', {'error': f'Dashboard for {appuser.role} is not available yet.'})
                 
