@@ -161,7 +161,7 @@
           </div>
         </div>
 
-        <!-- 6 Category Pill Tabs -->
+        <!-- Category Pill Tabs -->
         <div class="filter-tabs-row">
           <button class="pill-tab-btn active" onclick="switchReportCategory(this, 'all')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
@@ -171,21 +171,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
             <span>Attendance Reports</span>
           </button>
-          <button class="pill-tab-btn" onclick="switchReportCategory(this, 'academic')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
-            <span>Academic Performance</span>
-          </button>
-          <button class="pill-tab-btn" onclick="switchReportCategory(this, 'progress')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-            <span>Student Progress & Mastery</span>
-          </button>
           <button class="pill-tab-btn" onclick="switchReportCategory(this, 'batch')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
             <span>Batch Clearance</span>
-          </button>
-          <button class="pill-tab-btn" onclick="switchReportCategory(this, 'fee')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-            <span>Fee Dues & Aging</span>
           </button>
         </div>
       </div>
@@ -315,89 +303,7 @@
             </table>
           </div>
 
-          <!-- 3. Academic Performance Panel -->
-          <div class="tab-content-panel" id="panel-academic" style="display: none;">
-            <table class="admin-data-table reports-table-element">
-              <thead>
-                <tr>
-                  <th style="width: 240px;">Student & ID</th>
-                  <th>Batch / Cohort</th>
-                  <th>Assessments Taken</th>
-                  <th>Average Grade / Score</th>
-                  <th>Academic Standing</th>
-                  <th>Program Domain</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in student_reports %}
-                <tr data-program="{{ item.student.course }}" data-status="{{ item.student.status }}">
-                  <td>
-                    <div class="entity-cell">
-                      <div class="entity-avatar" style="background: linear-gradient(135deg, #16a34a, #15803d);">{{ item.student.name|slice:":1"|upper }}</div>
-                      <div class="entity-info">
-                        <span class="entity-name">{{ item.student.name }}</span>
-                        <span class="entity-sub">{{ item.student.student_id }}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="font-mono-code">{{ item.student.batch.name|default:"Unassigned" }}</span>
-                  </td>
-                  <td><strong>{{ item.test_count }}</strong></td>
-                  <td><strong style="color: #2563eb; font-size: 0.95rem;">{{ item.avg_score }}%</strong></td>
-                  <td><span class="{{ item.acad_badge_class }}">{{ item.acad_grade }}</span></td>
-                  <td><span style="color: #475569; font-size: 0.85rem;">{{ item.student.course }}</span></td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No academic performance reports found.</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
 
-          <!-- 4. Student Progress & Mastery Panel -->
-          <div class="tab-content-panel" id="panel-progress" style="display: none;">
-            <table class="admin-data-table reports-table-element">
-              <thead>
-                <tr>
-                  <th style="width: 240px;">Student & ID</th>
-                  <th>Batch / Cohort</th>
-                  <th>Topics Completed</th>
-                  <th>Hands-on Labs</th>
-                  <th>Compute Env</th>
-                  <th>Curriculum Plan</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in student_reports %}
-                <tr data-program="{{ item.student.course }}" data-status="{{ item.student.status }}">
-                  <td>
-                    <div class="entity-cell">
-                      <div class="entity-avatar" style="background: linear-gradient(135deg, #9333ea, #7e22ce);">{{ item.student.name|slice:":1"|upper }}</div>
-                      <div class="entity-info">
-                        <span class="entity-name">{{ item.student.name }}</span>
-                        <span class="entity-sub">{{ item.student.student_id }}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="font-mono-code">{{ item.student.batch.name|default:"Unassigned" }}</span>
-                  </td>
-                  <td><strong>{{ item.student.topics_count|default:"12" }} Topics</strong></td>
-                  <td><span style="color: #059669; font-weight: 700;">{{ item.student.hands_on_labs|default:"4" }} Labs Completed</span></td>
-                  <td><span class="font-mono-code">{{ item.student.compute_env|default:"AWS Cloud9" }}</span></td>
-                  <td><span class="badge-status-active">{{ item.student.plan|default:"Placement Included" }}</span></td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No student progress reports found.</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
 
           <!-- 5. Batch Clearance Panel -->
           <div class="tab-content-panel" id="panel-batch" style="display: none;">
@@ -439,47 +345,7 @@
             </table>
           </div>
 
-          <!-- 6. Fee Dues & Aging Panel -->
-          <div class="tab-content-panel" id="panel-fee" style="display: none;">
-            <table class="admin-data-table reports-table-element">
-              <thead>
-                <tr>
-                  <th style="width: 240px;">Student & ID</th>
-                  <th>Batch / Cohort</th>
-                  <th>Total Paid (₹)</th>
-                  <th>Balance Due (₹)</th>
-                  <th>Last Payment Date</th>
-                  <th>Payment Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in student_reports %}
-                <tr data-program="{{ item.student.course }}" data-status="{{ item.student.status }}">
-                  <td>
-                    <div class="entity-cell">
-                      <div class="entity-avatar" style="background: linear-gradient(135deg, #059669, #047857);">{{ item.student.name|slice:":1"|upper }}</div>
-                      <div class="entity-info">
-                        <span class="entity-name">{{ item.student.name }}</span>
-                        <span class="entity-sub">{{ item.student.student_id }}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="font-mono-code">{{ item.student.batch.name|default:"Unassigned" }}</span>
-                  </td>
-                  <td><strong style="color: #16a34a;">₹{{ item.fee_paid }}</strong></td>
-                  <td><strong style="color: {% if item.fee_due > 0 %}#dc2626{% else %}#64748b{% endif %};">₹{{ item.fee_due }}</strong></td>
-                  <td><span style="color: #64748b; font-size: 0.875rem;">{{ item.last_pmt_date|date:"d M Y" }}</span></td>
-                  <td><span class="{{ item.fee_badge_class }}">{{ item.fee_status }}</span></td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No fee dues reports found.</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+
 
         </div>
 
@@ -532,10 +398,7 @@
           <label class="form-label-title">Report Category *</label>
           <select class="form-select-box" required>
             <option value="attendance">Student & Batch Attendance Log</option>
-            <option value="academic">Academic Gradebook & Assessment Performance</option>
-            <option value="progress">Student Progress & Technical Mastery Dossier</option>
             <option value="batch">Batch Clearance & Placement Readiness</option>
-            <option value="fee">Fee Dues, Payment History & Aging Schedule</option>
           </select>
         </div>
 
@@ -607,10 +470,7 @@
     const titles = {
       'all': 'Executive Overview & Student Directory',
       'attendance': 'Attendance Records & Biometric Audit Log',
-      'academic': 'Academic Curriculum Mastery & Grade Distributions',
-      'progress': 'Student Progress, Lab Submissions & Mastery Dossier',
-      'batch': 'Batch Clearance & Graduation Certification Status',
-      'fee': 'Fee Realization, Installment Collection & Aging Schedule'
+      'batch': 'Batch Clearance & Graduation Certification Status'
     };
     heading.textContent = titles[category] || titles['all'];
 
