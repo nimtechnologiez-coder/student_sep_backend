@@ -483,7 +483,7 @@
 
           <div class="form-group-field">
             <label class="form-label-title">Priority Level</label>
-            <select class="form-select-box">
+            <select class="form-select-box" name="priority" id="modalNotifPriority">
               <option value="normal">Normal Broadcast</option>
               <option value="high">High Priority</option>
               <option value="urgent">Urgent Banner Alert</option>
@@ -494,18 +494,46 @@
         <div class="form-grid-2col">
           <div class="form-group-field">
             <label class="form-label-title">Target Audience *</label>
-            <select class="form-select-box" name="target_group" id="modalNotifAudience" required>
+            <select class="form-select-box" name="target_audience" id="modalNotifAudience" required onchange="handleAudienceChange(this.value)">
               <option value="All Students">All Students</option>
-              <option value="Batch Students">Batch Students</option>
-              <option value="Mentors">Mentors</option>
+              <option value="Batch Students">Specific Batch</option>
+              <option value="Individual Student">Individual Student</option>
+              <option value="Mentors">All Mentors</option>
+              <option value="Selected Mentor">Specific Mentor</option>
               <option value="Accountants">Accountants</option>
               <option value="Parents">Parents</option>
             </select>
           </div>
 
-          <div class="form-group-field">
-            <label class="form-label-title">Schedule Send</label>
-            <input type="datetime-local" class="form-input-text" value="2026-09-24T12:30">
+          <!-- Dynamic Recipient Selectors -->
+          <div class="form-group-field" id="batchSelectGroup" style="display: none;">
+            <label class="form-label-title">Select Batch *</label>
+            <select class="form-select-box" name="target_batch_id" id="modalTargetBatch">
+              <option value="">-- Choose Batch --</option>
+              {% for b in all_batches %}
+              <option value="{{ b.id }}">{{ b.name }} ({{ b.timing }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group-field" id="studentSelectGroup" style="display: none;">
+            <label class="form-label-title">Select Student *</label>
+            <select class="form-select-box" name="target_student_id" id="modalTargetStudent">
+              <option value="">-- Choose Student --</option>
+              {% for s in all_students %}
+              <option value="{{ s.id }}">{{ s.name }} ({{ s.student_id }}{% if s.batch %} - {{ s.batch.name }}{% endif %})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group-field" id="mentorSelectGroup" style="display: none;">
+            <label class="form-label-title">Select Mentor *</label>
+            <select class="form-select-box" name="target_mentor_id" id="modalTargetMentor">
+              <option value="">-- Choose Mentor --</option>
+              {% for m in all_mentors %}
+              <option value="{{ m.id }}">{{ m.name }} ({{ m.email }})</option>
+              {% endfor %}
+            </select>
           </div>
         </div>
 
@@ -529,12 +557,23 @@
 </div>
 
 <script>
+    function handleAudienceChange(val) {
+      const batchGroup = document.getElementById('batchSelectGroup');
+      const studentGroup = document.getElementById('studentSelectGroup');
+      const mentorGroup = document.getElementById('mentorSelectGroup');
+
+      if (batchGroup) batchGroup.style.display = (val === 'Batch Students') ? 'block' : 'none';
+      if (studentGroup) studentGroup.style.display = (val === 'Individual Student') ? 'block' : 'none';
+      if (mentorGroup) mentorGroup.style.display = (val === 'Selected Mentor') ? 'block' : 'none';
+    }
+
     function openNewModal() {
       document.getElementById('modalNotifId').value = '';
       document.getElementById('modalNotifTitle').value = '';
       document.getElementById('modalNotifMessage').value = '';
       document.getElementById('modalNotifCategory').selectedIndex = 0;
       document.getElementById('modalNotifAudience').selectedIndex = 0;
+      handleAudienceChange('All Students');
       document.getElementById('broadcastModal').classList.add('active');
     }
 

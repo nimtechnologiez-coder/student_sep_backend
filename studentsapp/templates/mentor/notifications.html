@@ -413,7 +413,7 @@
 
       <!-- Action Buttons -->
       <div style="display: flex; gap: 8px; align-items: center; shrink: 0;">
-        <button class="btn-table-sm primary" onclick="openNotifDetail('{{ n.id }}', '{{ n.title|escapejs }}', '{{ n.message|escapejs }}', '{{ n.timestamp|date:"M d, Y • h:i A" }}', '{% if n.direction == "question" %}From: {{ n.sender_student.name|escapejs }}{% elif n.direction == "sent" %}To: {% if n.target_student %}{{ n.target_student.name|escapejs }}{% else %}{{ n.target_group|escapejs }}{% endif %}{% else %}From: Academy Admin{% endif %}', '{% if n.direction %}{{ n.direction }}{% elif n.sender_mentor %}sent{% else %}admin{% endif %}');">
+        <button class="btn-table-sm primary" onclick="openNotifDetail('{{ n.id }}', '{{ n.title|escapejs }}', '{{ n.message|escapejs }}', '{{ n.timestamp|date:"M d, Y • h:i A" }}', '{% if n.direction == "question" %}From: {{ n.sender_student.name|escapejs }}{% elif n.direction == "sent" %}To: {% if n.target_student %}{{ n.target_student.name|escapejs }}{% else %}{{ n.target_group|escapejs }}{% endif %}{% else %}From: Academy Admin{% endif %}', '{% if n.direction %}{{ n.direction }}{% elif n.sender_mentor %}sent{% else %}admin{% endif %}', '{{ n.request.id|default:"" }}');">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
@@ -550,6 +550,28 @@
       <p id="readMsgFrom" style="font-size: 0.875rem; font-weight: 600; color: #007782; margin: 0 0 16px 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;"></p>
       
       <div id="readMsgBody" style="font-size: 0.9375rem; color: #334155; line-height: 1.6; white-space: pre-wrap; background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0;"></div>
+
+      <!-- Quick Reply Form for Student Doubts -->
+      <div id="mentorReplySection" style="display: none; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+        <h4 style="font-size: 0.9375rem; font-weight: 700; color: #0f172a; margin: 0 0 10px 0;">Reply to Student Doubt</h4>
+        <input type="hidden" id="replyRequestId" value="">
+        <div class="form-group-custom" style="margin-bottom: 12px;">
+          <label style="font-size: 0.8125rem; font-weight: 600; color: #475569;">Update Status</label>
+          <select id="replyStatusSelect" class="form-select-custom" style="padding: 8px 12px; font-size: 0.875rem;">
+            <option value="Resolved">Resolved</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Open">Open</option>
+          </select>
+        </div>
+        <div class="form-group-custom" style="margin-bottom: 12px;">
+          <label style="font-size: 0.8125rem; font-weight: 600; color: #475569;">Your Reply Message *</label>
+          <textarea id="replyMessageText" class="form-textarea-custom" rows="3" placeholder="Type your response to the student here..." style="font-size: 0.875rem;"></textarea>
+        </div>
+        <button type="button" class="btn-nim-primary" id="btnSubmitReply" onclick="submitMentorReply();" style="width: 100%; justify-content: center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Send Reply to Student</span>
+        </button>
+      </div>
     </div>
 
     <div class="modal-footer-bar">
@@ -840,11 +862,23 @@
   }
 
   // 10. Open Detail Modal & Mark Notification as Read
-  async function openNotifDetail(id, title, message, dateStr, fromStr, direction) {
+  async function openNotifDetail(id, title, message, dateStr, fromStr, direction, requestId) {
     document.getElementById('readMsgTitle').textContent = title;
     document.getElementById('readMsgBody').textContent = message;
     document.getElementById('readMsgDate').textContent = dateStr;
     document.getElementById('readMsgFrom').textContent = fromStr;
+
+    const replySection = document.getElementById('mentorReplySection');
+    const replyReqId = document.getElementById('replyRequestId');
+    const replyText = document.getElementById('replyMessageText');
+    if (replyText) replyText.value = '';
+
+    if (direction === 'question' && requestId) {
+      if (replyReqId) replyReqId.value = requestId;
+      if (replySection) replySection.style.display = 'block';
+    } else {
+      if (replySection) replySection.style.display = 'none';
+    }
 
     const badge = document.getElementById('readMsgBadge');
     if (direction === 'question') {
@@ -883,6 +917,53 @@
       }
     } catch (e) {
       console.error(e);
+    }
+  }
+
+  async function submitMentorReply() {
+    const requestId = document.getElementById('replyRequestId').value;
+    const message = (document.getElementById('replyMessageText').value || '').trim();
+    const status = document.getElementById('replyStatusSelect').value;
+
+    if (!requestId) {
+      alert('This notification is not directly linked to a doubt ticket ID.');
+      return;
+    }
+    if (!message) {
+      alert('Please enter a reply message.');
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitReply');
+    btn.disabled = true;
+    btn.innerHTML = '<span>Sending...</span>';
+
+    try {
+      const res = await fetch('/api/mentor/reply-doubt/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          request_id: requestId,
+          message: message,
+          status: status
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Reply sent to student successfully!');
+        closeReadMsgModal();
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.message || data.error || 'Failed to send reply'));
+      }
+    } catch (e) {
+      alert('Network error: ' + e);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Send Reply to Student</span>';
     }
   }
 

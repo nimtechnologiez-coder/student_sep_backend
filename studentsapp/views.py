@@ -15,7 +15,7 @@ import json
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, date, time, timedelta
-from .models import Student, Batch, FeePayment, PlacementOffer, ClassSchedule, Trainer, Attendance, Activity, AcademicModule, Assessment, AssessmentResult, Notification, NotificationUserStatus, AppUser, StudentRequest, CurriculumMonth, CurriculumModule, CurriculumTopic, CourseModule, CourseTopic, Task, TaskSubmission, StudentTopicProgress
+from .models import Student, Batch, FeePayment, PlacementOffer, ClassSchedule, Trainer, Attendance, Activity, AcademicModule, Assessment, AssessmentResult, Notification, NotificationUserStatus, AppUser, StudentRequest, RequestReply, CurriculumMonth, CurriculumModule, CurriculumTopic, CourseModule, CourseTopic, Task, TaskSubmission, StudentTopicProgress
 
 def clean_username_part(name: str) -> str:
     if not name:
@@ -1432,11 +1432,38 @@ def notifications(request):
         action_type = request.POST.get('action_type', 'broadcast')
         if action_type == 'broadcast':
             notif_id = request.POST.get('notif_id')
-            title = request.POST.get('title')
-            message = request.POST.get('message')
+            title = request.POST.get('title', '').strip()
+            message = request.POST.get('message', '').strip()
             category = request.POST.get('category', 'System')
-            target_group = request.POST.get('target_group', 'All Students')
-            
+            target_audience = request.POST.get('target_audience', request.POST.get('target_group', 'All Students'))
+            priority = request.POST.get('priority', 'normal')
+            student_id = request.POST.get('target_student_id')
+            mentor_id = request.POST.get('target_mentor_id')
+            batch_id = request.POST.get('target_batch_id')
+
+            target_student = None
+            target_mentor = None
+            target_group = target_audience
+
+            if target_audience in ['Individual Student', 'student'] and student_id:
+                try:
+                    target_student = Student.objects.get(id=student_id)
+                    target_group = f"Student: {target_student.name}"
+                except Student.DoesNotExist:
+                    pass
+            elif target_audience in ['Selected Mentor', 'mentor'] and mentor_id:
+                try:
+                    target_mentor = AppUser.objects.get(id=mentor_id)
+                    target_group = f"Mentor: {target_mentor.name}"
+                except AppUser.DoesNotExist:
+                    pass
+            elif target_audience in ['Batch Students', 'batch'] and batch_id:
+                try:
+                    batch = Batch.objects.get(id=batch_id)
+                    target_group = f"Batch: {batch.name}"
+                except Batch.DoesNotExist:
+                    pass
+
             if notif_id:
                 try:
                     notif = Notification.objects.get(id=notif_id)
@@ -1444,6 +1471,9 @@ def notifications(request):
                     notif.message = message
                     notif.category = category
                     notif.target_group = target_group
+                    notif.target_student = target_student
+                    notif.target_mentor = target_mentor
+                    notif.priority = priority
                     notif.save()
                 except Notification.DoesNotExist:
                     pass
@@ -1453,24 +1483,40 @@ def notifications(request):
                     message=message,
                     category=category,
                     target_group=target_group,
+                    target_student=target_student,
+                    target_mentor=target_mentor,
+                    priority=priority,
+                    direction='sent',
                     is_read=False
                 )
         elif action_type == 'reply':
             request_id = request.POST.get('request_id')
-            reply_msg = request.POST.get('reply_message')
-            status = request.POST.get('status')
+            reply_msg = request.POST.get('reply_message', '').strip()
+            status = request.POST.get('status', 'Resolved')
             try:
                 sreq = StudentRequest.objects.get(id=request_id)
                 sreq.admin_reply = reply_msg
                 sreq.status = status
                 sreq.save()
-                # Create a notification for the student
+
+                admin_user = AppUser.objects.filter(role__iexact='Admin', status='Active').first() or AppUser.objects.filter(role__iexact='Admin').first()
+                RequestReply.objects.create(
+                    request=sreq,
+                    sender_type='admin',
+                    sender_user=admin_user,
+                    message=reply_msg
+                )
+
+                # Create a notification strictly for this student
                 Notification.objects.create(
-                    title=f"Reply to your request: {sreq.subject}",
+                    title=f"Admin Replied: {sreq.subject}",
                     message=reply_msg,
                     category='Support Reply',
-                    target_group='Specific Student',
+                    target_group=f"Student: {sreq.student.name}",
                     target_student=sreq.student,
+                    request=sreq,
+                    direction='reply',
+                    priority='high',
                     is_read=False
                 )
             except StudentRequest.DoesNotExist:
@@ -1514,7 +1560,13 @@ def notifications(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    student_requests = StudentRequest.objects.all().order_by('-created_at')
+    student_requests = StudentRequest.objects.filter(
+        Q(recipient_type='Admin') | Q(recipient_type__isnull=True)
+    ).order_by('-created_at')
+
+    all_students = Student.objects.filter(approval_status='Approved').exclude(status='Dropped').order_by('name')
+    all_mentors = AppUser.objects.filter(role__iexact='Mentor', status='Active').order_by('name')
+    all_batches = Batch.objects.filter(status='Active').order_by('name')
 
     total_cnt = Notification.objects.count()
     unread_cnt = Notification.objects.filter(is_read=False).count()
@@ -1525,15 +1577,18 @@ def notifications(request):
         'total': total_cnt,
         'unread': unread_cnt,
         'read_rate': read_rate,
-        'fee_alerts': Notification.objects.filter(category='Fee Alert').count(),
-        'assessments': Notification.objects.filter(category='Assessments').count(),
-        'system': Notification.objects.filter(category='System').count(),
+        'fee_alerts': Notification.objects.filter(category__icontains='Fee').count(),
+        'assessments': Notification.objects.filter(category__icontains='Assess').count(),
+        'system': Notification.objects.filter(category__icontains='System').count(),
     }
 
     context = {
         'active_page': 'notifications',
         'notifications': page_obj,
         'student_requests': student_requests,
+        'all_students': all_students,
+        'all_mentors': all_mentors,
+        'all_batches': all_batches,
         'kpi': kpi,
         'unread_notifications_count': unread_cnt,
         'current_q': query,
@@ -1542,6 +1597,19 @@ def notifications(request):
         'current_status': status_filter
     }
     return render(request, 'notifications.html', context)
+
+
+def api_admin_recipients(request):
+    """Return recipients for Admin notification broadcast modal."""
+    students = Student.objects.filter(approval_status='Approved').exclude(status='Dropped').order_by('name')
+    mentors = AppUser.objects.filter(role__iexact='Mentor', status='Active').order_by('name')
+    batches = Batch.objects.filter(status='Active').order_by('name')
+    return JsonResponse({
+        'success': True,
+        'students': [{'id': s.id, 'name': s.name, 'student_id': s.student_id, 'batch': s.batch.name if s.batch else ''} for s in students],
+        'mentors': [{'id': m.id, 'name': m.name, 'email': m.email} for m in mentors],
+        'batches': [{'id': b.id, 'name': b.name} for b in batches]
+    })
 
 
 def api_admin_notifications_unread_count(request):
@@ -1708,12 +1776,12 @@ def get_mentor_notifications_qs(trainer):
     my_student_ids = list(my_students.values_list('id', flat=True))
 
     return Notification.objects.filter(
-        Q(direction='question', sender_student__id__in=my_student_ids) |
         Q(direction='question', target_mentor=trainer) |
+        Q(direction='question', request__recipient_user=trainer) |
         Q(direction='sent', sender_mentor=trainer) |
         Q(sender_mentor=trainer) |
         Q(target_mentor=trainer) |
-        Q(sender_mentor__isnull=True, target_group__in=['Mentor', 'All Mentors', 'All Users'])
+        Q(sender_mentor__isnull=True, target_group__in=['Mentor', 'Mentors', 'All Mentors', 'All Users'])
     ).select_related(
         'sender_student', 'sender_student__batch', 'target_student', 'target_student__batch', 'sender_mentor', 'target_mentor'
     ).order_by('-timestamp').distinct()
@@ -4284,6 +4352,8 @@ def api_mentor_send_batch_notification(request):
             data = json.loads(request.body)
             title = (data.get('title') or '').strip()
             message = (data.get('message') or '').strip()
+            category = (data.get('category') or 'announcements').strip()
+            priority = (data.get('priority') or 'normal').strip()
             send_type = data.get('send_type', 'batch')  # 'batch' or 'student'
             
             if not title or not message:
@@ -4296,13 +4366,14 @@ def api_mentor_send_batch_notification(request):
                 if not student_id:
                     return JsonResponse({'success': False, 'error': 'Please select a student.'})
                 student = Student.objects.get(id=student_id)
-                # Security: student must belong to one of the mentor's batches
-                if student.batch_id not in my_batches.values_list('id', flat=True):
-                    return JsonResponse({'success': False, 'error': 'You can only message students in your assigned batches.'})
+                # Security: student must belong to one of the mentor's batches or assigned to mentor
+                if student.batch_id not in my_batches.values_list('id', flat=True) and student.mentor != trainer:
+                    return JsonResponse({'success': False, 'error': 'You can only message students in your assigned cohorts.'})
                 Notification.objects.create(
                     title=title,
                     message=message,
-                    category='message',
+                    category=category,
+                    priority=priority,
                     direction='sent',
                     sender_mentor=trainer,
                     target_student=student,
@@ -4323,7 +4394,8 @@ def api_mentor_send_batch_notification(request):
                     Notification.objects.create(
                         title=title,
                         message=message,
-                        category='message',
+                        category=category,
+                        priority=priority,
                         direction='sent',
                         sender_mentor=trainer,
                         target_student=s,
@@ -4334,6 +4406,93 @@ def api_mentor_send_batch_notification(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid method'})
+
+
+@csrf_exempt
+def api_mentor_reply_doubt(request):
+    """Allows a mentor to reply to a student question/doubt."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST method required'}, status=405)
+    try:
+        trainer = get_current_mentor(request)
+        if not trainer:
+            return JsonResponse({'success': False, 'error': 'Mentor not found in session'}, status=401)
+        
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            data = request.POST
+
+        request_id = data.get('request_id')
+        reply_msg = (data.get('reply_message') or data.get('message') or '').strip()
+        status = data.get('status', 'Resolved')
+
+        if not request_id or not reply_msg:
+            return JsonResponse({'success': False, 'error': 'Request ID and reply message are required'}, status=400)
+
+        sreq = StudentRequest.objects.get(id=request_id)
+        
+        # Verify mentor permission
+        my_batches = Batch.objects.filter(trainer=trainer, status='Active')
+        if sreq.recipient_user and sreq.recipient_user != trainer and sreq.student.batch_id not in my_batches.values_list('id', flat=True):
+            return JsonResponse({'success': False, 'error': 'Permission denied: This question was not assigned to you.'}, status=403)
+
+        sreq.status = status
+        sreq.admin_reply = reply_msg
+        sreq.save()
+
+        # Create RequestReply
+        RequestReply.objects.create(
+            request=sreq,
+            sender_type='mentor',
+            sender_user=trainer,
+            message=reply_msg
+        )
+
+        # Create notification for student
+        Notification.objects.create(
+            title=f"Mentor Replied: {sreq.subject}",
+            message=reply_msg,
+            category='Support Reply',
+            target_group=f"Student: {sreq.student.name}",
+            target_student=sreq.student,
+            sender_mentor=trainer,
+            request=sreq,
+            direction='reply',
+            priority='high',
+            is_read=False
+        )
+
+        # Mark mentor question notification as read
+        Notification.objects.filter(
+            Q(request=sreq) | Q(sender_student=sreq.student, title__icontains=sreq.subject),
+            direction='question',
+            target_mentor=trainer
+        ).update(is_read=True)
+
+        return JsonResponse({'success': True, 'message': 'Reply sent to student successfully!'})
+    except StudentRequest.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Student question not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_mentor_recipients(request):
+    """Return assigned batches and students for the current mentor."""
+    trainer = get_current_mentor(request)
+    if not trainer:
+        return JsonResponse({'success': False, 'error': 'Mentor not found in session'}, status=401)
+    my_batches = Batch.objects.filter(trainer=trainer, status='Active')
+    my_students = Student.objects.filter(
+        Q(batch__in=my_batches) | Q(mentor=trainer)
+    ).exclude(status='Dropped').distinct().order_by('name')
+
+    return JsonResponse({
+        'success': True,
+        'batches': [{'id': b.id, 'name': b.name, 'course': b.course} for b in my_batches],
+        'students': [{'id': s.id, 'name': s.name, 'student_id': s.student_id, 'batch_id': s.batch_id, 'batch_name': s.batch.name if s.batch else ''} for s in my_students]
+    })
 
 
 @csrf_exempt
@@ -6249,11 +6408,51 @@ def api_student_pay_fee(request):
         logger.error(f"Error in api_student_pay_fee: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+def serialize_student_request(r):
+    replies_list = []
+    for reply in r.replies.all().order_by('created_at'):
+        s_name = 'Student'
+        if reply.sender_type == 'student':
+            s_name = reply.sender_student.name if reply.sender_student else 'Student'
+        elif reply.sender_user:
+            s_name = reply.sender_user.name
+        elif reply.sender_type == 'mentor':
+            s_name = 'Mentor'
+        elif reply.sender_type == 'admin':
+            s_name = 'Admin'
+
+        replies_list.append({
+            'id': reply.id,
+            'sender_type': reply.sender_type,
+            'sender_name': s_name,
+            'message': reply.message,
+            'created_at': reply.created_at.strftime('%d %b %Y %I:%M %p') if reply.created_at else '',
+            'attachment_url': reply.attachment.url if reply.attachment else None,
+            'attachment_name': reply.attachment_name or (reply.attachment.name.split('/')[-1] if reply.attachment else ''),
+        })
+
+    return {
+        'id': r.id,
+        'category': r.category,
+        'subject': r.subject,
+        'description': r.description,
+        'priority': r.priority,
+        'status': r.status,
+        'recipient_type': r.recipient_type or 'Mentor',
+        'recipient_name': r.recipient_user.name if r.recipient_user else ('Assigned Mentor' if (r.recipient_type or 'Mentor') == 'Mentor' else 'Admin Support'),
+        'recipient_email': r.recipient_user.email if r.recipient_user else '',
+        'attachment_url': r.attachment.url if r.attachment else None,
+        'attachment_name': r.attachment_name or (r.attachment.name.split('/')[-1] if r.attachment else ''),
+        'admin_reply': r.admin_reply or '',
+        'created_at': r.created_at.strftime('%d %b %Y %I:%M %p') if r.created_at else '',
+        'replies': replies_list
+    }
+
+
 def api_student_notifications_list(request, student_id=None):
     student = get_student_by_id_or_default(student_id)
     if not student:
         return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
-        
         
     batch_name = student.batch.name if student.batch else None
     target_q = Q(target_student=student) | Q(target_group__in=['All Users', 'All Students', 'Students', 'All'])
@@ -6269,17 +6468,20 @@ def api_student_notifications_list(request, student_id=None):
     
     notifs_qs = notifs_qs.exclude(id__in=deleted_ids)
     
-    # Fetch read statuses for this student
-    read_ids = set(NotificationUserStatus.objects.filter(
-        student=student, is_read=True
-    ).values_list('notification_id', flat=True))
+    # Fetch read and starred statuses for this student
+    user_status_map = {
+        s.notification_id: s
+        for s in NotificationUserStatus.objects.filter(student=student)
+    }
     
     requests_qs = StudentRequest.objects.filter(student=student).order_by('-created_at')
     
     notifs_list = []
     unread_cnt = 0
     for n in notifs_qs:
-        is_read_for_user = (n.id in read_ids) or (n.target_student == student and n.is_read)
+        st = user_status_map.get(n.id)
+        is_read_for_user = (st.is_read if st else False) or (n.target_student == student and n.is_read)
+        is_starred_for_user = (st.is_starred if st else False) or (n.target_student == student and getattr(n, 'is_starred', False))
         if not is_read_for_user:
             unread_cnt += 1
             
@@ -6295,6 +6497,8 @@ def api_student_notifications_list(request, student_id=None):
             'title': n.title,
             'message': n.message,
             'category': n.category or 'General',
+            'priority': getattr(n, 'priority', 'normal') or 'normal',
+            'is_starred': is_starred_for_user,
             'target_group': n.target_group,
             'is_read': is_read_for_user,
             'timestamp': n.timestamp.strftime('%d %b %Y %I:%M %p') if n.timestamp else '',
@@ -6320,21 +6524,7 @@ def api_student_notifications_list(request, student_id=None):
         'role': 'Admin'
     } if admin_user else None
 
-    requests_list = [{
-        'id': r.id,
-        'category': r.category,
-        'subject': r.subject,
-        'description': r.description,
-        'priority': r.priority,
-        'status': r.status,
-        'recipient_type': r.recipient_type or 'Mentor',
-        'recipient_name': r.recipient_user.name if r.recipient_user else ('Assigned Mentor' if (r.recipient_type or 'Mentor') == 'Mentor' else 'Admin Support'),
-        'recipient_email': r.recipient_user.email if r.recipient_user else '',
-        'attachment_url': r.attachment.url if r.attachment else None,
-        'attachment_name': r.attachment_name or (r.attachment.name.split('/')[-1] if r.attachment else ''),
-        'admin_reply': r.admin_reply or '',
-        'created_at': r.created_at.strftime('%d %b %Y %I:%M %p') if r.created_at else ''
-    } for r in requests_qs]
+    requests_list = [serialize_student_request(r) for r in requests_qs]
     
     return JsonResponse({
         'status': 'success',
@@ -6548,21 +6738,7 @@ def api_student_requests(request, student_id=None):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
             
     requests_qs = StudentRequest.objects.filter(student=student).order_by('-created_at')
-    requests_list = [{
-        'id': r.id,
-        'category': r.category,
-        'subject': r.subject,
-        'description': r.description,
-        'priority': r.priority,
-        'status': r.status,
-        'recipient_type': r.recipient_type or 'Mentor',
-        'recipient_name': r.recipient_user.name if r.recipient_user else ('Assigned Mentor' if (r.recipient_type or 'Mentor') == 'Mentor' else 'Admin Support'),
-        'recipient_email': r.recipient_user.email if r.recipient_user else '',
-        'attachment_url': r.attachment.url if r.attachment else None,
-        'attachment_name': r.attachment_name or (r.attachment.name.split('/')[-1] if r.attachment else ''),
-        'admin_reply': r.admin_reply or '',
-        'created_at': r.created_at.strftime('%d %b %Y %I:%M %p') if r.created_at else ''
-    } for r in requests_qs]
+    requests_list = [serialize_student_request(r) for r in requests_qs]
     
     return JsonResponse({
         'status': 'success',
@@ -6570,6 +6746,221 @@ def api_student_requests(request, student_id=None):
         'assigned_mentor': mentor_info,
         'available_admin': admin_info
     })
+
+@csrf_exempt
+def api_student_request_reply(request, request_id, student_id=None):
+    student = get_student_by_id_or_default(student_id)
+    if not student:
+        return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
+
+    try:
+        sreq = StudentRequest.objects.get(id=request_id, student=student)
+    except StudentRequest.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Request not found or unauthorized'}, status=404)
+
+    if request.method == 'POST':
+        try:
+            content_type = request.content_type or ''
+            attachment = None
+            attachment_name = ''
+            if 'multipart/form-data' in content_type:
+                message = (request.POST.get('message') or request.POST.get('reply_message') or '').strip()
+                if 'attachment' in request.FILES:
+                    attachment = request.FILES['attachment']
+                    attachment_name = attachment.name
+            else:
+                try:
+                    data = json.loads(request.body)
+                except Exception:
+                    data = {}
+                message = (data.get('message') or data.get('reply_message') or '').strip()
+
+            if not message:
+                return JsonResponse({'status': 'error', 'message': 'Message is required'}, status=400)
+
+            reply = RequestReply.objects.create(
+                request=sreq,
+                sender_type='student',
+                sender_student=student,
+                message=message,
+                attachment=attachment,
+                attachment_name=attachment_name
+            )
+
+            if sreq.status in ['Resolved', 'Closed']:
+                sreq.status = 'In Progress'
+                sreq.save()
+
+            # Create notification for recipient
+            if str(sreq.recipient_type).lower() == 'mentor':
+                target_mentor = sreq.recipient_user or student.mentor or (student.batch.trainer if student.batch else None)
+                Notification.objects.create(
+                    title=f"Student Reply: {sreq.subject}",
+                    message=f"{student.name} replied: {message}",
+                    category='Doubt Reply',
+                    target_group='Mentor',
+                    target_mentor=target_mentor,
+                    sender_student=student,
+                    direction='question',
+                    is_read=False,
+                    priority='high',
+                    request=sreq,
+                    timestamp=timezone.now()
+                )
+            else:
+                Notification.objects.create(
+                    title=f"Student Reply: {sreq.subject}",
+                    message=f"{student.name} replied: {message}",
+                    category='Support Reply',
+                    target_group='Admin',
+                    sender_student=student,
+                    direction='question',
+                    is_read=False,
+                    priority='high',
+                    request=sreq,
+                    timestamp=timezone.now()
+                )
+
+            return JsonResponse({
+                'status': 'success',
+                'success': True,
+                'message': 'Reply sent successfully',
+                'request': serialize_student_request(sreq)
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+
+@csrf_exempt
+def api_student_toggle_star(request, notif_id, student_id=None):
+    student = get_student_by_id_or_default(student_id)
+    if not student:
+        return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
+    try:
+        notif = Notification.objects.get(id=notif_id)
+        status_obj, created = NotificationUserStatus.objects.get_or_create(
+            notification=notif, student=student
+        )
+        status_obj.is_starred = not status_obj.is_starred
+        status_obj.save()
+        if notif.target_student == student:
+            notif.is_starred = status_obj.is_starred
+            notif.save()
+        return JsonResponse({
+            'status': 'success',
+            'success': True,
+            'is_starred': status_obj.is_starred
+        })
+    except Notification.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
+
+
+@csrf_exempt
+def api_mentor_reply_doubt(request):
+    trainer = get_current_mentor(request)
+    if not trainer:
+        appuser_id = request.session.get('appuser_id')
+        if appuser_id:
+            trainer = AppUser.objects.filter(id=appuser_id, role__iexact='Mentor').first()
+
+    if not trainer:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized mentor'}, status=403)
+
+    if request.method == 'POST':
+        try:
+            content_type = request.content_type or ''
+            if 'multipart/form-data' in content_type:
+                request_id = request.POST.get('request_id')
+                reply_msg = (request.POST.get('message') or request.POST.get('reply_message') or '').strip()
+                status_val = request.POST.get('status', 'Resolved').strip()
+            else:
+                try:
+                    data = json.loads(request.body)
+                except Exception:
+                    data = {}
+                request_id = data.get('request_id')
+                reply_msg = (data.get('message') or data.get('reply_message') or '').strip()
+                status_val = data.get('status', 'Resolved').strip()
+
+            if not request_id:
+                return JsonResponse({'status': 'error', 'message': 'Request ID is required'}, status=400)
+            if not reply_msg:
+                return JsonResponse({'status': 'error', 'message': 'Reply message cannot be empty'}, status=400)
+
+            try:
+                sreq = StudentRequest.objects.get(id=request_id)
+            except StudentRequest.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Student request not found'}, status=404)
+
+            # Security check: mentor is recipient or assigned
+            is_assigned = (
+                sreq.recipient_user == trainer or
+                sreq.student.mentor == trainer or
+                (sreq.student.batch and sreq.student.batch.trainer == trainer)
+            )
+            is_admin = trainer.role.lower() == 'admin'
+            if not is_assigned and not is_admin:
+                return JsonResponse({'status': 'error', 'message': 'You are not authorized to reply to this doubt'}, status=403)
+
+            sreq.admin_reply = reply_msg
+            if status_val:
+                sreq.status = status_val
+            sreq.save()
+
+            RequestReply.objects.create(
+                request=sreq,
+                sender_type='mentor',
+                sender_user=trainer,
+                message=reply_msg
+            )
+
+            # Create notification strictly for this student
+            Notification.objects.create(
+                title=f"Mentor Replied: {sreq.subject}",
+                message=reply_msg,
+                category='Doubt Reply',
+                target_group=f"Student: {sreq.student.name}",
+                target_student=sreq.student,
+                sender_mentor=trainer,
+                request=sreq,
+                direction='reply',
+                priority='high',
+                is_read=False,
+                timestamp=timezone.now()
+            )
+
+            return JsonResponse({
+                'status': 'success',
+                'success': True,
+                'message': 'Reply sent successfully',
+                'request': serialize_student_request(sreq)
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+
+def api_mentor_recipients(request):
+    trainer = get_current_mentor(request)
+    if not trainer:
+        appuser_id = request.session.get('appuser_id')
+        if appuser_id:
+            trainer = AppUser.objects.filter(id=appuser_id, role__iexact='Mentor').first()
+
+    my_batches = Batch.objects.filter(trainer=trainer, status='Active') if trainer else Batch.objects.filter(status='Active')
+    my_students = Student.objects.filter(
+        Q(batch__in=my_batches) | Q(mentor=trainer)
+    ).exclude(status='Dropped').order_by('name').distinct()
+
+    return JsonResponse({
+        'success': True,
+        'batches': [{'id': b.id, 'name': b.name} for b in my_batches],
+        'students': [{'id': s.id, 'name': s.name, 'student_id': s.student_id, 'batch': s.batch.name if s.batch else ''} for s in my_students]
+    })
+
 
 @csrf_exempt
 def api_student_classes(request, student_id=None):

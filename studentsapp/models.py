@@ -524,21 +524,25 @@ class AssessmentResult(models.Model):
     max_score = models.IntegerField(default=100)
 
 class Notification(models.Model):
-    DIRECTION_CHOICES = [('sent', 'Sent by Mentor'), ('question', 'Student Question')]
+    DIRECTION_CHOICES = [('sent', 'Sent Notification'), ('question', 'Student Question'), ('reply', 'Question Reply')]
     title = models.CharField(max_length=200)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
+    is_starred = models.BooleanField(default=False)
+    priority = models.CharField(max_length=20, default='normal', choices=[('normal', 'Normal'), ('high', 'High'), ('urgent', 'Urgent')])
     category = models.CharField(max_length=50, default='System')
     target_group = models.CharField(max_length=100, default='All Users')
     target_student = models.ForeignKey('Student', on_delete=models.CASCADE, null=True, blank=True, related_name='received_notifications')
     sender_student = models.ForeignKey('Student', on_delete=models.CASCADE, null=True, blank=True, related_name='sent_questions')
     sender_mentor = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_notifications')
+    sender_admin = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_admin_notifications')
     target_mentor = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='received_mentor_notifications')
     direction = models.CharField(max_length=20, choices=DIRECTION_CHOICES, default='sent')
     action_url = models.CharField(max_length=255, blank=True, null=True, default='/fees')
     action_label = models.CharField(max_length=100, blank=True, null=True, default='Go to Fees & Payments')
     fee_payment = models.ForeignKey('FeePayment', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     reminder_type = models.CharField(max_length=50, blank=True, null=True)
+    request = models.ForeignKey('StudentRequest', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -549,6 +553,7 @@ class NotificationUserStatus(models.Model):
     student = models.ForeignKey('Student', on_delete=models.CASCADE, null=True, blank=True, related_name='notification_statuses')
     user = models.ForeignKey('AppUser', on_delete=models.CASCADE, null=True, blank=True, related_name='notification_statuses')
     is_read = models.BooleanField(default=False)
+    is_starred = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -585,9 +590,28 @@ class StudentRequest(models.Model):
     attachment_name = models.CharField(max_length=255, blank=True, null=True)
     admin_reply = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.subject} - {self.student.name}"
+
+
+class RequestReply(models.Model):
+    request = models.ForeignKey(StudentRequest, on_delete=models.CASCADE, related_name='replies')
+    sender_type = models.CharField(max_length=20, choices=[('student', 'Student'), ('mentor', 'Mentor'), ('admin', 'Admin')])
+    sender_student = models.ForeignKey('Student', on_delete=models.SET_NULL, null=True, blank=True, related_name='request_replies')
+    sender_user = models.ForeignKey('AppUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='request_replies')
+    message = models.TextField()
+    attachment = models.FileField(upload_to='support_attachments/', blank=True, null=True)
+    attachment_name = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        sender = self.sender_student.name if self.sender_student else (self.sender_user.name if self.sender_user else self.sender_type)
+        return f"Reply by {sender} on {self.request.subject}"
 
 
 class Task(models.Model):
