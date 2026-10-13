@@ -101,8 +101,8 @@
       </li>
 
       <!-- 5. Curriculum -->
-      <li class="nav-item {% if active_page == 'academic' or active_page == 'curriculum' or active_page == 'mentor_academic' %}active{% endif %}">
-        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_academic' %}{% else %}{% url 'academic' %}{% endif %}" class="nav-link">
+      <li class="nav-item {% if active_page == 'academic' or active_page == 'curriculum' or active_page == 'mentor_academic' or active_page == 'mentor_curriculum' %}active{% endif %}">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_curriculum' %}{% else %}{% url 'academic' %}{% endif %}" class="nav-link">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
@@ -137,7 +137,7 @@
 
       <!-- 8. Placement -->
       <li class="nav-item {% if active_page == 'placement' or active_page == 'mentor_placement' %}active{% endif %}">
-        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_placement' %}{% else %}#placement{% endif %}" class="nav-link">
+        <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_placement' %}{% else %}{% url 'placement' %}{% endif %}" class="nav-link">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m12 15 2 2 4-4"/>

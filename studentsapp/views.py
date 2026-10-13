@@ -285,9 +285,12 @@ def get_fee_analytics(fee_param='last_6_months', now=None):
     }
 
 def dashboard(request):
+    appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
+    if appuser_role == 'mentor':
+        return redirect('mentor_dashboard')
     role = request.GET.get('role', 'admin').lower()
     if role == 'mentor':
-        return mentor_dashboard(request)
+        return redirect('mentor_dashboard')
         
     curr_user = request.user.get_full_name() if (request.user.is_authenticated and request.user.get_full_name()) else (request.user.username if request.user.is_authenticated else '')
     app_u = AppUser.objects.filter(role__iexact=role).first()
@@ -894,6 +897,9 @@ def start_fee_reminder_scheduler(interval_seconds=300):
     pass
 
 def fees(request):
+    appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
+    if appuser_role == 'mentor':
+        return redirect('mentor_dashboard')
     query = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status', '').strip()
     start_date = request.GET.get('start_date', '').strip()
@@ -1370,6 +1376,9 @@ def reports(request):
 
 
 def users_roles(request):
+    appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
+    if appuser_role == 'mentor':
+        return redirect('mentor_dashboard')
     query = request.GET.get('q', '')
     role_filter = request.GET.get('role', '')
     status_filter = request.GET.get('status', '')
@@ -1738,6 +1747,10 @@ def mentor_context(request):
         }
 
 def mentor_dashboard(request):
+    appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
+    is_admin = (hasattr(request, 'user') and request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)) or appuser_role in ('admin', 'administrator')
+    if is_admin and appuser_role != 'mentor':
+        return redirect('dashboard')
     trainer = get_current_mentor(request)
     user_name = trainer.name if trainer else request.session.get('appuser_name', '')
     initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else ''
@@ -2508,7 +2521,7 @@ def mentor_evaluations(request, task_id=None):
     return render(request, 'mentor/evaluations.html', context)
 
 def mentor_academic(request):
-    return redirect('mentor_students')
+    return redirect('mentor_curriculum')
 
 def mentor_assessments(request):
     trainer = get_current_mentor(request)
@@ -2834,10 +2847,11 @@ def mentor_notifications(request):
 def login_view(request):
     # If user is already authenticated and visits login page, redirect to their dashboard
     if request.method == 'GET':
-        appuser_role = str(request.session.get('appuser_role', '')).lower()
-        if appuser_role == 'mentor':
+        appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
+        role_sess = str(request.session.get('role', '')).strip().lower()
+        if appuser_role == 'mentor' or role_sess == 'mentor':
             return redirect('mentor_dashboard')
-        if (request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)) or appuser_role in ('admin', 'administrator') or str(request.session.get('role', '')).lower() in ('admin', 'administrator'):
+        if (request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)) or appuser_role in ('admin', 'administrator') or role_sess in ('admin', 'administrator'):
             return redirect('dashboard')
 
     if request.method == 'POST':
@@ -2849,10 +2863,12 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             if user.is_superuser or user.is_staff:
+                logout(request)
                 login(request, user)
                 request.session['role'] = 'Admin'
                 request.session['appuser_role'] = 'Admin'
                 request.session['appuser_name'] = user.get_full_name() or user.username
+                request.session.pop('appuser_id', None)
                 return redirect('dashboard')
             else:
                 return render(request, 'login.html', {'error': 'Only administrators can access the admin control center.'})
@@ -2861,8 +2877,11 @@ def login_view(request):
         if role == 'parent':
             try:
                 student = Student.objects.get(parent_username=username, parent_password=password)
+                logout(request)
+                request.session.flush()
                 request.session['parent_student_id'] = student.student_id
                 request.session['role'] = 'Parent'
+                request.session['appuser_role'] = 'Parent'
                 return redirect('students')
             except Student.DoesNotExist:
                 return render(request, 'login.html', {'error': 'Invalid username or password.'})
@@ -2873,9 +2892,14 @@ def login_view(request):
             if appuser.status.lower() == 'blocked':
                 return render(request, 'login.html', {'error': 'This account has been blocked.'})
             
+            # Cleanly isolate session to avoid role bleed from previous logins
+            logout(request)
+            request.session.flush()
+
             # Set custom session variables
             request.session['appuser_id'] = appuser.id
             request.session['appuser_role'] = appuser.role
+            request.session['role'] = appuser.role
             request.session['appuser_name'] = appuser.name
             
             if appuser.role.lower() == 'mentor':
@@ -2892,7 +2916,7 @@ def login_view(request):
     return render(request, 'login.html')
 
 def mentor_batches(request):
-    return redirect('mentor_students')
+    return redirect('mentor_classes')
 
 def mentor_task_detail(request, task_id):
     trainer = get_current_mentor(request)

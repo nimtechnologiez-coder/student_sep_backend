@@ -4,8 +4,10 @@ from django.http import JsonResponse
 class DashboardAuthMiddleware:
     """
     Protects all dashboard pages and admin/mentor APIs from unauthorized access.
-    Redirects unauthenticated users to /login/.
-    Redirects already authenticated users on /login/ or / to their appropriate dashboard.
+    Enforces strict role-based routing between Admin and Mentor portals:
+    - Admin users are restricted to Admin routes (e.g. /dashboard/, /students/, /users/)
+    - Mentor users are restricted to Mentor routes (e.g. /mentor/dashboard/, /mentor/students/)
+    - Prevents session bleed or cross-role URL navigation.
     """
     def __init__(self, get_response):
         self.get_response = get_response
@@ -13,31 +15,35 @@ class DashboardAuthMiddleware:
     def __call__(self, request):
         path = request.path
 
-        # Determine authentication state
-        is_admin = False
-        if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
-            is_admin = True
-        elif request.session.get('appuser_id') and str(request.session.get('appuser_role', '')).lower() in ('admin', 'administrator'):
-            is_admin = True
-        elif str(request.session.get('role', '')).lower() in ('admin', 'administrator'):
-            is_admin = True
+        # Determine user role strictly
+        appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
+        session_role = str(request.session.get('role', '')).strip().lower()
 
         is_mentor = False
-        if request.session.get('appuser_id') and str(request.session.get('appuser_role', '')).lower() == 'mentor':
+        is_admin = False
+
+        if appuser_role == 'mentor' or session_role == 'mentor':
             is_mentor = True
+            is_admin = False
+        elif (hasattr(request, 'user') and request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)) or \
+             appuser_role in ('admin', 'administrator') or \
+             session_role in ('admin', 'administrator'):
+            is_admin = True
+            is_mentor = False
 
         is_authenticated = is_admin or is_mentor
 
-        # 1. If an already logged-in user visits login pages on GET, redirect to their dashboard
+        # 1. Login page routing
         if path in ('/', '/login', '/login/'):
             if request.method == 'GET' and is_authenticated:
-                if is_mentor and not is_admin:
+                if is_mentor:
                     return redirect('mentor_dashboard')
-                return redirect('dashboard')
+                if is_admin:
+                    return redirect('dashboard')
             return self.get_response(request)
 
-        # 2. Check protected dashboard pages
-        protected_prefixes = [
+        # 2. Check protected page access
+        admin_page_prefixes = [
             '/dashboard',
             '/students',
             '/batches',
@@ -49,29 +55,62 @@ class DashboardAuthMiddleware:
             '/reports',
             '/users',
             '/notifications',
-            '/mentor',
         ]
 
-        # /students/register/ is public student registration
-        is_protected_page = False
+        # Ignore public student registration
         if path.startswith('/students/register'):
-            is_protected_page = False
-        else:
-            for prefix in protected_prefixes:
-                if path == prefix or path == f"{prefix}/" or path.startswith(f"{prefix}/"):
-                    is_protected_page = True
-                    break
-
-        if is_protected_page:
-            if not is_authenticated:
-                return redirect('login_page')
-            # If mentor attempts to access admin dashboard, redirect to mentor dashboard
-            if is_mentor and not is_admin and not path.startswith('/mentor'):
-                return redirect('mentor_dashboard')
             return self.get_response(request)
 
+        is_admin_page = any(path == p or path == f"{p}/" or path.startswith(f"{p}/") for p in admin_page_prefixes)
+        is_mentor_page = path == '/mentor' or path == '/mentor/' or path.startswith('/mentor/')
+
+        # A. Unauthenticated access check
+        if (is_admin_page or is_mentor_page) and not is_authenticated:
+            return redirect('login_page')
+
+        # B. Mentor accessing Admin pages -> redirect to corresponding Mentor page or Mentor Dashboard
+        if is_admin_page and is_mentor:
+            if path.startswith('/students'):
+                return redirect('mentor_students')
+            elif path.startswith('/classes') or path.startswith('/batches'):
+                return redirect('mentor_classes')
+            elif path.startswith('/academic'):
+                return redirect('mentor_curriculum')
+            elif path.startswith('/assessments'):
+                return redirect('mentor_assessments')
+            elif path.startswith('/placement'):
+                return redirect('mentor_placement')
+            elif path.startswith('/reports'):
+                return redirect('mentor_reports')
+            elif path.startswith('/notifications'):
+                return redirect('mentor_notifications')
+            else:
+                # /users/, /fees/, /dashboard/, etc.
+                return redirect('mentor_dashboard')
+
+        # C. Admin accessing Mentor pages -> redirect to corresponding Admin page or Admin Dashboard
+        if is_mentor_page and is_admin:
+            if path.startswith('/mentor/students'):
+                return redirect('students')
+            elif path.startswith('/mentor/classes') or path.startswith('/mentor/attendance'):
+                return redirect('classes')
+            elif path.startswith('/mentor/batches'):
+                return redirect('batches')
+            elif path.startswith('/mentor/curriculum') or path.startswith('/mentor/academic'):
+                return redirect('academic')
+            elif path.startswith('/mentor/assessments'):
+                return redirect('assessments')
+            elif path.startswith('/mentor/placement'):
+                return redirect('placement')
+            elif path.startswith('/mentor/reports'):
+                return redirect('reports')
+            elif path.startswith('/mentor/notifications'):
+                return redirect('notifications')
+            else:
+                return redirect('dashboard')
+
         # 3. Check protected Admin & Mentor APIs
-        protected_api_prefixes = [
+        admin_api_prefixes = [
             '/api/approve-student',
             '/api/reject-student',
             '/api/block-student',
@@ -92,14 +131,24 @@ class DashboardAuthMiddleware:
             '/api/fees/',
             '/api/fee-data',
             '/api/admin',
-            '/api/mentor',
             '/api/curriculum/add-',
             '/api/curriculum/delete-',
             '/api/curriculum/edit-',
         ]
+        mentor_api_prefixes = [
+            '/api/mentor',
+        ]
 
-        is_protected_api = any(path.startswith(prefix) for prefix in protected_api_prefixes)
-        if is_protected_api and not is_authenticated:
-            return JsonResponse({'success': False, 'error': 'Authentication required. Please log in.'}, status=401)
+        if any(path.startswith(p) for p in admin_api_prefixes):
+            if not is_authenticated:
+                return JsonResponse({'success': False, 'error': 'Authentication required. Please log in.'}, status=401)
+            if not is_admin:
+                return JsonResponse({'success': False, 'error': 'Permission denied. Administrator access required.'}, status=403)
+
+        if any(path.startswith(p) for p in mentor_api_prefixes):
+            if not is_authenticated:
+                return JsonResponse({'success': False, 'error': 'Authentication required. Please log in.'}, status=401)
+            if not is_mentor and not is_admin:
+                return JsonResponse({'success': False, 'error': 'Permission denied. Mentor access required.'}, status=403)
 
         return self.get_response(request)
