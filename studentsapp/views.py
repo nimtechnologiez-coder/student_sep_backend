@@ -6512,7 +6512,7 @@ def api_student_requests(request, student_id=None):
                     sender_student=student,
                     title=f"Student Doubt: {subject}",
                     direction='question',
-                    timestamp__gte=timezone.now() - datetime.timedelta(seconds=15)
+                    timestamp__gte=timezone.now() - timedelta(seconds=15)
                 ).exists()
 
                 if not has_duplicate:
