@@ -197,7 +197,7 @@ def get_fee_analytics(fee_param='last_6_months', now=None):
         _, last_day = calendar.monthrange(end_y, end_m)
         end_date = datetime.date(end_y, end_m, last_day)
         
-        fees = FeePayment.objects.filter(payment_date__gte=start_date, payment_date__lte=end_date)
+        fees = FeePayment.objects.filter(payment_date__gte=start_date, payment_date__lte=end_date, status='Paid')
         monthly_fees = defaultdict(int)
         for f in fees:
             monthly_fees[(f.payment_date.year, f.payment_date.month)] += int(f.amount)
@@ -233,7 +233,7 @@ def get_fee_analytics(fee_param='last_6_months', now=None):
         _, last_day = calendar.monthrange(end_y, end_m)
         end_date = datetime.date(end_y, end_m, last_day)
         
-        fees = FeePayment.objects.filter(payment_date__gte=start_date, payment_date__lte=end_date)
+        fees = FeePayment.objects.filter(payment_date__gte=start_date, payment_date__lte=end_date, status='Paid')
         monthly_fees = defaultdict(int)
         for f in fees:
             monthly_fees[(f.payment_date.year, f.payment_date.month)] += int(f.amount)
@@ -253,7 +253,7 @@ def get_fee_analytics(fee_param='last_6_months', now=None):
     else:
         target_year = now.year if fee_param == 'this_year' else now.year - 1
         label = 'This Year' if fee_param == 'this_year' else 'Last Year'
-        fees = FeePayment.objects.filter(payment_date__year=target_year)
+        fees = FeePayment.objects.filter(payment_date__year=target_year, status='Paid')
         monthly_fees = defaultdict(int)
         for f in fees:
             monthly_fees[f.payment_date.month] += int(f.amount)
@@ -324,13 +324,24 @@ def dashboard(request):
     active_batches = Batch.objects.count()
     admissions_ytd = Student.objects.filter(join_date__year=now.year).count()
     
-    fee_ytd_agg = FeePayment.objects.filter(payment_date__year=now.year).aggregate(total=Sum('amount'))
+    fee_ytd_agg = FeePayment.objects.filter(Q(payment_date__year=now.year) | Q(payment_date__isnull=True), status='Paid').aggregate(total=Sum('amount'))
     fee_ytd_total = fee_ytd_agg['total'] or 0
     fee_collection_str = f"₹ {fee_ytd_total/100000:.1f} L" if fee_ytd_total >= 100000 else f"₹ {fee_ytd_total:,.0f}"
     
     placement_offers = PlacementOffer.objects.count()
     classes_today = ClassSchedule.objects.filter(date=now.date()).count()
-    trainer_count = Trainer.objects.filter(status='Active').count()
+    
+    active_mentors = set(AppUser.objects.filter(
+        Q(role__icontains='mentor') | Q(role__icontains='trainer'),
+        status__iexact='Active'
+    ).values_list('name', flat=True))
+    active_trainers = set(Trainer.objects.filter(status__iexact='Active').values_list('name', flat=True))
+    trainer_count = len(active_mentors.union(active_trainers))
+    if trainer_count == 0:
+        trainer_count = AppUser.objects.filter(
+            Q(role__icontains='mentor') | Q(role__icontains='trainer'),
+            status__iexact='Active'
+        ).count() + Trainer.objects.filter(status__iexact='Active').count()
     
     total_attendance = Attendance.objects.count()
     present_attendance = Attendance.objects.filter(status='Present').count()
