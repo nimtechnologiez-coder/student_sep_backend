@@ -13,6 +13,114 @@
   <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+  <style>
+    .reply-thread-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .reply-thread-item.rep-sender-admin {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+    .reply-thread-item.rep-sender-mentor {
+      background: #f0fdfa;
+      border-color: #ccfbf1;
+    }
+    .rep-title-admin { color: #1d4ed8; }
+    .rep-title-mentor { color: #0f766e; }
+    .rep-title-student { color: #334155; }
+
+    /* Student Requests Clean Alignment & Badges */
+    .recipient-pill {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 5px !important;
+      padding: 4px 10px !important;
+      border-radius: 9999px !important;
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      white-space: nowrap !important;
+      flex-wrap: nowrap !important;
+      width: max-content !important;
+      max-width: 100% !important;
+    }
+    .recipient-pill span {
+      white-space: nowrap !important;
+    }
+    .recipient-pill-admin {
+      background: #f5f3ff !important;
+      color: #6d28d9 !important;
+      border: 1px solid #ddd6fe !important;
+    }
+    .recipient-pill-mentor {
+      background: #f0fdfa !important;
+      color: #0f766e !important;
+      border: 1px solid #ccfbf1 !important;
+    }
+    .req-status-pill {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      padding: 4px 10px !important;
+      border-radius: 9999px !important;
+      font-size: 0.75rem !important;
+      font-weight: 700 !important;
+      white-space: nowrap !important;
+      flex-wrap: nowrap !important;
+    }
+    .req-status-open {
+      background-color: #fef2f2 !important;
+      color: #ef4444 !important;
+      border: 1px solid #fecaca !important;
+    }
+    .req-status-progress {
+      background-color: #fffbeb !important;
+      color: #d97706 !important;
+      border: 1px solid #fde68a !important;
+    }
+    .req-status-resolved {
+      background-color: #ecfdf5 !important;
+      color: #059669 !important;
+      border: 1px solid #a7f3d0 !important;
+    }
+    .req-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .req-status-open .req-status-dot { background-color: #ef4444; }
+    .req-status-progress .req-status-dot { background-color: #f59e0b; }
+    .req-status-resolved .req-status-dot { background-color: #10b981; }
+
+    .req-priority-pill {
+      display: inline-block !important;
+      font-size: 0.72rem !important;
+      font-weight: 700 !important;
+      padding: 3px 9px !important;
+      border-radius: 6px !important;
+      text-transform: capitalize !important;
+      white-space: nowrap !important;
+    }
+    .req-priority-urgent {
+      color: #ef4444 !important;
+      background: #fef2f2 !important;
+      border: 1px solid #fecaca !important;
+    }
+    .req-priority-high {
+      color: #d97706 !important;
+      background: #fffbeb !important;
+      border: 1px solid #fde68a !important;
+    }
+    .req-priority-normal {
+      color: #2563eb !important;
+      background: #eff6ff !important;
+      border: 1px solid #bfdbfe !important;
+    }
+  </style>
 </head>
 <body>
 
@@ -84,26 +192,37 @@
       </div>
 
       <!-- 4 KPI Summary Cards -->
-      <div class="kpi-cards-grid">
+      <div class="kpi-cards-grid" style="grid-template-columns: repeat(4, 1fr);">
           <div class="kpi-stat-card">
             <div class="kpi-icon-box kpi-icon-blue">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
             </div>
             <div class="kpi-details-col">
-              <span class="kpi-stat-number">{{ kpi.total }}</span>
-              <span class="kpi-stat-label">Total Broadcasts</span>
-              <span class="kpi-trend-row"><span class="trend-green">Fall Term 2026</span></span>
+              <span class="kpi-stat-number" id="kpiTotalCount">{{ kpi.total }}</span>
+              <span class="kpi-stat-label">Total Notifications</span>
+              <span class="kpi-trend-row"><span class="trend-green">Admin Hub</span></span>
             </div>
           </div>
 
           <div class="kpi-stat-card">
-            <div class="kpi-icon-box kpi-icon-green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            <div class="kpi-icon-box" style="background: #ecfdf5; color: #10b981;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
             </div>
             <div class="kpi-details-col">
-              <span class="kpi-stat-number">98%</span>
-              <span class="kpi-stat-label">Overall Read Rate</span>
-              <span class="kpi-trend-row"><span class="trend-green">↑ High engagement</span></span>
+              <span class="kpi-stat-number" id="kpiEnrollmentsCount" style="color: #059669;">{{ kpi.enrollments|default:0 }}</span>
+              <span class="kpi-stat-label">New Enrollments</span>
+              <span class="kpi-trend-row"><span style="color: #059669; font-weight: 600; font-size: 0.72rem;">★ Admin Role Only</span></span>
+            </div>
+          </div>
+
+          <div class="kpi-stat-card">
+            <div class="kpi-icon-box" style="background: #eff6ff; color: #3b82f6;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            </div>
+            <div class="kpi-details-col">
+              <span class="kpi-stat-number" id="kpiPaymentsCount" style="color: #2563eb;">{{ kpi.payments|default:0 }}</span>
+              <span class="kpi-stat-label">Payment Alerts</span>
+              <span class="kpi-trend-row"><span style="color: #2563eb; font-weight: 600; font-size: 0.72rem;">★ Verified Payments</span></span>
             </div>
           </div>
 
@@ -112,8 +231,8 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
             </div>
             <div class="kpi-details-col">
-              <span class="kpi-stat-number">{{ kpi.unread }}</span>
-              <span class="kpi-stat-label">Unread Broadcasts</span>
+              <span class="kpi-stat-number" id="kpiUnreadCount">{{ kpi.unread }}</span>
+              <span class="kpi-stat-label">Unread Alerts</span>
               <span class="kpi-trend-row"><span class="trend-amber">Needs attention</span></span>
             </div>
           </div>
@@ -130,6 +249,8 @@
             <div class="filter-dropdowns-group">
               <select class="filter-select" id="notifCategorySelect">
                 <option value="" {% if current_category == '' %}selected{% endif %}>All Categories</option>
+                <option value="Enrollment" {% if current_category == 'Enrollment' %}selected{% endif %}>🎓 Student Enrollments (Admin Only)</option>
+                <option value="Payment" {% if current_category == 'Payment' %}selected{% endif %}>💳 Fee Payments (Admin Only)</option>
                 <option value="System" {% if current_category == 'System' %}selected{% endif %}>System Updates</option>
                 <option value="Fee Alert" {% if current_category == 'Fee Alert' %}selected{% endif %}>Fee Alerts</option>
                 <option value="Assessments" {% if current_category == 'Assessments' %}selected{% endif %}>Assessments</option>
@@ -137,6 +258,7 @@
 
               <select class="filter-select" id="notifTargetSelect">
                 <option value="" {% if current_target == '' %}selected{% endif %}>Target: All</option>
+                <option value="Admin" {% if current_target == 'Admin' %}selected{% endif %}>Admin Only</option>
                 <option value="All Students" {% if current_target == 'All Students' %}selected{% endif %}>All Students</option>
                 <option value="Batch Students" {% if current_target == 'Batch Students' %}selected{% endif %}>Batch Students</option>
                 <option value="Mentors" {% if current_target == 'Mentors' %}selected{% endif %}>Mentors</option>
@@ -155,25 +277,39 @@
 
           <!-- Category Pill Tabs -->
           <div class="filter-tabs-row">
-            <button class="pill-tab-btn {% if not current_category %}active{% endif %}" onclick="filterByTab(this, '')">
+            <button class="pill-tab-btn {% if not current_category and not current_status %}active{% endif %}" onclick="filterByTab(this, '')">
               <span>All Broadcasts</span>
-              <span class="pill-tab-count">{{ kpi.total }}</span>
+              <span class="pill-tab-count" id="pillCountTotal">{{ kpi.total }}</span>
+            </button>
+            <button class="pill-tab-btn {% if current_category == 'Enrollment' %}active{% endif %}" onclick="filterByTab(this, 'Enrollment')" style="border-color: #10b981;">
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Enrollments
+              </span>
+              <span class="pill-tab-count" id="pillCountEnrollments" style="background: #10b981; color: #fff;">{{ kpi.enrollments|default:0 }}</span>
+            </button>
+            <button class="pill-tab-btn {% if current_category == 'Payment' %}active{% endif %}" onclick="filterByTab(this, 'Payment')" style="border-color: #3b82f6;">
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                Payments
+              </span>
+              <span class="pill-tab-count" id="pillCountPayments" style="background: #3b82f6; color: #fff;">{{ kpi.payments|default:0 }}</span>
             </button>
             <button class="pill-tab-btn {% if current_status == 'unread' %}active{% endif %}" onclick="updateFilters({status: 'unread'})">
               <span>Unread</span>
-              <span class="pill-tab-count">{{ kpi.unread }}</span>
+              <span class="pill-tab-count" id="pillCountUnread">{{ kpi.unread }}</span>
             </button>
             <button class="pill-tab-btn {% if current_category == 'Fee Alert' %}active{% endif %}" onclick="filterByTab(this, 'Fee Alert')">
               <span>Fee Alerts</span>
-              <span class="pill-tab-count">{{ kpi.fee_alerts }}</span>
+              <span class="pill-tab-count" id="pillCountFeeAlerts">{{ kpi.fee_alerts }}</span>
             </button>
             <button class="pill-tab-btn {% if current_category == 'Assessments' %}active{% endif %}" onclick="filterByTab(this, 'Assessments')">
               <span>Assessments</span>
-              <span class="pill-tab-count">{{ kpi.assessments }}</span>
+              <span class="pill-tab-count" id="pillCountAssessments">{{ kpi.assessments }}</span>
             </button>
             <button class="pill-tab-btn {% if current_category == 'System' %}active{% endif %}" onclick="filterByTab(this, 'System')">
               <span>System</span>
-              <span class="pill-tab-count">{{ kpi.system }}</span>
+              <span class="pill-tab-count" id="pillCountSystem">{{ kpi.system }}</span>
             </button>
           </div>
       </div>
@@ -184,10 +320,14 @@
           <div class="table-header-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
             <span>Broadcast Feed & Dispatch Ledger</span>
-            <span class="table-records-count">{{ kpi.total|default:"0" }} Broadcasts</span>
+            <span class="table-records-count" id="tableLedgerCount">{{ kpi.total|default:"0" }} Broadcasts</span>
           </div>
 
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" id="btnDeleteSelected" onclick="openBulkDeleteModal();" disabled style="opacity: 0.5; cursor: not-allowed; padding: 6px 14px; font-size: 0.8125rem; color: #dc2626; border: 1px solid #fecaca; background: #fff5f5; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; border-radius: 8px; transition: all 0.2s;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Delete Selected (<span id="selectedCountBadge">0</span>)</span>
+            </button>
             <button class="btn-secondary-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="alert('Notification delivery telemetry synced with SMS & Email gateway.');">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
               <span>Sync Telemetry</span>
@@ -199,7 +339,10 @@
           <table class="admin-data-table" id="notifsTable">
               <thead>
                 <tr>
-                  <th style="width: 280px;">Notification Subject & Message</th>
+                  <th style="width: 44px; text-align: center;">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this);" style="width: 17px; height: 17px; accent-color: #2563eb; cursor: pointer; border-radius: 4px; vertical-align: middle;" title="Select All">
+                  </th>
+                  <th style="width: 320px;">Notification Subject & Message</th>
                   <th>Category</th>
                   <th>Target Department / Group</th>
                   <th>Channels</th>
@@ -211,23 +354,54 @@
               </thead>
               <tbody>
                 {% for notification in notifications %}
-                <tr>
+                <tr id="notif-row-{{ notification.id }}" data-category="{{ notification.category }}" data-is-read="{{ notification.is_read|yesno:'true,false' }}" style="transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);">
+                  <td style="text-align: center; width: 44px;">
+                    <input type="checkbox" class="notif-row-checkbox" value="{{ notification.id }}" onchange="handleRowCheckboxChange();" style="width: 17px; height: 17px; accent-color: #2563eb; cursor: pointer; border-radius: 4px; vertical-align: middle;" title="Select this notification">
+                  </td>
                   <td>
                     <div class="entity-cell">
+                      {% if notification.category|lower == 'enrollment' or 'enroll' in notification.title|lower %}
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #10b981, #047857); color: #fff; font-weight: 700;">EN</div>
+                      {% elif notification.category|lower == 'payment' or 'payment' in notification.title|lower %}
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; font-weight: 700;">₹</div>
+                      {% else %}
                       <div class="entity-avatar" style="background: linear-gradient(135deg, #d97706, #b45309);">{{ notification.title|slice:":1"|upper }}</div>
+                      {% endif %}
                       <div class="entity-info">
                         <span class="entity-name">{{ notification.title }}</span>
-                        <span class="entity-sub">{{ notification.message|truncatechars:50 }}</span>
+                        <span class="entity-sub">{{ notification.message|truncatechars:60 }}</span>
+                        {% if notification.action_url %}
+                        <a href="{{ notification.action_url }}" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 600; color: #2563eb; margin-top: 3px; text-decoration: none;">
+                          <span>{{ notification.action_label|default:"View Details" }}</span>
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                        {% endif %}
                       </div>
                     </div>
                   </td>
                   <td>
+                    {% if notification.category|lower == 'enrollment' or 'enroll' in notification.title|lower %}
+                    <span class="status-pill" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600; padding: 3px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem;">
+                      <span class="badge-dot" style="background: #10b981;"></span> Enrollment
+                    </span>
+                    {% elif notification.category|lower == 'payment' or 'payment' in notification.title|lower %}
+                    <span class="status-pill" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 600; padding: 3px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem;">
+                      <span class="badge-dot" style="background: #3b82f6;"></span> Fee Payment
+                    </span>
+                    {% else %}
                     <span class="status-pill status-active" style="background: #fffbeb; color: #b45309;">
                       <span class="badge-dot" style="background: #d97706;"></span> {{ notification.category }}
                     </span>
+                    {% endif %}
                   </td>
                   <td>
+                    {% if notification.target_group == 'Admin' %}
+                    <span class="status-pill" style="background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; font-weight: 600; padding: 3px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin Only
+                    </span>
+                    {% else %}
                     <span style="font-weight: 600; color: var(--admin-blue);">{{ notification.target_group }}</span>
+                    {% endif %}
                   </td>
                   <td>
                     <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6; background: #eff6ff; padding: 2px 6px; border-radius: 4px;">In-App</span>
@@ -238,55 +412,38 @@
                   </td>
                   <td>
                     <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 4px;">
-                      <div style="width: {% if notification.is_read %}100%{% else %}15%{% endif %}; height: 100%; background: #3b82f6;"></div>
+                      <div class="progress-bar-inner" style="width: {% if notification.is_read %}100%{% else %}15%{% endif %}; height: 100%; background: #3b82f6; transition: width 0.35s ease;"></div>
                     </div>
                   </td>
-                  <td>
+                  <td id="status-cell-{{ notification.id }}">
                     {% if notification.is_read %}
                     <span class="status-pill status-active">Read</span>
                     {% else %}
-                    <form method="POST" action="{% url 'notifications' %}" style="display: inline;">
-                      {% csrf_token %}
-                      <input type="hidden" name="action_type" value="mark_read">
-                      <input type="hidden" name="notif_id" value="{{ notification.id }}">
-                      <button type="submit" title="Click to mark as read" class="status-pill status-unread-pill" style="background: #fef2f2; color: #ef4444; border: none; cursor: pointer; font-family: inherit; font-size: inherit; font-weight: inherit;">
-                        <span class="badge-dot" style="background: #ef4444;"></span> Unread
-                      </button>
-                    </form>
+                    <button type="button" onclick="markReadSmooth('{{ notification.id }}', this)" title="Click to mark as read" class="status-pill status-unread-pill" style="background: #fef2f2; color: #ef4444; border: none; cursor: pointer; font-family: inherit; font-size: inherit; font-weight: inherit; transition: all 0.2s;">
+                      <span class="badge-dot" style="background: #ef4444;"></span> Unread
+                    </button>
                     {% endif %}
                   </td>
                   <td style="text-align: right;">
                     <div class="table-actions-cell" style="justify-content: flex-end;">
-                      <button title="View Broadcast" onclick="viewBroadcastModal('{{ notification.id }}', '{{ notification.title|escapejs }}', '{{ notification.message|escapejs }}', {{ notification.is_read|yesno:'true,false' }})" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; margin-right: 4px; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#eff6ff'; this.style.color='#3b82f6';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';">
+                      <button type="button" title="View Broadcast" onclick="viewBroadcastModal('{{ notification.id }}', '{{ notification.title|escapejs }}', '{{ notification.message|escapejs }}', {{ notification.is_read|yesno:'true,false' }})" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; margin-right: 4px; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#eff6ff'; this.style.color='#3b82f6';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                       </button>
-                      {% if not notification.is_read %}
-                      <form method="POST" action="{% url 'notifications' %}" style="display: inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="action_type" value="mark_read">
-                        <input type="hidden" name="notif_id" value="{{ notification.id }}">
-                        <button type="submit" title="Mark as Read" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #16a34a; margin-right: 4px; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#f0fdf4'; this.style.color='#15803d';" onmouseout="this.style.background='#f8fafc'; this.style.color='#16a34a';">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        </button>
-                      </form>
-                      {% endif %}
-                      <button title="Edit Broadcast" onclick="openEditModal('{{ notification.id }}', '{{ notification.title|escapejs }}', '{{ notification.message|escapejs }}', '{{ notification.category|escapejs }}', '{{ notification.target_group|escapejs }}')" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; margin-right: 4px; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#fef3c7'; this.style.color='#d97706';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';">
+                      <button type="button" id="action-mark-read-{{ notification.id }}" title="Mark as Read" onclick="markReadSmooth('{{ notification.id }}', this)" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #16a34a; margin-right: 4px; display: {% if notification.is_read %}none{% else %}inline-flex{% endif %}; transition: all 0.2s;" onmouseover="this.style.background='#f0fdf4'; this.style.color='#15803d';" onmouseout="this.style.background='#f8fafc'; this.style.color='#16a34a';">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                      </button>
+                      <button type="button" title="Edit Broadcast" onclick="openEditModal('{{ notification.id }}', '{{ notification.title|escapejs }}', '{{ notification.message|escapejs }}', '{{ notification.category|escapejs }}', '{{ notification.target_group|escapejs }}')" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; margin-right: 4px; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#fef3c7'; this.style.color='#d97706';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
-                      <form method="POST" action="{% url 'notifications' %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this broadcast for ALL target users?');">
-                        {% csrf_token %}
-                        <input type="hidden" name="action_type" value="delete">
-                        <input type="hidden" name="notif_id" value="{{ notification.id }}">
-                        <button type="submit" title="Delete Broadcast" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #ef4444; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#fef2f2'; this.style.color='#dc2626';" onmouseout="this.style.background='#f8fafc'; this.style.color='#ef4444';">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                        </button>
-                      </form>
+                      <button type="button" title="Delete Broadcast" onclick="deleteBroadcastSmooth('{{ notification.id }}', this)" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #ef4444; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#fef2f2'; this.style.color='#dc2626';" onmouseout="this.style.background='#f8fafc'; this.style.color='#ef4444';">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">No broadcasts found.</td>
+                  <td colspan="9" style="text-align: center; padding: 20px; color: #94a3b8;">No broadcasts found.</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -321,73 +478,171 @@
         </div>
 
         <!-- Student Requests Section -->
-        <div class="table-card" style="margin-top: 24px;">
-          <div class="table-card-header">
-            <div class="table-header-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--admin-blue);"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-              <span>Student Complaints & Support Requests</span>
+        <div class="table-card" style="margin-top: 24px;" id="studentRequestsCard">
+          <div class="table-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 16px 20px;">
+            <div class="table-header-title" style="display: flex; align-items: center; gap: 10px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: var(--admin-blue); flex-shrink: 0;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span style="font-weight: 700; font-size: 0.95rem; color: #0f172a;">Student Complaints & Support Requests</span>
+              <span class="table-records-count" id="tableRequestsCount" style="margin-left: 4px;">{{ student_requests|length }} Requests</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <div class="filter-search-box" style="min-width: 220px; max-width: 270px; margin: 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" class="filter-search-input" id="requestsSearchInput" placeholder="Filter student, subject, mentor..." onkeyup="filterRequestsTable();" style="height: 36px; padding-left: 36px;">
+              </div>
+              <div class="filter-tabs-row" style="margin: 0; gap: 6px;">
+                <button type="button" class="pill-tab-btn active" id="reqFilterTabAll" onclick="filterRequestsByStatus(this, 'all')" style="height: 34px; padding: 0 12px;">
+                  <span>All</span>
+                  <span class="pill-tab-count" id="pillReqTotal">{{ requests_total|default:"0" }}</span>
+                </button>
+                <button type="button" class="pill-tab-btn" id="reqFilterTabOpen" onclick="filterRequestsByStatus(this, 'open')" style="height: 34px; padding: 0 12px;">
+                  <span>Open</span>
+                  <span class="pill-tab-count" style="background: #ef4444; color: #fff;">{{ requests_open|default:"0" }}</span>
+                </button>
+                <button type="button" class="pill-tab-btn" id="reqFilterTabProgress" onclick="filterRequestsByStatus(this, 'in progress')" style="height: 34px; padding: 0 12px;">
+                  <span>In Progress</span>
+                  <span class="pill-tab-count" style="background: #d97706; color: #fff;">{{ requests_in_progress|default:"0" }}</span>
+                </button>
+                <button type="button" class="pill-tab-btn" id="reqFilterTabResolved" onclick="filterRequestsByStatus(this, 'resolved')" style="height: 34px; padding: 0 12px;">
+                  <span>Resolved</span>
+                  <span class="pill-tab-count" style="background: #10b981; color: #fff;">{{ requests_resolved|default:"0" }}</span>
+                </button>
+              </div>
             </div>
           </div>
 
           <div class="table-scroll-container">
-            <table class="admin-data-table">
+            <table class="admin-data-table" id="studentRequestsTable" style="width: 100%; border-collapse: separate; border-spacing: 0;">
               <thead>
                 <tr>
-                  <th style="width: 250px;">Student Name</th>
-                  <th>Category & Subject</th>
-                  <th>Priority</th>
-                  <th>Date Submitted</th>
-                  <th>Status</th>
-                  <th style="text-align: right; width: 120px;">Actions</th>
+                  <th style="padding: 12px 18px; width: 22%; min-width: 190px;">Student Name</th>
+                  <th style="padding: 12px 18px; width: 25%; min-width: 210px;">Category & Subject</th>
+                  <th style="padding: 12px 18px; width: 18%; min-width: 180px;">Target Recipient</th>
+                  <th style="padding: 12px 18px; width: 10%; min-width: 95px; text-align: center;">Priority</th>
+                  <th style="padding: 12px 18px; width: 12%; min-width: 120px;">Date Submitted</th>
+                  <th style="padding: 12px 18px; width: 10%; min-width: 110px; text-align: center;">Status</th>
+                  <th style="padding: 12px 18px; width: 110px; min-width: 110px; text-align: right;">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {% for req in student_requests %}
-                <tr>
-                  <td>
-                    <div class="entity-cell">
-                      <div class="entity-avatar" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">{{ req.student.name|slice:":1"|upper }}</div>
-                      <div class="entity-info">
-                        <span class="entity-name">{{ req.student.name }}</span>
-                        <span class="entity-sub">{{ req.student.student_id }}</span>
+                <tr id="req-row-{{ req.id }}" 
+                    data-req-id="{{ req.id }}"
+                    data-student-name="{{ req.student.name|default:'Student' }}"
+                    data-student-id="{{ req.student.student_id|default:'' }}"
+                    data-student-batch="{{ req.student.batch.name|default:'' }}"
+                    data-subject="{{ req.subject }}"
+                    data-category="{{ req.category }}"
+                    data-recipient="{% if req.recipient_type|lower == 'mentor' %}Mentor ({{ req.recipient_user.name|default:'Assigned Mentor' }}){% else %}Admin Support{% endif %}"
+                    data-priority="{{ req.priority|default:'normal' }}"
+                    data-status="{{ req.status }}"
+                    data-date="{{ req.created_at|date:'d M Y H:i' }}"
+                    data-attachment="{% if req.attachment %}{{ req.attachment.url }}{% endif %}"
+                    data-attachment-name="{% if req.attachment %}{{ req.attachment_name|default:'Download Attachment' }}{% endif %}"
+                    data-search="{{ req.student.name|lower }} {{ req.student.student_id|lower }} {{ req.subject|lower }} {{ req.category|lower }} {{ req.recipient_type|lower }} {{ req.recipient_user.name|default:''|lower }}" 
+                    style="transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);">
+                  <td style="padding: 14px 18px; vertical-align: middle;">
+                    <div class="entity-cell" style="display: flex; align-items: center; gap: 10px;">
+                      <div class="entity-avatar" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; font-weight: 700; width: 34px; height: 34px; min-width: 34px; border-radius: 50%; font-size: 0.8125rem;">{{ req.student.name|slice:":1"|upper }}</div>
+                      <div class="entity-info" style="display: flex; flex-direction: column; min-width: 0;">
+                        <span class="entity-name" style="font-weight: 700; font-size: 0.84rem; color: var(--admin-text-main); white-space: nowrap;">{{ req.student.name }}</span>
+                        <span class="entity-sub" style="font-size: 0.72rem; color: var(--admin-text-muted); margin-top: 2px; white-space: nowrap;">{{ req.student.student_id }}{% if req.student.batch %} • {{ req.student.batch.name }}{% endif %}</span>
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <div style="font-weight: 600; color: var(--admin-text-main);">{{ req.subject }}</div>
-                    <div style="font-size: 0.75rem; color: var(--admin-text-muted);">{{ req.category }}</div>
+                  <td style="padding: 14px 18px; vertical-align: middle;">
+                    <div style="font-weight: 600; color: var(--admin-text-main); font-size: 0.84rem; line-height: 1.35;">{{ req.subject }}</div>
+                    <div style="font-size: 0.72rem; color: var(--admin-text-muted); display: flex; align-items: center; gap: 5px; margin-top: 3px; white-space: nowrap;">
+                      <span>{{ req.category }}</span>
+                      {% if req.attachment %}
+                      <span style="display: inline-flex; align-items: center; gap: 2px; color: #2563eb; font-weight: 600;" title="Has Attachment">
+                        • <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      </span>
+                      {% endif %}
+                      {% if req.replies.all|length > 0 %}
+                      <span style="display: inline-flex; align-items: center; gap: 2px; color: #059669; font-weight: 600;" title="Conversation replies">
+                        • {{ req.replies.all|length }} repl{{ req.replies.all|length|pluralize:"y,ies" }}
+                      </span>
+                      {% endif %}
+                    </div>
                   </td>
-                  <td>
-                    {% if req.priority == 'High' or req.priority == 'Urgent' %}
-                    <span style="font-size: 0.75rem; font-weight: 600; color: #ef4444; background: #fef2f2; padding: 2px 6px; border-radius: 4px;">{{ req.priority }}</span>
+                  <td style="padding: 14px 18px; vertical-align: middle; white-space: nowrap;">
+                    {% if req.recipient_type|lower == 'mentor' %}
+                    <span class="recipient-pill recipient-pill-mentor" title="Directed to Mentor">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <span>To: Mentor ({{ req.recipient_user.name|default:"Assigned Mentor" }})</span>
+                    </span>
                     {% else %}
-                    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6; background: #eff6ff; padding: 2px 6px; border-radius: 4px;">{{ req.priority }}</span>
+                    <span class="recipient-pill recipient-pill-admin" title="Directed to Admin Support">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      <span>To: Admin Support</span>
+                    </span>
                     {% endif %}
                   </td>
-                  <td>
-                    <div style="font-weight: 600; color: var(--admin-text-main);">{{ req.created_at|date:"d M Y" }}</div>
-                    <div style="font-size: 0.75rem; color: var(--admin-text-muted);">{{ req.created_at|time:"H:i" }}</div>
-                  </td>
-                  <td>
-                    {% if req.status == 'Resolved' %}
-                    <span class="status-pill status-active">Resolved</span>
-                    {% elif req.status == 'In Progress' %}
-                    <span class="status-pill" style="background: #fef3c7; color: #d97706;"><span class="badge-dot" style="background: #d97706;"></span> In Progress</span>
+                  <td style="padding: 14px 18px; text-align: center; vertical-align: middle; white-space: nowrap;">
+                    {% if req.priority|lower == 'urgent' %}
+                    <span class="req-priority-pill req-priority-urgent">Urgent</span>
+                    {% elif req.priority|lower == 'high' %}
+                    <span class="req-priority-pill req-priority-high">High</span>
                     {% else %}
-                    <span class="status-pill" style="background: #fef2f2; color: #ef4444;"><span class="badge-dot" style="background: #ef4444;"></span> Open</span>
+                    <span class="req-priority-pill req-priority-normal">Normal</span>
                     {% endif %}
                   </td>
-                  <td style="text-align: right;">
-                    <div class="table-actions-cell" style="justify-content: flex-end;">
-                      <button title="Reply & Resolve" onclick="openReplyModal('{{ req.id }}', '{{ req.student.name|escapejs }}', '{{ req.subject|escapejs }}', '{{ req.description|escapejs }}', '{{ req.status }}')" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; cursor: pointer; color: #64748b; margin-right: 4px; display: inline-flex; transition: all 0.2s;" onmouseover="this.style.background='#eff6ff'; this.style.color='#3b82f6';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  <td style="padding: 14px 18px; vertical-align: middle; white-space: nowrap;">
+                    <div style="font-weight: 600; color: var(--admin-text-main); font-size: 0.8125rem;">{{ req.created_at|date:"d M Y" }}</div>
+                    <div style="font-size: 0.72rem; color: var(--admin-text-muted); margin-top: 2px;">{{ req.created_at|time:"H:i" }}</div>
+                  </td>
+                  <td style="padding: 14px 18px; text-align: center; vertical-align: middle; white-space: nowrap;">
+                    {% if req.status|lower == 'resolved' %}
+                    <span class="req-status-pill req-status-resolved">
+                      <span class="req-status-dot"></span> Resolved
+                    </span>
+                    {% elif req.status|lower == 'in progress' %}
+                    <span class="req-status-pill req-status-progress">
+                      <span class="req-status-dot"></span> In Progress
+                    </span>
+                    {% else %}
+                    <span class="req-status-pill req-status-open">
+                      <span class="req-status-dot"></span> Open
+                    </span>
+                    {% endif %}
+                  </td>
+                  <td style="padding: 14px 18px; text-align: right; vertical-align: middle; white-space: nowrap;">
+                    <div class="table-actions-cell" style="justify-content: flex-end; display: inline-flex; align-items: center; gap: 6px;">
+                      <button type="button" class="btn-action-icon btn-action-view" title="View Request Details" onclick="openViewRequestModal(this, false);" style="border: 1px solid #e2e8f0; background: #ffffff; border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: all 0.15s ease;">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                       </button>
+                      <button type="button" class="btn-action-icon btn-action-reply" title="Reply to Student" onclick="openViewRequestModal(this, true);" style="border: 1px solid #bfdbfe; background: #eff6ff; border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #2563eb; transition: all 0.15s ease;">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                      </button>
+                      <button type="button" class="btn-action-icon btn-action-delete" title="Delete Request" onclick="deleteStudentRequest('{{ req.id }}', this);" style="border: 1px solid #fee2e2; background: #ffffff; border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #ef4444; transition: all 0.15s ease;">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+
+                    <!-- Hidden request payload for modals -->
+                    <div class="req-description-hidden" style="display: none;">{{ req.description }}</div>
+                    <div class="req-replies-hidden" style="display: none;">
+                      {% for rep in req.replies.all %}
+                      <div class="reply-thread-item rep-sender-{{ rep.sender_type|lower }}">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                          <span class="rep-sender-title rep-title-{{ rep.sender_type|lower }}" style="font-weight: 700; font-size: 0.8rem;">
+                            {% if rep.sender_type == 'admin' %}Admin Support ({{ rep.sender_user.name|default:'Admin' }}){% elif rep.sender_type == 'mentor' %}Mentor ({{ rep.sender_user.name|default:'Mentor' }}){% else %}{{ rep.sender_student.name|default:'Student' }}{% endif %}
+                          </span>
+                          <span style="font-size: 0.72rem; color: #64748b;">{{ rep.created_at|date:"d M Y H:i" }}</span>
+                        </div>
+                        <div style="font-size: 0.8125rem; color: #1e293b; line-height: 1.4; white-space: pre-wrap;">{{ rep.message }}</div>
+                      </div>
+                      {% empty %}
+                      <div style="font-size: 0.8125rem; color: #94a3b8; font-style: italic; padding: 6px 0;">No replies yet.</div>
+                      {% endfor %}
                     </div>
                   </td>
                 </tr>
                 {% empty %}
-                <tr>
-                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No student requests found.</td>
+                <tr id="noRequestsRow">
+                  <td colspan="7" style="text-align: center; padding: 24px; color: #94a3b8;">No student requests found.</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -401,7 +656,7 @@
 
 <!-- Reply Modal -->
   <div class="modal-overlay" id="replyModal">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width: 540px;">
       <div class="modal-header-bar">
         <div class="modal-title-text">Reply to Student Request</div>
         <button class="btn-close-modal" onclick="document.getElementById('replyModal').classList.remove('active');">
@@ -409,16 +664,19 @@
         </button>
       </div>
 
-      <form method="POST" action="{% url 'notifications' %}">
+      <form method="POST" action="{% url 'notifications' %}" id="replyForm">
         {% csrf_token %}
         <input type="hidden" name="action_type" value="reply">
         <input type="hidden" name="request_id" id="modalReplyId">
         
         <div class="modal-body-content">
-          <div style="background: #f8fafc; padding: 12px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
-            <div style="font-weight: 600; font-size: 0.8125rem; color: #475569; margin-bottom: 4px;" id="replyStudentName">Student Name</div>
-            <div style="font-weight: 700; color: #0f172a; margin-bottom: 8px;" id="replySubject">Subject</div>
-            <div style="font-size: 0.8125rem; color: #475569; line-height: 1.5;" id="replyMessage">Message description goes here...</div>
+          <div style="background: #f8fafc; padding: 14px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+              <span style="font-weight: 700; font-size: 0.875rem; color: #1e293b;" id="replyStudentName">Student Name</span>
+              <span class="status-pill" id="replyRecipientBadge" style="background: #f1f5f9; color: #475569; font-size: 0.72rem; font-weight: 600;">Directed to: Support</span>
+            </div>
+            <div style="font-weight: 700; color: #0f172a; margin-bottom: 6px; font-size: 0.95rem;" id="replySubject">Subject</div>
+            <div style="font-size: 0.8125rem; color: #475569; line-height: 1.5; white-space: pre-wrap; max-height: 120px; overflow-y: auto;" id="replyMessage">Message description goes here...</div>
           </div>
 
           <div class="form-grid-2col">
@@ -561,10 +819,17 @@
       const batchGroup = document.getElementById('batchSelectGroup');
       const studentGroup = document.getElementById('studentSelectGroup');
       const mentorGroup = document.getElementById('mentorSelectGroup');
+      const targetBatch = document.getElementById('modalTargetBatch');
+      const targetStudent = document.getElementById('modalTargetStudent');
+      const targetMentor = document.getElementById('modalTargetMentor');
 
       if (batchGroup) batchGroup.style.display = (val === 'Batch Students') ? 'block' : 'none';
       if (studentGroup) studentGroup.style.display = (val === 'Individual Student') ? 'block' : 'none';
       if (mentorGroup) mentorGroup.style.display = (val === 'Selected Mentor') ? 'block' : 'none';
+
+      if (targetBatch) targetBatch.required = (val === 'Batch Students');
+      if (targetStudent) targetStudent.required = (val === 'Individual Student');
+      if (targetMentor) targetMentor.required = (val === 'Selected Mentor');
     }
 
     function openNewModal() {
@@ -732,46 +997,992 @@
         this.classList.remove('active');
       }
     });
+    const bulkDelModal = document.getElementById('bulkDeleteConfirmModal');
+    if (bulkDelModal) {
+      bulkDelModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeBulkDeleteModal();
+        }
+      });
+    }
 
+    const viewDetailModalEl = document.getElementById('viewBroadcastDetailModal');
+    if (viewDetailModalEl) {
+      viewDetailModalEl.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('active');
+      });
+    }
+
+    // Floating Toast Notification
+    function showAdminToast(message, type) {
+      type = type || 'success';
+      const container = document.getElementById('adminToastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.style.cssText = 'display: inline-flex; align-items: center; gap: 10px; background: #0f172a; color: #ffffff; padding: 12px 18px; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); font-size: 0.85rem; font-weight: 500; pointer-events: auto; opacity: 0; transform: translateY(12px) scale(0.95); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);';
+      if (type === 'success') {
+        toast.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#22c55e" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>' + message + '</span>';
+      } else {
+        toast.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>' + message + '</span>';
+      }
+      container.appendChild(toast);
+      requestAnimationFrame(function() {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0) scale(1)';
+      });
+      setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px) scale(0.95)';
+        setTimeout(function() { toast.remove(); }, 250);
+      }, 3000);
+    }
+
+    // Real-time counter updates across KPI cards & pill tabs
+    function updateAllCounters(data) {
+      if (!data) return;
+
+      const kpiTotal = document.getElementById('kpiTotalCount');
+      if (kpiTotal && typeof data.total_count !== 'undefined') kpiTotal.textContent = data.total_count;
+
+      const kpiEnroll = document.getElementById('kpiEnrollmentsCount');
+      if (kpiEnroll && typeof data.enrollment_count !== 'undefined') kpiEnroll.textContent = data.enrollment_count;
+
+      const kpiPay = document.getElementById('kpiPaymentsCount');
+      if (kpiPay && typeof data.payment_count !== 'undefined') kpiPay.textContent = data.payment_count;
+
+      const kpiUnread = document.getElementById('kpiUnreadCount');
+      if (kpiUnread && typeof data.unread_count !== 'undefined') kpiUnread.textContent = data.unread_count;
+
+      const pillTotal = document.getElementById('pillCountTotal');
+      if (pillTotal && typeof data.total_count !== 'undefined') pillTotal.textContent = data.total_count;
+
+      const pillEnroll = document.getElementById('pillCountEnrollments');
+      if (pillEnroll && typeof data.enrollment_count !== 'undefined') pillEnroll.textContent = data.enrollment_count;
+
+      const pillPay = document.getElementById('pillCountPayments');
+      if (pillPay && typeof data.payment_count !== 'undefined') pillPay.textContent = data.payment_count;
+
+      const pillUnread = document.getElementById('pillCountUnread');
+      if (pillUnread && typeof data.unread_count !== 'undefined') pillUnread.textContent = data.unread_count;
+
+      const pillFee = document.getElementById('pillCountFeeAlerts');
+      if (pillFee && typeof data.fee_alerts_count !== 'undefined') pillFee.textContent = data.fee_alerts_count;
+
+      const pillAssess = document.getElementById('pillCountAssessments');
+      if (pillAssess && typeof data.assessments_count !== 'undefined') pillAssess.textContent = data.assessments_count;
+
+      const pillSys = document.getElementById('pillCountSystem');
+      if (pillSys && typeof data.system_count !== 'undefined') pillSys.textContent = data.system_count;
+
+      const ledgerCount = document.getElementById('tableLedgerCount');
+      if (ledgerCount && typeof data.total_count !== 'undefined') {
+        ledgerCount.textContent = data.total_count + ' Broadcasts';
+      }
+
+      if (typeof data.unread_count !== 'undefined') {
+        if (window.updateAllNotifBadges) {
+          window.updateAllNotifBadges(data.unread_count);
+        }
+        const sidebarBadge = document.querySelector('.sidebar-nav-badge');
+        if (sidebarBadge) {
+          sidebarBadge.textContent = data.unread_count;
+          sidebarBadge.style.display = data.unread_count > 0 ? '' : 'none';
+        }
+      }
+    }
+
+    // 0. Bulk Delete & Checkbox Management
+    function getSelectedNotificationIds() {
+      const checkedBoxes = document.querySelectorAll('.notif-row-checkbox:checked');
+      const ids = [];
+      checkedBoxes.forEach(function(cb) {
+        ids.push(cb.value);
+      });
+      return ids;
+    }
+
+    function handleRowCheckboxChange() {
+      const allCheckboxes = document.querySelectorAll('.notif-row-checkbox');
+      const checkedCheckboxes = document.querySelectorAll('.notif-row-checkbox:checked');
+      const count = checkedCheckboxes.length;
+      const total = allCheckboxes.length;
+
+      const badge = document.getElementById('selectedCountBadge');
+      if (badge) badge.textContent = count;
+
+      const delBtn = document.getElementById('btnDeleteSelected');
+      if (delBtn) {
+        if (count > 0) {
+          delBtn.disabled = false;
+          delBtn.style.opacity = '1';
+          delBtn.style.cursor = 'pointer';
+          delBtn.style.background = '#fee2e2';
+          delBtn.style.borderColor = '#f87171';
+        } else {
+          delBtn.disabled = true;
+          delBtn.style.opacity = '0.5';
+          delBtn.style.cursor = 'not-allowed';
+          delBtn.style.background = '#fff5f5';
+          delBtn.style.borderColor = '#fecaca';
+        }
+      }
+
+      const selectAll = document.getElementById('selectAllCheckbox');
+      if (selectAll) {
+        if (total > 0 && count === total) {
+          selectAll.checked = true;
+          selectAll.indeterminate = false;
+        } else if (count > 0) {
+          selectAll.checked = false;
+          selectAll.indeterminate = true;
+        } else {
+          selectAll.checked = false;
+          selectAll.indeterminate = false;
+        }
+      }
+    }
+
+    function toggleSelectAll(masterCheckbox) {
+      const isChecked = masterCheckbox.checked;
+      const checkboxes = document.querySelectorAll('.notif-row-checkbox');
+      checkboxes.forEach(function(cb) {
+        const row = cb.closest('tr');
+        if (row && row.style.display !== 'none') {
+          cb.checked = isChecked;
+        }
+      });
+      handleRowCheckboxChange();
+    }
+
+    function openBulkDeleteModal() {
+      const ids = getSelectedNotificationIds();
+      if (!ids || ids.length === 0) {
+        showAdminToast('Please select at least one notification to delete.', 'error');
+        return;
+      }
+      const countText = document.getElementById('bulkDeleteCountConfirmText');
+      if (countText) countText.textContent = ids.length;
+      const modal = document.getElementById('bulkDeleteConfirmModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeBulkDeleteModal() {
+      const modal = document.getElementById('bulkDeleteConfirmModal');
+      if (modal) modal.classList.remove('active');
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Delete Selected</span>';
+      }
+    }
+
+    function executeBulkDelete() {
+      const ids = getSelectedNotificationIds();
+      if (!ids || ids.length === 0) {
+        closeBulkDeleteModal();
+        return;
+      }
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display: inline-flex; align-items: center; gap: 6px;"><svg style="animation: spin 1s linear infinite; width: 15px; height: 15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg><span>Deleting...</span></span>';
+      }
+
+      // Smooth departure animation for all selected rows immediately
+      ids.forEach(function(id) {
+        const row = document.getElementById('notif-row-' + id);
+        if (row) {
+          row.style.transition = 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)';
+          row.style.opacity = '0';
+          row.style.transform = 'translateX(24px) scale(0.98)';
+          row.style.backgroundColor = '#fef2f2';
+        }
+      });
+
+      fetch('/api/admin/notifications/bulk-delete/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ ids: ids })
+      })
+      .then(function(res) {
+        if (res.status === 403) {
+          throw new Error('Permission denied: Admin privileges required.');
+        }
+        return res.json();
+      })
+      .then(function(data) {
+        closeBulkDeleteModal();
+        if (data.status === 'success' || data.success) {
+          const deletedIds = data.deleted_ids || ids;
+          deletedIds.forEach(function(id) {
+            const row = document.getElementById('notif-row-' + id);
+            if (row) {
+              row.style.maxHeight = '0px';
+              row.style.padding = '0';
+              setTimeout(function() {
+                row.remove();
+                checkEmptyBroadcasts();
+              }, 80);
+            }
+          });
+
+          updateAllCounters(data);
+          setTimeout(function() {
+            handleRowCheckboxChange();
+          }, 100);
+          showAdminToast(data.message || (deletedIds.length + ' notifications deleted successfully'), 'success');
+        } else {
+          // Restore selected rows
+          ids.forEach(function(id) {
+            const row = document.getElementById('notif-row-' + id);
+            if (row) {
+              row.style.opacity = '1';
+              row.style.transform = 'none';
+              row.style.backgroundColor = '';
+            }
+          });
+          showAdminToast(data.message || 'Could not delete notifications', 'error');
+        }
+      })
+      .catch(function(err) {
+        closeBulkDeleteModal();
+        ids.forEach(function(id) {
+          const row = document.getElementById('notif-row-' + id);
+          if (row) {
+            row.style.opacity = '1';
+            row.style.transform = 'none';
+            row.style.backgroundColor = '';
+          }
+        });
+        showAdminToast(err.message || 'Error executing bulk deletion', 'error');
+      });
+    }
+
+    function checkEmptyBroadcasts() {
+      const tbody = document.querySelector('#notifsTable tbody');
+      if (tbody && tbody.querySelectorAll('tr').length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 24px; color: #94a3b8;">No broadcasts found.</td></tr>';
+      }
+    }
+
+    // 1. Smooth Delete (No Full Page Reload)
+    function deleteBroadcastSmooth(notifId, btn) {
+      if (!confirm('Are you sure you want to delete this broadcast for ALL target users?')) return;
+      const row = (btn && btn.closest('tr')) || document.getElementById('notif-row-' + notifId);
+      if (!row) return;
+
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+
+      // Smooth departure visual
+      row.style.transition = 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)';
+      row.style.opacity = '0';
+      row.style.transform = 'translateX(24px) scale(0.98)';
+      row.style.backgroundColor = '#fef2f2';
+
+      fetch('/api/admin/notifications/delete/' + notifId + '/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.status === 'success' || data.success) {
+          row.style.maxHeight = '0px';
+          row.style.padding = '0';
+          setTimeout(function() {
+            row.remove();
+            checkEmptyBroadcasts();
+            handleRowCheckboxChange();
+          }, 80);
+
+          updateAllCounters(data);
+          showAdminToast('Broadcast notification deleted successfully', 'success');
+        } else {
+          row.style.opacity = '1';
+          row.style.transform = 'none';
+          row.style.backgroundColor = '';
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          showAdminToast(data.message || 'Could not delete notification', 'error');
+        }
+      })
+      .catch(function(err) {
+        console.error('Delete error:', err);
+        row.style.opacity = '1';
+        row.style.transform = 'none';
+        row.style.backgroundColor = '';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        showAdminToast('Failed to delete notification', 'error');
+      });
+    }
+
+    // 2. Smooth Mark as Read (No Full Page Reload)
+    function markReadSmooth(notifId, btn) {
+      const row = (btn && btn.closest('tr')) || document.getElementById('notif-row-' + notifId);
+      fetch('/api/admin/notifications/mark-read/' + notifId + '/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.status === 'success' || data.success) {
+          if (row) {
+            row.setAttribute('data-is-read', 'true');
+            const pBar = row.querySelector('.progress-bar-inner');
+            if (pBar) pBar.style.width = '100%';
+
+            const statusCell = document.getElementById('status-cell-' + notifId);
+            if (statusCell) {
+              statusCell.innerHTML = '<span class="status-pill status-active">Read</span>';
+            }
+
+            const actionBtn = document.getElementById('action-mark-read-' + notifId);
+            if (actionBtn) {
+              actionBtn.style.transition = 'all 0.2s';
+              actionBtn.style.opacity = '0';
+              setTimeout(function() { actionBtn.style.display = 'none'; }, 200);
+            }
+          }
+
+          if (typeof data.unread_count !== 'undefined') {
+            const kpiUnread = document.getElementById('kpiUnreadCount');
+            if (kpiUnread) kpiUnread.textContent = data.unread_count;
+            const pillUnread = document.getElementById('pillCountUnread');
+            if (pillUnread) pillUnread.textContent = data.unread_count;
+            if (window.updateAllNotifBadges) window.updateAllNotifBadges(data.unread_count);
+            const sidebarBadge = document.querySelector('.sidebar-nav-badge');
+            if (sidebarBadge) {
+              sidebarBadge.textContent = data.unread_count;
+              sidebarBadge.style.display = data.unread_count > 0 ? '' : 'none';
+            }
+          }
+          showAdminToast('Marked as read', 'success');
+        }
+      })
+      .catch(function(err) {
+        console.error('Mark read error:', err);
+      });
+    }
+
+    // 3. Smooth Mark All as Read (No Full Page Reload)
     function markAllNotificationsRead() {
       fetch('/api/admin/notifications/mark-all-read/', {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
         }
       })
       .then(function(res) { return res.json(); })
       .then(function(data) {
-        if (window.updateAllNotifBadges) {
-          window.updateAllNotifBadges(0);
+        if (data.status === 'success' || data.success) {
+          document.querySelectorAll('#notifsTable tbody tr').forEach(function(row) {
+            row.setAttribute('data-is-read', 'true');
+            const pBar = row.querySelector('.progress-bar-inner');
+            if (pBar) pBar.style.width = '100%';
+
+            const statusCells = row.querySelectorAll('[id^="status-cell-"]');
+            statusCells.forEach(function(sc) {
+              sc.innerHTML = '<span class="status-pill status-active">Read</span>';
+            });
+
+            const actionBtns = row.querySelectorAll('[id^="action-mark-read-"]');
+            actionBtns.forEach(function(btn) {
+              btn.style.display = 'none';
+            });
+          });
+
+          const kpiUnread = document.getElementById('kpiUnreadCount');
+          if (kpiUnread) kpiUnread.textContent = '0';
+          const pillUnread = document.getElementById('pillCountUnread');
+          if (pillUnread) pillUnread.textContent = '0';
+          if (window.updateAllNotifBadges) window.updateAllNotifBadges(0);
+          const sidebarBadge = document.querySelector('.sidebar-nav-badge');
+          if (sidebarBadge) sidebarBadge.style.display = 'none';
+
+          showAdminToast('All broadcasts marked as read', 'success');
         }
-        window.location.reload();
       })
-      .catch(function() {
-        var form = document.getElementById('markAllReadForm');
-        if (form) form.submit();
+      .catch(function(err) {
+        console.error('Mark all read error:', err);
       });
     }
 
+    // 4. Smooth View Broadcast Modal (No alert, No Full Page Reload)
     function viewBroadcastModal(id, title, message, isRead) {
-      if (!isRead) {
-        fetch('/api/admin/notifications/mark-read/' + id + '/', {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/json'
-          }
-        }).then(function() {
-          if (window.syncNotificationCount) window.syncNotificationCount();
-        }).catch(function() {});
+      document.getElementById('viewModalHeadline').textContent = title || 'Broadcast Notification';
+      document.getElementById('viewModalMessage').textContent = message || '';
+
+      const row = document.getElementById('notif-row-' + id);
+      const cat = row ? (row.getAttribute('data-category') || 'General') : 'General';
+      const catEl = document.getElementById('viewModalCategory');
+      if (catEl) catEl.textContent = cat;
+
+      const statEl = document.getElementById('viewModalStatus');
+      if (statEl) {
+        statEl.textContent = isRead ? 'Read' : 'Unread';
+        statEl.className = isRead ? 'status-pill status-active' : 'status-pill';
+        if (!isRead) {
+          statEl.style.background = '#fef2f2';
+          statEl.style.color = '#ef4444';
+        } else {
+          statEl.style.background = '';
+          statEl.style.color = '';
+        }
       }
-      alert('Viewing broadcast:\n' + title + '\n\n' + message);
+
       if (!isRead) {
-        window.location.reload();
+        markReadSmooth(id, null);
+      }
+
+      document.getElementById('viewBroadcastDetailModal').classList.add('active');
+    }
+
+    // 5. Student Requests Management Functions
+    var activeRequestStatusFilter = 'all';
+
+    function filterRequestsByStatus(btn, status) {
+      activeRequestStatusFilter = (status || 'all').toLowerCase();
+      document.querySelectorAll('#studentRequestsCard .filter-tabs-row .pill-tab-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      if (btn) btn.classList.add('active');
+      filterRequestsTable();
+    }
+
+    function filterRequestsTable() {
+      const searchInput = document.getElementById('requestsSearchInput');
+      const term = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      const rows = document.querySelectorAll('#studentRequestsTable tbody tr:not(#noRequestsRow)');
+      let visibleCount = 0;
+
+      rows.forEach(function(row) {
+        const searchData = (row.getAttribute('data-search') || '').toLowerCase();
+        const statusData = (row.getAttribute('data-status') || '').toLowerCase();
+
+        const matchesSearch = !term || searchData.indexOf(term) !== -1;
+        const matchesStatus = (activeRequestStatusFilter === 'all') || (statusData === activeRequestStatusFilter);
+
+        if (matchesSearch && matchesStatus) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      const noRow = document.getElementById('noRequestsRow');
+      if (noRow) {
+        noRow.style.display = visibleCount === 0 ? '' : 'none';
       }
     }
+
+    function recalculateRequestCounts() {
+      const visibleRows = document.querySelectorAll('#studentRequestsTable tbody tr:not(#noRequestsRow)');
+      let openCnt = 0;
+      let progCnt = 0;
+      let resCnt = 0;
+      visibleRows.forEach(function(r) {
+        const st = (r.getAttribute('data-status') || '').toLowerCase();
+        if (st === 'open') openCnt++;
+        else if (st === 'in progress') progCnt++;
+        else if (st === 'resolved') resCnt++;
+      });
+
+      const totalReqs = visibleRows.length;
+      const totalBadge = document.getElementById('tableRequestsCount');
+      if (totalBadge) totalBadge.textContent = totalReqs + ' Requests';
+      const pillTotal = document.getElementById('pillReqTotal');
+      if (pillTotal) pillTotal.textContent = totalReqs;
+      const pillOpen = document.querySelector('#reqFilterTabOpen .pill-tab-count');
+      if (pillOpen) pillOpen.textContent = openCnt;
+      const pillProg = document.querySelector('#reqFilterTabProgress .pill-tab-count');
+      if (pillProg) pillProg.textContent = progCnt;
+      const pillRes = document.querySelector('#reqFilterTabResolved .pill-tab-count');
+      if (pillRes) pillRes.textContent = resCnt;
+    }
+
+    function openViewRequestModal(btn, focusReply) {
+      const row = btn.closest('tr');
+      if (!row) return;
+
+      const reqId = row.getAttribute('data-req-id') || '';
+      const sName = row.getAttribute('data-student-name') || 'Student';
+      const sId = row.getAttribute('data-student-id') || '';
+      const sBatch = row.getAttribute('data-student-batch') || '';
+      const subj = row.getAttribute('data-subject') || '';
+      const cat = row.getAttribute('data-category') || 'General';
+      const recipient = row.getAttribute('data-recipient') || 'Support';
+      const priority = row.getAttribute('data-priority') || 'Normal';
+      const status = row.getAttribute('data-status') || 'Open';
+      const dt = row.getAttribute('data-date') || '';
+      const attachUrl = row.getAttribute('data-attachment') || '';
+      const attachName = row.getAttribute('data-attachment-name') || 'Download Attachment';
+
+      const descEl = row.querySelector('.req-description-hidden');
+      const repliesEl = row.querySelector('.req-replies-hidden');
+
+      const hidId = document.getElementById('viewReqHiddenId');
+      if (hidId) hidId.value = reqId;
+
+      document.getElementById('viewReqStudentName').textContent = sName;
+      document.getElementById('viewReqStudentSub').textContent = (sId ? sId : '') + (sBatch ? (' • ' + sBatch) : '');
+      document.getElementById('viewReqSubject').textContent = subj;
+      document.getElementById('viewReqCategoryBadge').textContent = cat;
+      document.getElementById('viewReqDate').textContent = dt;
+      document.getElementById('viewReqDescription').textContent = descEl ? descEl.textContent : '';
+
+      const pBadge = document.getElementById('viewReqPriorityBadge');
+      if (pBadge) {
+        pBadge.textContent = priority.charAt(0).toUpperCase() + priority.slice(1);
+        if (priority.toLowerCase() === 'urgent') {
+          pBadge.style.background = '#fef2f2';
+          pBadge.style.color = '#ef4444';
+          pBadge.style.border = '1px solid #fecaca';
+        } else if (priority.toLowerCase() === 'high') {
+          pBadge.style.background = '#fffbeb';
+          pBadge.style.color = '#d97706';
+          pBadge.style.border = '1px solid #fde68a';
+        } else {
+          pBadge.style.background = '#eff6ff';
+          pBadge.style.color = '#3b82f6';
+          pBadge.style.border = '1px solid #bfdbfe';
+        }
+      }
+
+      const rBadge = document.getElementById('viewReqRecipientBadge');
+      if (rBadge) {
+        rBadge.textContent = recipient;
+        rBadge.className = (recipient.toLowerCase().indexOf('mentor') !== -1) ? 'recipient-pill recipient-pill-mentor' : 'recipient-pill recipient-pill-admin';
+      }
+
+      const stBadge = document.getElementById('viewReqStatusBadge');
+      if (stBadge) {
+        stBadge.textContent = status;
+        if (status.toLowerCase() === 'resolved') {
+          stBadge.className = 'req-status-pill req-status-resolved';
+        } else if (status.toLowerCase() === 'in progress') {
+          stBadge.className = 'req-status-pill req-status-progress';
+        } else {
+          stBadge.className = 'req-status-pill req-status-open';
+        }
+      }
+
+      // Reset reply inputs
+      const replyMsgInput = document.getElementById('viewReqReplyMessage');
+      if (replyMsgInput) replyMsgInput.value = '';
+      const replyStatusSelect = document.getElementById('viewReqNewStatus');
+      if (replyStatusSelect) {
+        replyStatusSelect.value = (status.toLowerCase() === 'resolved') ? 'Resolved' : 'Resolved';
+      }
+
+      const attWrap = document.getElementById('viewReqAttachmentWrap');
+      const attLink = document.getElementById('viewReqAttachmentLink');
+      const attText = document.getElementById('viewReqAttachmentText');
+      if (attachUrl && attWrap && attLink) {
+        attWrap.style.display = 'block';
+        attLink.href = attachUrl;
+        if (attText) attText.textContent = attachName;
+      } else if (attWrap) {
+        attWrap.style.display = 'none';
+      }
+
+      const repContainer = document.getElementById('viewReqRepliesContainer');
+      if (repContainer) {
+        repContainer.innerHTML = repliesEl ? repliesEl.innerHTML : '<div style="font-size: 0.8125rem; color: #94a3b8; font-style: italic;">No replies yet.</div>';
+      }
+
+      const replyBtn = document.getElementById('btnReplyFromViewModal');
+      if (replyBtn) {
+        replyBtn.onclick = function() {
+          document.getElementById('viewStudentRequestModal').classList.remove('active');
+          openReplyModalFromBtn(btn);
+        };
+      }
+
+      document.getElementById('viewStudentRequestModal').classList.add('active');
+
+      if (focusReply && replyMsgInput) {
+        setTimeout(function() {
+          replyMsgInput.focus();
+          replyMsgInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 150);
+      }
+    }
+
+    function submitReplyFromViewModal() {
+      const reqId = document.getElementById('viewReqHiddenId').value;
+      const replyMsg = (document.getElementById('viewReqReplyMessage').value || '').trim();
+      const newStatus = document.getElementById('viewReqNewStatus').value;
+      const submitBtn = document.getElementById('btnSubmitReplyModal');
+
+      if (!reqId) {
+        showAdminToast('No request selected', 'error');
+        return;
+      }
+      if (!replyMsg) {
+        showAdminToast('Please type a reply message before sending.', 'error');
+        const rInput = document.getElementById('viewReqReplyMessage');
+        if (rInput) rInput.focus();
+        return;
+      }
+
+      let origBtnHtml = '';
+      if (submitBtn) {
+        origBtnHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.7';
+        submitBtn.innerHTML = '<svg style="animation: spin 1s linear infinite; width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> <span>Sending...</span>';
+      }
+
+      const params = new URLSearchParams();
+      params.append('action_type', 'reply');
+      params.append('request_id', reqId);
+      params.append('reply_message', replyMsg);
+      params.append('status', newStatus);
+
+      fetch('{% url "notifications" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: params.toString()
+      })
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerHTML = origBtnHtml || '<span>Send Reply</span>';
+        }
+
+        if (data.status === 'success' || data.success) {
+          // 1. Clear textarea
+          const rInput = document.getElementById('viewReqReplyMessage');
+          if (rInput) rInput.value = '';
+
+          // 2. Add reply to modal conversation history
+          const repContainer = document.getElementById('viewReqRepliesContainer');
+          const repTime = (data.reply && data.reply.created_at) || 'Just now';
+          const repSender = (data.reply && data.reply.sender_name) || 'Admin Support';
+          const repText = (data.reply && data.reply.message) || replyMsg;
+          
+          if (repContainer) {
+            if (repContainer.textContent.indexOf('No replies yet') !== -1) {
+              repContainer.innerHTML = '';
+            }
+
+            const repDiv = document.createElement('div');
+            repDiv.className = 'reply-thread-item rep-sender-admin';
+            repDiv.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span class="rep-sender-title rep-title-admin" style="font-weight: 700; font-size: 0.8rem;">${escapeHtml(repSender)}</span>
+                <span style="font-size: 0.72rem; color: #64748b;">${repTime}</span>
+              </div>
+              <div style="font-size: 0.8125rem; color: #1e293b; line-height: 1.4; white-space: pre-wrap;">${escapeHtml(repText)}</div>
+            `;
+            repContainer.appendChild(repDiv);
+            repContainer.scrollTop = repContainer.scrollHeight;
+          }
+
+          // 3. Update modal status badge
+          const finalStatus = data.new_status || newStatus;
+          const stBadge = document.getElementById('viewReqStatusBadge');
+          if (stBadge) {
+            stBadge.textContent = finalStatus;
+            if (finalStatus.toLowerCase() === 'resolved') {
+              stBadge.className = 'req-status-pill req-status-resolved';
+            } else if (finalStatus.toLowerCase() === 'in progress') {
+              stBadge.className = 'req-status-pill req-status-progress';
+            } else {
+              stBadge.className = 'req-status-pill req-status-open';
+            }
+          }
+
+          // 4. Update row in table
+          const row = document.getElementById('req-row-' + reqId);
+          if (row) {
+            row.setAttribute('data-status', finalStatus);
+            // Update status cell in row (6th td)
+            const cells = row.querySelectorAll('td');
+            if (cells && cells.length >= 6) {
+              const statusCell = cells[5];
+              let pillClass = 'req-status-pill req-status-open';
+              if (finalStatus.toLowerCase() === 'resolved') {
+                pillClass = 'req-status-pill req-status-resolved';
+              } else if (finalStatus.toLowerCase() === 'in progress') {
+                pillClass = 'req-status-pill req-status-progress';
+              }
+              statusCell.innerHTML = `<span class="${pillClass}"><span class="req-status-dot"></span> ${finalStatus}</span>`;
+            }
+
+            // Also append into row's hidden replies so reopening has it
+            const hiddenReplies = row.querySelector('.req-replies-hidden');
+            if (hiddenReplies) {
+              if (hiddenReplies.textContent.indexOf('No replies yet') !== -1) {
+                hiddenReplies.innerHTML = '';
+              }
+              const repDiv = document.createElement('div');
+              repDiv.className = 'reply-thread-item rep-sender-admin';
+              repDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span class="rep-sender-title rep-title-admin" style="font-weight: 700; font-size: 0.8rem;">${escapeHtml(repSender)}</span>
+                  <span style="font-size: 0.72rem; color: #64748b;">${repTime}</span>
+                </div>
+                <div style="font-size: 0.8125rem; color: #1e293b; line-height: 1.4; white-space: pre-wrap;">${escapeHtml(repText)}</div>
+              `;
+              hiddenReplies.appendChild(repDiv);
+            }
+          }
+
+          // 5. Recalculate status counters
+          recalculateRequestCounts();
+
+          // 6. Show toast notification
+          showAdminToast('Reply sent to student successfully!', 'success');
+        } else {
+          showAdminToast(data.message || 'Could not send reply', 'error');
+        }
+      })
+      .catch(function(err) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerHTML = origBtnHtml || '<span>Send Reply</span>';
+        }
+        showAdminToast(err.message || 'Error sending reply', 'error');
+      });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function openReplyModalFromBtn(btn) {
+      const row = btn.closest('tr');
+      if (!row) return;
+
+      const reqId = row.getAttribute('data-req-id');
+      const sName = row.getAttribute('data-student-name') || 'Student';
+      const recipient = row.getAttribute('data-recipient') || 'Support';
+      const subj = row.getAttribute('data-subject') || '';
+      const status = row.getAttribute('data-status') || 'Open';
+      const descEl = row.querySelector('.req-description-hidden');
+
+      document.getElementById('modalReplyId').value = reqId;
+      document.getElementById('replyStudentName').textContent = sName;
+      document.getElementById('replyRecipientBadge').textContent = recipient;
+      document.getElementById('replySubject').textContent = subj;
+      document.getElementById('replyMessage').textContent = descEl ? descEl.textContent : '';
+
+      const statusSelect = document.getElementById('modalReplyStatus');
+      if (statusSelect) {
+        statusSelect.value = status.toLowerCase() === 'resolved' ? 'Resolved' : (status.toLowerCase() === 'in progress' ? 'In Progress' : 'Open');
+      }
+
+      document.getElementById('replyModal').classList.add('active');
+    }
+
+    function deleteStudentRequest(reqId, btn) {
+      if (!confirm('Are you sure you want to permanently delete this student request? This cannot be undone.')) {
+        return;
+      }
+
+      const row = btn.closest('tr');
+      if (row) {
+        row.style.transition = 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(24px) scale(0.98)';
+        row.style.backgroundColor = '#fef2f2';
+      }
+
+      fetch('/api/admin/requests/delete/' + reqId + '/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(function(res) {
+        if (!res.ok) {
+          throw new Error('Failed to delete request (HTTP ' + res.status + ')');
+        }
+        return res.json();
+      })
+      .then(function(data) {
+        if (data.status === 'success' || data.success) {
+          if (row) {
+            row.remove();
+          }
+
+          // Recalculate request counts
+          recalculateRequestCounts();
+          filterRequestsTable();
+          showAdminToast(data.message || 'Request deleted successfully', 'success');
+        } else {
+          if (row) {
+            row.style.opacity = '1';
+            row.style.transform = 'none';
+            row.style.backgroundColor = '';
+          }
+          showAdminToast(data.message || 'Error deleting request', 'error');
+        }
+      })
+      .catch(function(err) {
+        if (row) {
+          row.style.opacity = '1';
+          row.style.transform = 'none';
+          row.style.backgroundColor = '';
+        }
+        showAdminToast(err.message || 'Connection error', 'error');
+      });
+    }
+      });
+    }
   </script>
+
+  <!-- Confirm Bulk Delete Modal -->
+  <div class="modal-overlay" id="bulkDeleteConfirmModal">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header-bar" style="border-bottom: 1px solid #fee2e2;">
+        <div class="modal-title-text" style="color: #dc2626; display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Confirm Bulk Deletion</span>
+        </div>
+        <button class="btn-close-modal" onclick="closeBulkDeleteModal();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body-content" style="padding: 18px 0;">
+        <p style="font-size: 0.9375rem; color: #334155; margin-bottom: 12px; line-height: 1.5;">
+          Are you sure you want to permanently delete <strong id="bulkDeleteCountConfirmText" style="color: #dc2626;">0</strong> selected broadcast notification(s)?
+        </p>
+        <div style="background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span style="font-size: 0.8125rem; color: #991b1b; line-height: 1.4;">
+            <strong>Warning:</strong> This action cannot be undone. All selected notifications and delivery logs will be permanently deleted for all recipients.
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer-bar" style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+        <button type="button" class="btn-secondary-action" onclick="closeBulkDeleteModal();">Cancel</button>
+        <button type="button" class="btn-primary-add" id="btnConfirmBulkDelete" onclick="executeBulkDelete();" style="background: #dc2626; border-color: #dc2626; color: #ffffff;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Delete Selected</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Broadcast Detail Modal -->
+  <div class="modal-overlay" id="viewBroadcastDetailModal">
+    <div class="modal-box" style="max-width: 520px;">
+      <div class="modal-header-bar">
+        <div class="modal-title-text" id="viewModalTitle">Broadcast Details</div>
+        <button class="btn-close-modal" onclick="document.getElementById('viewBroadcastDetailModal').classList.remove('active');">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body-content">
+        <div style="background: #f8fafc; padding: 14px 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span id="viewModalCategory" class="status-pill status-active">Category</span>
+            <span id="viewModalStatus" class="status-pill">Read</span>
+          </div>
+          <div style="font-weight: 700; font-size: 1.05rem; color: #0f172a; margin-bottom: 6px;" id="viewModalHeadline">Subject</div>
+          <div style="font-size: 0.875rem; color: #334155; line-height: 1.6; white-space: pre-wrap;" id="viewModalMessage">Message body</div>
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-secondary-action" onclick="document.getElementById('viewBroadcastDetailModal').classList.remove('active');">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Student Request Modal -->
+  <div class="modal-overlay" id="viewStudentRequestModal">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header-bar">
+        <div class="modal-title-text" id="viewReqModalTitle">Student Request Details</div>
+        <button class="btn-close-modal" onclick="document.getElementById('viewStudentRequestModal').classList.remove('active');">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body-content">
+        <div style="background: #f8fafc; padding: 14px 16px; border-radius: 8px; margin-bottom: 14px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <div style="font-weight: 700; font-size: 0.95rem; color: #0f172a;" id="viewReqStudentName">Student Name</div>
+              <div style="font-size: 0.75rem; color: #64748b;" id="viewReqStudentSub">ID • Batch</div>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <span class="status-pill" id="viewReqRecipientBadge" style="background: #f1f5f9; color: #475569; font-weight: 600; font-size: 0.75rem;">To: Support</span>
+              <span class="status-pill" id="viewReqStatusBadge">Open</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 0.75rem; flex-wrap: wrap;">
+            <span id="viewReqCategoryBadge" style="font-weight: 600; color: #475569; background: #e2e8f0; padding: 2px 8px; border-radius: 4px;">General</span>
+            <span id="viewReqPriorityBadge" style="font-weight: 700; padding: 2px 8px; border-radius: 4px;">Normal</span>
+            <span style="color: #94a3b8;" id="viewReqDate">22 Oct 2026</span>
+          </div>
+
+          <div style="font-weight: 700; font-size: 1rem; color: #0f172a; margin-bottom: 6px;" id="viewReqSubject">Subject</div>
+          <div style="font-size: 0.875rem; color: #334155; line-height: 1.6; white-space: pre-wrap; background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; max-height: 180px; overflow-y: auto;" id="viewReqDescription">Description body</div>
+
+          <div id="viewReqAttachmentWrap" style="margin-top: 10px; display: none;">
+            <a id="viewReqAttachmentLink" href="#" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 600; color: #2563eb; background: #eff6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #bfdbfe; text-decoration: none;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              <span id="viewReqAttachmentText">Download Attachment</span>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight: 700; font-size: 0.85rem; color: #334155; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Conversation History</span>
+          </div>
+          <div id="viewReqRepliesContainer" style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
+            <!-- Populated from row replies -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer-bar" style="display: flex; justify-content: flex-end; align-items: center;">
+        <button type="button" class="btn-secondary-action" onclick="document.getElementById('viewStudentRequestModal').classList.remove('active');">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="adminToastContainer" style="position: fixed; bottom: 24px; right: 24px; z-index: 99999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;"></div>
 </body>
 </html>
 

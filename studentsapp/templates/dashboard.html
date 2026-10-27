@@ -189,22 +189,35 @@
             <a href="{% url 'students' %}" class="panel-link-view">View All →</a>
           </div>
 
-          <div class="donut-chart-flex"></div>
+          <div class="panel-body-content">
+            <div class="donut-chart-flex"></div>
           </div>
 
-          <!-- Column 2: Batch-wise Students -->
+          <div class="card-bottom-summary" id="statusBottomSummary">
+            <div class="summary-pill"><span class="summary-label">Total Students:</span> <strong>{{ metrics.total_students|default:"0" }}</strong></div>
+            <div class="summary-pill"><span class="summary-label">Status:</span> <strong style="color: #2563eb;">Monitored</strong></div>
+          </div>
+        </div>
+
+        <!-- Column 2: Batch-wise Students -->
         <div class="dash-panel-card">
           <div class="panel-header-row">
             <span class="panel-title">Batch-wise Students</span>
             <a href="{% url 'batches' %}" class="panel-link-view">View All →</a>
           </div>
 
-          <div class="batch-chart-wrapper"></div>
+          <div class="panel-body-content">
+            <div class="batch-chart-wrapper"></div>
           </div>
 
-          <!-- Column 3: Fee Collection -->
+          <div id="batchBottomSection">
+            <!-- Dynamic Batch Capacity Card / Summary rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Column 3: Fee Collection -->
         <div class="dash-panel-card">
-          <div class="panel-header-row" style="margin-bottom: 6px;">
+          <div class="panel-header-row">
             <span class="panel-title">Fee Collection</span>
             <div class="dropdown-container" style="position: relative; display: inline-block;">
               <button class="dropdown-pill-btn" onclick="toggleFeeDropdown(event)">
@@ -220,16 +233,22 @@
             </div>
           </div>
 
-          <div class="fee-chart-top">
-            <div class="fee-metric-large">
-              <span class="fee-rupee-val">{{ fee_card_collection_str|default:metrics.fee_collection }}</span>
-              <span class="fee-trend-badge">↑ {{ metrics.fee_trend }} vs last period</span>
+          <div class="panel-body-content">
+            <div class="fee-chart-top">
+              <div class="fee-metric-large">
+                <span class="fee-rupee-val">{{ fee_card_collection_str|default:metrics.fee_collection }}</span>
+                <span class="fee-trend-badge">↑ {{ metrics.fee_trend }} vs last period</span>
+              </div>
             </div>
+            <div class="fee-line-chart-svg"></div>
           </div>
 
-          <div class="fee-line-chart-svg"></div>
+          <div class="card-bottom-summary">
+            <div class="summary-pill"><span class="summary-label">Realized:</span> <strong id="feeBottomRealized">{{ fee_card_collection_str|default:metrics.fee_collection }}</strong></div>
+            <div class="summary-pill"><span class="summary-label">Status:</span> <strong style="color: #16a34a;">● Verified</strong></div>
+          </div>
         </div>
-        </div>
+      </div>
 
         <!-- Bottom Row: Recent Registrations, Today's Classes, Recent Activities -->
       <div class="three-cards-row">
@@ -238,7 +257,7 @@
         <div class="dash-panel-card">
           <div class="panel-header-row">
             <span class="panel-title">Recent Registrations</span>
-            {% if total_admissions > 4 %}
+            {% if total_admissions > 5 %}
             <a href="{% url 'students' %}" class="panel-link-view">View All →</a>
             {% endif %}
           </div>
@@ -264,7 +283,20 @@
               </div>
               {% empty %}
               <div class="empty-state-container">
-                <p>No Recent Registrations available.</p>
+                <div class="empty-state-icon-wrap empty-icon-emerald">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" y1="8" x2="19" y2="14"/>
+                    <line x1="22" y1="11" x2="16" y2="11"/>
+                  </svg>
+                </div>
+                <h4 class="empty-state-title">No New Registrations</h4>
+                <p class="empty-state-desc">New student admissions will appear here once registered.</p>
+                <a href="{% url 'students' %}" class="empty-state-btn empty-btn-emerald">
+                  <span>View Students</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
               </div>
               {% endfor %}
             </div>
@@ -293,7 +325,21 @@
               </div>
               {% empty %}
               <div class="empty-state-container">
-                <p>No classes scheduled for today.</p>
+                <div class="empty-state-icon-wrap empty-icon-blue">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="3" ry="3"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                    <polyline points="12 14 12 17 14 17"/>
+                  </svg>
+                </div>
+                <h4 class="empty-state-title">No Classes Today</h4>
+                <p class="empty-state-desc">There are no classes scheduled for today. Check your full timetable.</p>
+                <a href="{% url 'classes' %}" class="empty-state-btn empty-btn-blue">
+                  <span>View Timetable</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
               </div>
               {% endfor %}
             </div>
@@ -325,7 +371,17 @@
               </div>
               {% empty %}
               <div class="empty-state-container">
-                <p>No recent activities found.</p>
+                <div class="empty-state-icon-wrap empty-icon-purple">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                  </svg>
+                </div>
+                <h4 class="empty-state-title">No Recent Activities</h4>
+                <p class="empty-state-desc">No events or activities logged today. Everything is up to date.</p>
+                <div class="empty-state-pill">
+                  <span class="empty-pulse-dot"></span>
+                  <span>All caught up</span>
+                </div>
               </div>
               {% endfor %}
             </div>
@@ -385,6 +441,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 legendHTML += `</div>`;
                 
                 document.querySelector('.donut-chart-flex').innerHTML = svgHTML + legendHTML;
+
+                const activeCount = statusMap['Active'] || 0;
+                const activePct = Math.round((activeCount / total) * 100);
+                const statusSummaryEl = document.getElementById('statusBottomSummary');
+                if (statusSummaryEl) {
+                    statusSummaryEl.innerHTML = `
+                      <div class="summary-pill"><span class="summary-label">Total Enrolled:</span> <strong>${total}</strong></div>
+                      <div class="summary-pill"><span class="summary-label">Active Rate:</span> <strong style="color: #16a34a;">${activePct}%</strong></div>
+                    `;
+                }
             } else {
                 document.querySelector('.donut-chart-flex').innerHTML = emptyStateHTML;
             }
@@ -404,53 +470,99 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const midCount = Math.round(maxCount / 2);
             
-            let svgHTML = `<svg viewBox="0 0 380 170" preserveAspectRatio="none">
+            let svgHTML = `<svg viewBox="0 0 380 120" preserveAspectRatio="none">
                 <!-- Grid Lines and Y-Axis Ticks -->
-                <text x="22" y="24" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="end">${maxCount}</text>
-                <line x1="30" y1="20" x2="370" y2="20" stroke="#f1f5f9" stroke-width="1.2" stroke-dasharray="3 3"/>
+                <text x="22" y="18" font-size="9" font-weight="600" fill="#94a3b8" text-anchor="end">${maxCount}</text>
+                <line x1="30" y1="15" x2="370" y2="15" stroke="#f1f5f9" stroke-width="1.2" stroke-dasharray="3 3"/>
                 
-                <text x="22" y="78" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="end">${midCount}</text>
-                <line x1="30" y1="74" x2="370" y2="74" stroke="#f1f5f9" stroke-width="1.2" stroke-dasharray="3 3"/>
+                <text x="22" y="55" font-size="9" font-weight="600" fill="#94a3b8" text-anchor="end">${midCount}</text>
+                <line x1="30" y1="52" x2="370" y2="52" stroke="#f1f5f9" stroke-width="1.2" stroke-dasharray="3 3"/>
                 
-                <text x="22" y="138" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="end">0</text>
-                <line x1="30" y1="134" x2="370" y2="134" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="22" y="94" font-size="9" font-weight="600" fill="#94a3b8" text-anchor="end">0</text>
+                <line x1="30" y1="90" x2="370" y2="90" stroke="#e2e8f0" stroke-width="1.5"/>
             `;
             
             const totalBars = batchData.length;
             const usableWidth = 330;
             const startX = 35;
             const slotWidth = usableWidth / totalBars;
-            const barWidth = Math.min(34, slotWidth * 0.45);
+            const barWidth = totalBars === 1 ? 48 : (totalBars <= 3 ? 38 : Math.min(30, slotWidth * 0.45));
             const barColors = ['#2563eb', '#7c3aed', '#059669', '#d97706'];
             
             batchData.forEach((d, i) => {
                 const count = Number(d.student_count) || 0;
                 const xCenter = startX + (slotWidth * i) + (slotWidth / 2);
                 const rectX = xCenter - (barWidth / 2);
-                const barH = (count / maxCount) * 105;
-                const yPos = 134 - barH;
-                const textY = count > 0 ? yPos - 6 : 126;
+                const barH = (count / maxCount) * 72;
+                const yPos = 90 - barH;
+                const textY = count > 0 ? yPos - 4 : 84;
                 const barColor = barColors[i % barColors.length];
                 
                 const cleanName = (d.name || '').replace(/\s*-\s*/g, '-');
                 
                 svgHTML += `
                     <!-- Background Track -->
-                    <rect x="${rectX}" y="20" width="${barWidth}" height="114" rx="6" fill="#f8fafc"/>
+                    <rect x="${rectX}" y="15" width="${barWidth}" height="75" rx="5" fill="#f8fafc"/>
                     
                     <!-- Value Label on Top -->
-                    <text x="${xCenter}" y="${textY}" font-size="11.5" font-weight="700" fill="${count > 0 ? '#0f172a' : '#94a3b8'}" text-anchor="middle">${count}</text>
+                    <text x="${xCenter}" y="${textY}" font-size="10.5" font-weight="700" fill="${count > 0 ? '#0f172a' : '#94a3b8'}" text-anchor="middle">${count}</text>
                     
                     <!-- Active Bar -->
-                    <rect class="chart-interactive batch-bar" data-tooltip="${cleanName}: ${count} Students" x="${rectX}" y="${count > 0 ? yPos : 131}" width="${barWidth}" height="${count > 0 ? barH : 3}" rx="5" fill="${barColor}"/>
+                    <rect class="chart-interactive batch-bar" data-tooltip="${cleanName}: ${count} Students" x="${rectX}" y="${count > 0 ? yPos : 88}" width="${barWidth}" height="${count > 0 ? barH : 2}" rx="4" fill="${barColor}"/>
                     
-                    <!-- Batch Name and Capacity Details -->
-                    <text x="${xCenter}" y="151" font-size="11" font-weight="600" fill="#334155" text-anchor="middle">${cleanName}</text>
-                    <text x="${xCenter}" y="164" font-size="9.5" font-weight="500" fill="#94a3b8" text-anchor="middle">${count} / ${d.capacity || 20} Enrolled</text>
+                    <!-- Batch Name Details -->
+                    <text x="${xCenter}" y="104" font-size="9.5" font-weight="600" fill="#334155" text-anchor="middle">${cleanName}</text>
+                    <text x="${xCenter}" y="115" font-size="8.5" font-weight="500" fill="#94a3b8" text-anchor="middle">${count} / ${d.capacity || 20} Enrolled</text>
                 `;
             });
             svgHTML += `</svg>`;
             document.querySelector('.batch-chart-wrapper').innerHTML = svgHTML;
+
+            // Render bottom capacity card or summary
+            const batchSectionEl = document.getElementById('batchBottomSection');
+            if (batchSectionEl) {
+                if (totalBars === 1) {
+                    const firstBatch = batchData[0];
+                    const bCount = Number(firstBatch.student_count) || 0;
+                    const bCap = Number(firstBatch.capacity) || 20;
+                    const bPct = Math.min(100, Math.round((bCount / bCap) * 100));
+                    const bClean = (firstBatch.name || '').replace(/\s*-\s*/g, '-');
+                    const bAvail = Math.max(0, bCap - bCount);
+
+                    batchSectionEl.innerHTML = `
+                      <div class="batch-capacity-card">
+                        <div class="batch-capacity-head">
+                          <span class="batch-pill-name">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            ${bClean}
+                          </span>
+                          <span class="batch-pill-badge">${bPct}% Occupancy</span>
+                        </div>
+                        <div class="batch-progress-track">
+                          <div class="batch-progress-fill" style="width: ${bPct}%;"></div>
+                        </div>
+                        <div class="batch-capacity-footer">
+                          <span><strong>${bCount}</strong> Enrolled</span>
+                          <span><strong style="color: #059669;">${bAvail}</strong> Seats Available</span>
+                        </div>
+                      </div>
+                    `;
+                } else {
+                    let totalEnrolled = 0;
+                    let totalCap = 0;
+                    batchData.forEach(d => {
+                        totalEnrolled += Number(d.student_count) || 0;
+                        totalCap += Number(d.capacity) || 20;
+                    });
+                    const avgPct = totalCap > 0 ? Math.round((totalEnrolled / totalCap) * 100) : 0;
+                    batchSectionEl.innerHTML = `
+                      <div class="card-bottom-summary">
+                        <div class="summary-pill"><span class="summary-label">Batches:</span> <strong>${totalBars} Active</strong></div>
+                        <div class="summary-pill"><span class="summary-label">Avg Occupancy:</span> <strong style="color: #2563eb;">${avgPct}%</strong></div>
+                      </div>
+                    `;
+                }
+            }
         } else {
             document.querySelector('.batch-chart-wrapper').innerHTML = emptyStateHTML;
         }
@@ -465,23 +577,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const midScale = (maxScale / 2).toFixed(1).replace('.0', '');
             
-            let svgHTML = `<svg viewBox="0 0 360 140" preserveAspectRatio="none">
+            let svgHTML = `<svg viewBox="0 0 360 110" preserveAspectRatio="none">
                 <defs>
                     <linearGradient id="feeAreaGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stop-color="#2563eb" stop-opacity="0.22"/>
                         <stop offset="100%" stop-color="#2563eb" stop-opacity="0.01"/>
                     </linearGradient>
                 </defs>
-                <text x="14" y="14" font-size="8.5" font-weight="600" fill="#94a3b8" text-anchor="start">₹ (Lakh)</text>
+                <text x="14" y="12" font-size="8" font-weight="600" fill="#94a3b8" text-anchor="start">₹ (Lakh)</text>
                 
-                <text x="24" y="24" font-size="9" font-weight="600" fill="#94a3b8" text-anchor="end">${maxScale}</text>
-                <line x1="32" y1="20" x2="350" y2="20" stroke="#f1f5f9" stroke-width="1.2" stroke-dasharray="3 3"/>
+                <text x="24" y="20" font-size="8.5" font-weight="600" fill="#94a3b8" text-anchor="end">${maxScale}</text>
+                <line x1="32" y1="16" x2="350" y2="16" stroke="#f1f5f9" stroke-width="1.2" stroke-dasharray="3 3"/>
                 
-                <text x="24" y="69" font-size="9" font-weight="600" fill="#94a3b8" text-anchor="end">${midScale}</text>
-                <line x1="32" y1="65" x2="350" y2="65" stroke="#f1f5f9" stroke-width="1.2" stroke-dasharray="3 3"/>
+                <text x="24" y="54" font-size="8.5" font-weight="600" fill="#94a3b8" text-anchor="end">${midScale}</text>
+                <line x1="32" y1="50" x2="350" y2="50" stroke="#f1f5f9" stroke-width="1.2" stroke-dasharray="3 3"/>
                 
-                <text x="24" y="114" font-size="9" font-weight="600" fill="#94a3b8" text-anchor="end">0</text>
-                <line x1="32" y1="110" x2="350" y2="110" stroke="#cbd5e1" stroke-width="1.5"/>
+                <text x="24" y="88" font-size="8.5" font-weight="600" fill="#94a3b8" text-anchor="end">0</text>
+                <line x1="32" y1="84" x2="350" y2="84" stroke="#cbd5e1" stroke-width="1.5"/>
             `;
             
             let pathD = "";
@@ -494,7 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             feeData.forEach((d, i) => {
                 const cx = startX + (i * xStep);
-                const cy = 110 - ((d.amount_lakhs / maxScale) * 88);
+                const cy = 84 - ((d.amount_lakhs / maxScale) * 68);
                 
                 if (i === 0) {
                     pathD += `M ${cx},${cy} `;
@@ -504,18 +616,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     areaD += `L ${cx},${cy} `;
                 }
                 
-                const fontSize = totalPoints > 8 ? '8' : '9.5';
-                svgHTML += `<text x="${cx}" y="127" font-size="${fontSize}" font-weight="600" fill="#94a3b8" text-anchor="middle">${d.month}</text>`;
+                const fontSize = totalPoints > 8 ? '8' : '9';
+                svgHTML += `<text x="${cx}" y="98" font-size="${fontSize}" font-weight="600" fill="#94a3b8" text-anchor="middle">${d.month}</text>`;
                 
                 const isHighlight = d.amount_lakhs > 0;
-                pointsHTML += `<circle class="chart-interactive fee-point" data-tooltip="${d.month}: ₹ ${d.amount_lakhs.toFixed(1)} L" cx="${cx}" cy="${cy}" r="${isHighlight ? '4.5' : '3'}" fill="${isHighlight ? '#2563eb' : '#94a3b8'}" stroke="#ffffff" stroke-width="${isHighlight ? '2' : '1'}"/>`;
+                pointsHTML += `<circle class="chart-interactive fee-point" data-tooltip="${d.month}: ₹ ${d.amount_lakhs.toFixed(1)} L" cx="${cx}" cy="${cy}" r="${isHighlight ? '4' : '2.5'}" fill="${isHighlight ? '#2563eb' : '#94a3b8'}" stroke="#ffffff" stroke-width="${isHighlight ? '2' : '1'}"/>`;
             });
             
             const lastX = startX + ((totalPoints - 1) * xStep);
-            areaD += `L ${lastX},110 L ${startX},110 Z`;
+            areaD += `L ${lastX},84 L ${startX},84 Z`;
             
             svgHTML += `<path d="${areaD}" fill="url(#feeAreaGrad)"/>`;
-            svgHTML += `<path d="${pathD}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+            svgHTML += `<path d="${pathD}" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
             svgHTML += pointsHTML;
             svgHTML += `</svg>`;
             document.querySelector('.fee-line-chart-svg').innerHTML = svgHTML;
@@ -532,6 +644,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
                 document.querySelector('.fee-rupee-val').textContent = data.fee_collection_str;
+                const feeRealizedEl = document.getElementById('feeBottomRealized');
+                if (feeRealizedEl) feeRealizedEl.textContent = data.fee_collection_str;
                 renderFeeChart(data.fee_collection_data);
             })
             .catch(err => console.error("Error fetching fee data:", err));

@@ -228,6 +228,25 @@
       margin-left: auto;
     }
 
+    .msg-count-badge {
+      background: #64748b;
+      opacity: 0.6;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 50%;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .msg-count-badge.has-unread {
+      background: #ef4444;
+      opacity: 1;
+    }
+
     /* -------------------------------------------------------------------------
        MAIN CONTENT CANVAS
        ------------------------------------------------------------------------- */
@@ -323,14 +342,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span>Messages</span>
         </div>
-        <span style="background: {% if unread_notifications_count > 0 %}#ef4444{% else %}#64748b; opacity: 0.6;{% endif %}; color: #ffffff; font-size: 10px; font-weight: 800; border-radius: 50%; min-width: 18px; height: 18px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center;" id="mentorSidebarMsgBadge">{{ unread_notifications_count|default:0 }}</span>
+        <span class="msg-count-badge {% if unread_notifications_count > 0 %}has-unread{% endif %}" id="mentorSidebarMsgBadge">{{ unread_notifications_count|default:0 }}</span>
       </a>
 
       <!-- Divider -->
       <div style="height: 1px; background: rgba(255, 255, 255, 0.08); margin: 12px 0;"></div>
 
       <!-- 8. Logout Button -->
-      <a href="{% url 'logout' %}" class="nav-item nav-item-logout" style="color: #f87171;">
+      <a href="{% url 'logout' %}?role=mentor" onclick="var urlParams = new URLSearchParams(window.location.search); var tId = sessionStorage.getItem('portal_tab_id') || urlParams.get('tab_id'); sessionStorage.removeItem('portal_tab_role'); sessionStorage.removeItem('portal_tab_id'); if (tId) { this.href += '&tab_id=' + encodeURIComponent(tId); }" class="nav-item nav-item-logout" style="color: #f87171;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         <span>Logout</span>
       </a>
@@ -359,6 +378,65 @@
   </main>
 
 </div>
+
+<script>
+  (function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var currentTabId = urlParams.get('tab_id') || sessionStorage.getItem('portal_tab_id');
+    if (currentTabId) {
+      sessionStorage.setItem('portal_tab_id', currentTabId);
+      sessionStorage.setItem('portal_tab_role', 'mentor');
+      if (!urlParams.get('tab_id')) {
+        try {
+          var newUrl = new URL(window.location.href);
+          newUrl.searchParams.set('tab_id', currentTabId);
+          window.history.replaceState({}, '', newUrl.toString());
+        } catch(e) {}
+      }
+    }
+
+    function appendTabToLinks() {
+      if (!currentTabId) return;
+      document.querySelectorAll('a[href]').forEach(function(anchor) {
+        var href = anchor.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.indexOf('logout') !== -1) return;
+        if (href.indexOf('tab_id=') === -1 && (href.startsWith('/') || href.startsWith(window.location.origin))) {
+          var sep = href.indexOf('?') === -1 ? '?' : '&';
+          anchor.setAttribute('href', href + sep + 'tab_id=' + encodeURIComponent(currentTabId));
+        }
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', appendTabToLinks);
+    } else {
+      appendTabToLinks();
+    }
+
+    if (currentTabId && window.fetch) {
+      var originalFetch = window.fetch;
+      window.fetch = function(input, init) {
+        init = init || {};
+        init.headers = init.headers || {};
+        if (init.headers instanceof Headers) {
+          if (!init.headers.has('X-Tab-ID')) {
+            init.headers.append('X-Tab-ID', currentTabId);
+          }
+        } else if (Array.isArray(init.headers)) {
+          var hasHeader = init.headers.some(function(pair) { return pair[0].toLowerCase() === 'x-tab-id'; });
+          if (!hasHeader) {
+            init.headers.push(['X-Tab-ID', currentTabId]);
+          }
+        } else {
+          if (!init.headers['X-Tab-ID']) {
+            init.headers['X-Tab-ID'] = currentTabId;
+          }
+        }
+        return originalFetch.call(this, input, init);
+      };
+    }
+  })();
+</script>
 
 {% block extra_js %}{% endblock %}
 </body>

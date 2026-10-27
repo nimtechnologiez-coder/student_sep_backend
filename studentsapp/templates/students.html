@@ -502,8 +502,11 @@
             <label>Full Name <span class="required-star">*</span></label>
             <input type="text" id="editName" class="modal-input" required>
             
-            <label>Email Address <span class="required-star">*</span></label>
-            <input type="email" id="editEmail" class="modal-input" required>
+            <label style="display:flex; justify-content:space-between; align-items:center;">
+              <span>Email Address <span class="required-star">*</span></span>
+              <span id="editEmailError" style="color:#ef4444; font-size:0.75rem; font-weight:600; display:none;">This email address is already registered.</span>
+            </label>
+            <input type="email" id="editEmail" class="modal-input" required oninput="document.getElementById('editEmailError').style.display='none'; this.style.borderColor='';">
             
             <label>Phone Number <span class="required-star">*</span></label>
             <input type="text" id="editPhone" class="modal-input" required>
@@ -861,6 +864,10 @@ function openEditModal(btn) {
     
     const emailCell = currentActionRow.querySelector('.cell-email') || currentActionRow.cells[3];
     document.getElementById('editEmail').value = emailCell ? emailCell.innerText : '';
+    const errSpan = document.getElementById('editEmailError');
+    if (errSpan) errSpan.style.display = 'none';
+    const emailInput = document.getElementById('editEmail');
+    if (emailInput) emailInput.style.borderColor = '';
     
     const phoneCell = currentActionRow.querySelector('.cell-phone') || currentActionRow.cells[4];
     document.getElementById('editPhone').value = phoneCell ? phoneCell.innerText : '';
@@ -984,6 +991,18 @@ function saveEdit() {
         closeModal('editModal');
         showToast('Student details updated.');
       } else {
+        if (data.field === 'email' || (data.error && data.error.includes('already registered'))) {
+          const errSpan = document.getElementById('editEmailError');
+          const emailInput = document.getElementById('editEmail');
+          if (errSpan) {
+            errSpan.innerText = data.error || 'This email address is already registered.';
+            errSpan.style.display = 'inline';
+          }
+          if (emailInput) {
+            emailInput.style.borderColor = '#ef4444';
+            emailInput.focus();
+          }
+        }
         showToast(data.error || 'Error updating student.', 'error');
       }
     });

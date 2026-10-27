@@ -280,6 +280,26 @@ class Student(models.Model):
         val = self.dynamic_installment_amount
         return f"₹{val:,.0f}" if val == int(val) else f"₹{val:,.2f}"
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.email and self.email.strip():
+            clean_email = self.email.strip().lower()
+            self.email = clean_email
+            if not self.pk:
+                if Student.objects.filter(email__iexact=clean_email).exists():
+                    raise ValidationError({'email': "This email address is already registered."})
+            else:
+                orig = Student.objects.filter(pk=self.pk).values('email').first()
+                if orig and (orig.get('email') or '').strip().lower() != clean_email:
+                    if Student.objects.filter(email__iexact=clean_email).exclude(pk=self.pk).exists():
+                        raise ValidationError({'email': "This email address is already registered."})
+
+    def save(self, *args, **kwargs):
+        if self.email and self.email.strip():
+            self.email = self.email.strip().lower()
+        self.clean()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -289,11 +309,50 @@ class FeePayment(models.Model):
     balance_due = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     payment_method = models.CharField(max_length=50, default='UPI')
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    order_id = models.CharField(max_length=100, blank=True, null=True)
     installment_name = models.CharField(max_length=50, blank=True, null=True, default='Full Payment')
     due_date = models.DateField(blank=True, null=True)
     payment_date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=20, choices=[('Paid', 'Paid'), ('Pending', 'Pending'), ('Failed', 'Failed')], default='Paid')
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('Success', 'Success'),
+            ('Failed', 'Failed'),
+            ('Pending', 'Pending'),
+            ('Created', 'Created'),
+            ('Refunded', 'Refunded')
+        ],
+        default='Success',
+        blank=True,
+        null=True
+    )
     
+
+    @property
+    def clean_payment_status(self):
+        val = (self.payment_status or '').strip()
+        if val in ['Success', 'Failed', 'Pending', 'Created', 'Refunded']:
+            return val
+        if self.status == 'Paid':
+            return 'Success'
+        elif self.status == 'Failed':
+            return 'Failed'
+        elif self.status == 'Pending':
+            return 'Pending'
+        return 'Pending'
+
+    @property
+    def payment_status_badge_class(self):
+        st = self.clean_payment_status
+        mapping = {
+            'Success': 'badge-payment-success',
+            'Failed': 'badge-payment-failed',
+            'Pending': 'badge-payment-pending',
+            'Created': 'badge-payment-created',
+            'Refunded': 'badge-payment-refunded'
+        }
+        return mapping.get(st, 'badge-payment-pending')
 
     @property
     def initials(self):
@@ -322,11 +381,20 @@ class FeePayment(models.Model):
     def save(self, *args, **kwargs):
         if self.transaction_id and self.transaction_id.strip():
             self.transaction_id = self.transaction_id.strip()
+        if self.order_id and self.order_id.strip():
+            self.order_id = self.order_id.strip()
+        if not self.payment_status:
+            if self.status == 'Paid':
+                self.payment_status = 'Success'
+            elif self.status == 'Failed':
+                self.payment_status = 'Failed'
+            elif self.status == 'Pending':
+                self.payment_status = 'Pending'
         self.clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"REC-#{self.id} {self.student.name} - ₹{self.amount} ({self.status})"
+        return f"REC-#{self.id} {self.student.name} - ₹{self.amount} ({self.clean_payment_status})"
 
 class PlacementOffer(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='offers')

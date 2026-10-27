@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env', override=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -59,6 +59,11 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-student-id',
+    'x-parent-id',
+]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://student-sep-backend.onrender.com',
@@ -102,8 +107,8 @@ DATABASES = {
         'USER': os.environ.get('DB_USER', 'postgres.jvhisiznzfunmclecwao'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'Nim#tech@2026'),
         'HOST': os.environ.get('DB_HOST', 'aws-0-ap-south-1.pooler.supabase.com'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', 600)),
+        'PORT': os.environ.get('DB_PORT', '6543'),
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', 0)),
         'CONN_HEALTH_CHECKS': True,
     }
 }
@@ -167,3 +172,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Razorpay Configuration (Test / Production)
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
+RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
+RAZORPAY_IS_TEST_MODE = RAZORPAY_KEY_ID.startswith('rzp_test_') if RAZORPAY_KEY_ID else True

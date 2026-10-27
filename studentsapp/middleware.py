@@ -2,47 +2,53 @@ from django.shortcuts import redirect
 from django.http import JsonResponse
 
 class DashboardAuthMiddleware:
-    """
-    Protects all dashboard pages and admin/mentor APIs from unauthorized access.
-    Enforces strict role-based routing between Admin and Mentor portals:
-    - Admin users are restricted to Admin routes (e.g. /dashboard/, /students/, /users/)
-    - Mentor users are restricted to Mentor routes (e.g. /mentor/dashboard/, /mentor/students/)
-    - Prevents session bleed or cross-role URL navigation.
-    """
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         path = request.path
 
-        # Determine user role strictly
-        appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
-        session_role = str(request.session.get('role', '')).strip().lower()
-
-        is_mentor = False
-        is_admin = False
-
-        if appuser_role == 'mentor' or session_role == 'mentor':
-            is_mentor = True
-            is_admin = False
-        elif (hasattr(request, 'user') and request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)) or \
-             appuser_role in ('admin', 'administrator') or \
-             session_role in ('admin', 'administrator'):
-            is_admin = True
-            is_mentor = False
-
-        is_authenticated = is_admin or is_mentor
-
-        # 1. Login page routing
-        if path in ('/', '/login', '/login/'):
-            if request.method == 'GET' and is_authenticated:
-                if is_mentor:
-                    return redirect('mentor_dashboard')
-                if is_admin:
-                    return redirect('dashboard')
+        # Ignore public student registration
+        if path.startswith('/students/register'):
             return self.get_response(request)
 
-        # 2. Check protected page access
+        # 1. Retrieve session-stored auth namespaces
+        session = getattr(request, 'session', {})
+        admin_auth = session.get('admin_auth')
+        mentor_auth = session.get('mentor_auth')
+        tab_sessions = session.get('tab_sessions', {})
+
+        # Legacy session fallback migration if namespaces are not yet populated
+        if not admin_auth and not mentor_auth:
+            legacy_appuser_role = str(session.get('appuser_role', '')).strip().lower()
+            legacy_role = str(session.get('role', '')).strip().lower()
+            if legacy_appuser_role == 'mentor' or legacy_role == 'mentor':
+                mentor_auth = {
+                    'appuser_id': session.get('appuser_id'),
+                    'role': 'Mentor',
+                    'appuser_role': 'Mentor',
+                    'appuser_name': session.get('appuser_name', 'Mentor'),
+                    'is_authenticated': True
+                }
+                session['mentor_auth'] = mentor_auth
+            elif (hasattr(request, 'user') and request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)) or \
+                 legacy_appuser_role in ('admin', 'administrator') or legacy_role in ('admin', 'administrator'):
+                admin_auth = {
+                    'user_id': getattr(request.user, 'id', None) if hasattr(request, 'user') and request.user.is_authenticated else None,
+                    'appuser_id': session.get('appuser_id'),
+                    'role': 'Admin',
+                    'appuser_role': 'Admin',
+                    'appuser_name': session.get('appuser_name', 'Admin'),
+                    'is_authenticated': True
+                }
+                session['admin_auth'] = admin_auth
+
+        # 2. Extract tab_id token if provided
+        tab_id = request.headers.get('X-Tab-ID') or request.GET.get('tab_id') or request.POST.get('tab_id')
+        tab_auth = tab_sessions.get(tab_id) if tab_id and isinstance(tab_sessions, dict) else None
+        request.tab_id = tab_id
+
+        # Route definitions
         admin_page_prefixes = [
             '/dashboard',
             '/students',
@@ -56,60 +62,10 @@ class DashboardAuthMiddleware:
             '/users',
             '/notifications',
         ]
-
-        # Ignore public student registration
-        if path.startswith('/students/register'):
-            return self.get_response(request)
-
         is_admin_page = any(path == p or path == f"{p}/" or path.startswith(f"{p}/") for p in admin_page_prefixes)
         is_mentor_page = path == '/mentor' or path == '/mentor/' or path.startswith('/mentor/')
+        is_mentor_api = path.startswith('/api/mentor')
 
-        # A. Unauthenticated access check
-        if (is_admin_page or is_mentor_page) and not is_authenticated:
-            return redirect('login_page')
-
-        # B. Mentor accessing Admin pages -> redirect to corresponding Mentor page or Mentor Dashboard
-        if is_admin_page and is_mentor:
-            if path.startswith('/students'):
-                return redirect('mentor_students')
-            elif path.startswith('/classes') or path.startswith('/batches'):
-                return redirect('mentor_classes')
-            elif path.startswith('/academic'):
-                return redirect('mentor_curriculum')
-            elif path.startswith('/assessments'):
-                return redirect('mentor_assessments')
-            elif path.startswith('/placement'):
-                return redirect('mentor_placement')
-            elif path.startswith('/reports'):
-                return redirect('mentor_reports')
-            elif path.startswith('/notifications'):
-                return redirect('mentor_notifications')
-            else:
-                # /users/, /fees/, /dashboard/, etc.
-                return redirect('mentor_dashboard')
-
-        # C. Admin accessing Mentor pages -> redirect to corresponding Admin page or Admin Dashboard
-        if is_mentor_page and is_admin:
-            if path.startswith('/mentor/students'):
-                return redirect('students')
-            elif path.startswith('/mentor/classes') or path.startswith('/mentor/attendance'):
-                return redirect('classes')
-            elif path.startswith('/mentor/batches'):
-                return redirect('batches')
-            elif path.startswith('/mentor/curriculum') or path.startswith('/mentor/academic'):
-                return redirect('academic')
-            elif path.startswith('/mentor/assessments'):
-                return redirect('assessments')
-            elif path.startswith('/mentor/placement'):
-                return redirect('placement')
-            elif path.startswith('/mentor/reports'):
-                return redirect('reports')
-            elif path.startswith('/mentor/notifications'):
-                return redirect('notifications')
-            else:
-                return redirect('dashboard')
-
-        # 3. Check protected Admin & Mentor APIs
         admin_api_prefixes = [
             '/api/approve-student',
             '/api/reject-student',
@@ -135,20 +91,102 @@ class DashboardAuthMiddleware:
             '/api/curriculum/delete-',
             '/api/curriculum/edit-',
         ]
-        mentor_api_prefixes = [
-            '/api/mentor',
-        ]
+        is_admin_api = any(path.startswith(p) for p in admin_api_prefixes)
 
-        if any(path.startswith(p) for p in admin_api_prefixes):
-            if not is_authenticated:
+        # 3. Determine active role context for this request
+        target_role = None
+        if tab_auth:
+            t_role = str(tab_auth.get('role', '')).strip().lower()
+            if t_role == 'mentor':
+                target_role = 'mentor'
+            elif t_role in ('admin', 'administrator'):
+                target_role = 'admin'
+
+        if not target_role:
+            if is_mentor_page or is_mentor_api:
+                target_role = 'mentor'
+            elif is_admin_page or is_admin_api:
+                target_role = 'admin'
+            else:
+                # Login or root path without tab context - do not assume a role
+                target_role = None
+
+        # 4. Hydrate in-memory request.session and request properties for downstream views & templates
+        if target_role == 'mentor' and mentor_auth:
+            session['appuser_role'] = 'Mentor'
+            session['role'] = 'Mentor'
+            session['appuser_id'] = mentor_auth.get('appuser_id')
+            session['appuser_name'] = mentor_auth.get('appuser_name', 'Mentor')
+            request.is_mentor = True
+            request.is_admin = False
+        elif target_role == 'admin' and admin_auth:
+            session['appuser_role'] = 'Admin'
+            session['role'] = 'Admin'
+            session['appuser_name'] = admin_auth.get('appuser_name', 'Admin')
+            if admin_auth.get('appuser_id'):
+                session['appuser_id'] = admin_auth.get('appuser_id')
+            else:
+                session.pop('appuser_id', None)
+            request.is_mentor = False
+            request.is_admin = True
+        else:
+            request.is_mentor = False
+            request.is_admin = False
+
+        # 5. Handle Login page & Root routing
+        if path in ('/', '/login', '/login/'):
+            if request.method == 'GET':
+                # If this specific tab has an authenticated session and didn't force login
+                if tab_auth and not request.GET.get('force'):
+                    if tab_auth.get('role', '').lower() == 'mentor' and mentor_auth:
+                        return redirect('mentor_dashboard')
+                    elif tab_auth.get('role', '').lower() in ('admin', 'administrator') and admin_auth:
+                        return redirect('dashboard')
+
+            return self.get_response(request)
+
+        # 6. Protected Page Authentication and Cross-Role Routing Guards
+        if is_admin_page:
+            # If tab_id was provided, verify this specific tab has an active admin tab session
+            if tab_id:
+                if not tab_auth or str(tab_auth.get('role', '')).lower() not in ('admin', 'administrator'):
+                    return redirect('login_page')
+            elif not admin_auth:
+                return redirect('login_page')
+
+            # Cross-role guard
+            if tab_auth and tab_auth.get('role', '').lower() == 'mentor' and not tab_auth.get('allow_admin'):
+                return redirect('mentor_dashboard')
+
+        if is_mentor_page:
+            # If tab_id was provided, verify this specific tab has an active mentor tab session
+            if tab_id:
+                if not tab_auth or str(tab_auth.get('role', '')).lower() != 'mentor':
+                    return redirect('login_page')
+            elif not mentor_auth:
+                return redirect('login_page')
+
+            # Cross-role guard
+            if tab_auth and tab_auth.get('role', '').lower() in ('admin', 'administrator') and not tab_auth.get('allow_mentor'):
+                return redirect('dashboard')
+
+        # 7. Check protected APIs
+        if is_admin_api:
+            if tab_id:
+                if not tab_auth or str(tab_auth.get('role', '')).lower() not in ('admin', 'administrator'):
+                    return JsonResponse({'success': False, 'error': 'Session expired or invalid tab.'}, status=401)
+            elif not admin_auth and not mentor_auth:
                 return JsonResponse({'success': False, 'error': 'Authentication required. Please log in.'}, status=401)
-            if not is_admin:
+            if not admin_auth and not (tab_auth and str(tab_auth.get('role', '')).lower() in ('admin', 'administrator')):
                 return JsonResponse({'success': False, 'error': 'Permission denied. Administrator access required.'}, status=403)
 
-        if any(path.startswith(p) for p in mentor_api_prefixes):
-            if not is_authenticated:
+        if is_mentor_api:
+            if tab_id:
+                if not tab_auth or str(tab_auth.get('role', '')).lower() != 'mentor':
+                    return JsonResponse({'success': False, 'error': 'Session expired or invalid tab.'}, status=401)
+            elif not mentor_auth and not admin_auth:
                 return JsonResponse({'success': False, 'error': 'Authentication required. Please log in.'}, status=401)
-            if not is_mentor and not is_admin:
+            if not mentor_auth and not (tab_auth and str(tab_auth.get('role', '')).lower() == 'mentor'):
                 return JsonResponse({'success': False, 'error': 'Permission denied. Mentor access required.'}, status=403)
 
         return self.get_response(request)

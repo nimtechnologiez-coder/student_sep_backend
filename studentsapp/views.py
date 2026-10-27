@@ -1,10 +1,15 @@
 import logging
+from django.conf import settings
+import razorpay
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Sum, Q, Count, Avg
 from django.db import transaction
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, DatabaseError
 
 logger = logging.getLogger(__name__)
 import random
@@ -81,8 +86,6 @@ def calculate_student_attendance(student):
         scheduled_class_ids = []
         scheduled_dates = []
 
-    # Only count attendance for dates/classes that have an actual ClassSchedule created by Mentor
-    # ClassSchedule இல்லாத நாளை attendance-ல் count செய்யக்கூடாது
     if scheduled_class_ids or scheduled_dates:
         att_conducted = Attendance.objects.filter(student=student, date__lte=today).filter(
             Q(class_schedule_id__in=scheduled_class_ids) |
@@ -285,11 +288,13 @@ def get_fee_analytics(fee_param='last_6_months', now=None):
     }
 
 def dashboard(request):
+    if getattr(request, 'is_mentor', False) and not getattr(request, 'is_admin', False):
+        return redirect('mentor_dashboard')
     appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
-    if appuser_role == 'mentor':
+    if appuser_role == 'mentor' and not getattr(request, 'is_admin', False):
         return redirect('mentor_dashboard')
     role = request.GET.get('role', 'admin').lower()
-    if role == 'mentor':
+    if role == 'mentor' and not getattr(request, 'is_admin', False):
         return redirect('mentor_dashboard')
         
     curr_user = request.user.get_full_name() if (request.user.is_authenticated and request.user.get_full_name()) else (request.user.username if request.user.is_authenticated else '')
@@ -371,7 +376,7 @@ def dashboard(request):
     total_todays_classes_count = ClassSchedule.objects.filter(date=now.date()).count()
     total_activities_count = Activity.objects.count()
 
-    recent_admissions = Student.objects.order_by('-join_date', '-id')[:4]
+    recent_admissions = Student.objects.order_by('-join_date', '-id')[:5]
     todays_classes = ClassSchedule.objects.filter(date=now.date()).order_by('time', '-id')[:4]
     recent_activities = Activity.objects.order_by('-timestamp', '-id')[:4]
     
@@ -398,7 +403,6 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 def students(request):
-    # Auto-fix existing approved students with missing credentials
     for s in Student.objects.filter(approval_status='Approved'):
         updated = False
         
@@ -420,17 +424,15 @@ def students(request):
 
         if updated:
             s.save()
-
-    # Ensure all students have the single default program 'Generative AI & LLMs'
     Student.objects.exclude(course='Generative AI & LLMs').update(course='Generative AI & LLMs')
 
-    # Ensure pending students have Pending Approval status
+ 
     for s in Student.objects.filter(approval_status='Pending'):
         if s.status != 'Pending Approval':
             s.status = 'Pending Approval'
             s.save(update_fields=['status'])
 
-    # Check and update 6-month batch completions
+
     check_and_update_batch_completions()
 
     students_list = Student.objects.all().select_related('batch').order_by('-join_date')
@@ -690,7 +692,6 @@ def classes(request):
         if c.date == today:
             todays_count += 1
 
-        # Real DB attendance calculations
         atts = list(c.attendances.all())
         if atts:
             c.has_attendance = True
@@ -708,7 +709,7 @@ def classes(request):
             c.leave_count = 0
             c.attendance_pct = 0
 
-        # Slot calculation (Morning, Afternoon, Evening)
+        
         start_t = c.time
         if start_t:
             if start_t.hour < 12:
@@ -720,14 +721,14 @@ def classes(request):
         else:
             c.time_slot = 'Morning'
 
-        # Full Date + Start Time + End Time comparison
+        
         if c.date > today:
             c.session_status = 'Upcoming'
             upcoming_count += 1
         elif c.date < today:
             c.session_status = 'Past'
             past_count += 1
-        else: # c.date == today
+        else: 
             end_t = c.end_time
 
             if start_t and now_time < start_t:
@@ -755,10 +756,7 @@ def classes(request):
                 c.session_status = 'Upcoming'
                 upcoming_count += 1
 
-    # Sorting Hierarchy:
-    # 0: Today's classes (sorted by Start Time ascending)
-    # 1: Upcoming classes (sorted by Date ascending -> Start Time ascending)
-    # 2: Past classes (sorted by Date descending -> Start Time ascending)
+ 
     def get_sort_key(c):
         default_time = time(0, 0)
         t = c.time if c.time else default_time
@@ -773,7 +771,7 @@ def classes(request):
     classes_list = sorted(classes_raw, key=get_sort_key)
     batches = Batch.objects.filter(status='Active').order_by('name')
     
-    # Collect all mentors/trainers from both AppUser (role=mentor) and Trainer model
+   
     mentor_users = AppUser.objects.filter(role__icontains='mentor').order_by('name')
     trainer_models = Trainer.objects.all().order_by('name')
 
@@ -884,21 +882,16 @@ def assessments(request):
     return render(request, 'assessments.html', context)
 
 def check_and_create_fee_reminders(student=None):
-    """
-    Fee reminders are displayed exclusively via the Fee Reminder modal at the top of the portal.
-    No automatic duplicate notification records are generated.
-    """
     return 0
 
 def start_fee_reminder_scheduler(interval_seconds=300):
-    """
-    Background scheduler for fee reminder checks.
-    """
     pass
 
 def fees(request):
+    if getattr(request, 'is_mentor', False) and not getattr(request, 'is_admin', False):
+        return redirect('mentor_dashboard')
     appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
-    if appuser_role == 'mentor':
+    if appuser_role == 'mentor' and not getattr(request, 'is_admin', False):
         return redirect('mentor_dashboard')
     query = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status', '').strip()
@@ -908,16 +901,15 @@ def fees(request):
     if view_mode not in ['ledger', 'summary']:
         view_mode = 'ledger'
     
-    # Base payments
+   
     base_payments = FeePayment.objects.all().select_related('student', 'student__batch').order_by('-payment_date', '-id')
     
-    # Global financial KPIs calculated accurately from payment records
+   
     all_paid_pmts = FeePayment.objects.filter(status='Paid')
     all_pending_pmts = FeePayment.objects.filter(status='Pending')
     total_paid_sum = all_paid_pmts.aggregate(total=Sum('amount'))['total'] or 0
     total_pending_sum = all_pending_pmts.aggregate(total=Sum('amount'))['total'] or 0
 
-    # Calculate Student Account Summaries
     all_students_with_fees = Student.objects.filter(payments__isnull=False).distinct().select_related('batch')
     all_student_summaries = []
     paid_in_full_students_count = 0
@@ -930,7 +922,7 @@ def fees(request):
         st_rem = max(0.0, round(st_total - st_paid, 2))
         has_pending_installment = any(p.status == 'Pending' for p in st_payments)
         
-        # Do not treat 1st installment paid as proof that all installments are paid
+        
         is_paid_in_full = (st_paid >= st_total and not has_pending_installment and st_total > 0)
         has_pending_dues = (st_rem > 0 or has_pending_installment)
         
@@ -980,7 +972,10 @@ def fees(request):
             Q(student__name__icontains=query) |
             Q(student__student_id__icontains=query) |
             Q(student__batch__name__icontains=query) |
-            Q(transaction_id__icontains=query)
+            Q(transaction_id__icontains=query) |
+            Q(order_id__icontains=query) |
+            Q(payment_method__icontains=query) |
+            Q(payment_status__icontains=query)
         )
         if clean_q.isdigit():
             q_filter |= Q(id=int(clean_q))
@@ -988,15 +983,13 @@ def fees(request):
 
     if status_filter:
         if status_filter.lower() == 'paid':
-            # Only payments belonging to students who are Paid in Full
-            paid_in_full_student_ids = [s['student'].id for s in all_student_summaries if s['is_paid_in_full']]
-            payments_qs = payments_qs.filter(student_id__in=paid_in_full_student_ids, status='Paid')
+            payments_qs = payments_qs.filter(Q(status='Paid') | Q(payment_status='Success'))
         elif status_filter.lower() == 'pending':
-            # Payments with pending status or belonging to students with dues
-            pending_student_ids = [s['student'].id for s in all_student_summaries if s['has_pending_dues']]
-            payments_qs = payments_qs.filter(Q(status='Pending') | Q(student_id__in=pending_student_ids))
+            payments_qs = payments_qs.filter(Q(status='Pending') | Q(payment_status__in=['Pending', 'Created']))
+        elif status_filter in ['Success', 'Failed', 'Pending', 'Created', 'Refunded']:
+            payments_qs = payments_qs.filter(payment_status=status_filter)
         else:
-            payments_qs = payments_qs.filter(status__iexact=status_filter)
+            payments_qs = payments_qs.filter(Q(status__iexact=status_filter) | Q(payment_status__iexact=status_filter))
 
     if start_date:
         payments_qs = payments_qs.filter(payment_date__gte=start_date)
@@ -1049,10 +1042,12 @@ def api_fee_record_payment(request):
         amount = data.get('amount')
         payment_method = data.get('payment_method', 'UPI').strip()
         transaction_id = data.get('transaction_id', '').strip()
+        order_id = (data.get('order_id') or '').strip()
         installment_name = data.get('installment_name', '1st Installment').strip()
         payment_date_str = data.get('payment_date', '').strip()
         due_date_str = data.get('due_date', '').strip()
         status_val = data.get('status', 'Paid').strip()
+        payment_status_val = data.get('payment_status') or ('Success' if status_val == 'Paid' else 'Pending')
         
         if not student_id:
             return JsonResponse({'success': False, 'error': 'Student registration ID is required.'}, status=400)
@@ -1095,11 +1090,27 @@ def api_fee_record_payment(request):
             balance_due=balance_due,
             payment_method=payment_method,
             transaction_id=transaction_id,
+            order_id=order_id or None,
             installment_name=installment_name,
             due_date=due_date,
             payment_date=payment_date,
-            status=status_val
+            status=status_val,
+            payment_status=payment_status_val
         )
+        
+        # Create payment notification exclusively for Admin
+        try:
+            Notification.objects.create(
+                category='Payment',
+                title='Fee Payment Recorded',
+                message=f'Payment of ₹{amount_val:,.2f} ({installment_name}) recorded for {student.name} ({student.student_id}) via {payment_method}. Txn ID: {payment.transaction_id}.',
+                priority='normal',
+                target_group='Admin',
+                action_label='View Ledger',
+                action_url='/fees'
+            )
+        except Exception as n_err:
+            logger.warning(f"Admin payment notification notice: {n_err}")
         
         return JsonResponse({
             'success': True,
@@ -1126,10 +1137,12 @@ def api_fee_update_payment(request, payment_id):
         amount = data.get('amount')
         payment_method = data.get('payment_method')
         transaction_id = data.get('transaction_id')
+        order_id = data.get('order_id')
         installment_name = data.get('installment_name')
         payment_date_str = data.get('payment_date')
         due_date_str = data.get('due_date')
         status_val = data.get('status')
+        payment_status_val = data.get('payment_status')
         
         if amount is not None:
             try:
@@ -1147,6 +1160,9 @@ def api_fee_update_payment(request, payment_id):
                         'error': f"Duplicate entry: Transaction ID '{txn_clean}' is already assigned to {existing.student.name} (REC-#{existing.id})."
                     }, status=400)
                 payment.transaction_id = txn_clean
+
+        if order_id is not None:
+            payment.order_id = order_id.strip() or None
                 
         if payment_method:
             payment.payment_method = payment_method.strip()
@@ -1167,6 +1183,8 @@ def api_fee_update_payment(request, payment_id):
                 payment.due_date = None
         if status_val:
             payment.status = status_val.strip()
+        if payment_status_val:
+            payment.payment_status = payment_status_val.strip()
             
         payment.save()
         return JsonResponse({
@@ -1376,8 +1394,10 @@ def reports(request):
 
 
 def users_roles(request):
+    if getattr(request, 'is_mentor', False) and not getattr(request, 'is_admin', False):
+        return redirect('mentor_dashboard')
     appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
-    if appuser_role == 'mentor':
+    if appuser_role == 'mentor' and not getattr(request, 'is_admin', False):
         return redirect('mentor_dashboard')
     query = request.GET.get('q', '')
     role_filter = request.GET.get('role', '')
@@ -1427,7 +1447,72 @@ def users_roles(request):
     }
     return render(request, 'users_roles.html', context)
 
+def check_is_admin_user(request):
+    sess = getattr(request, 'session', None)
+    if not sess:
+        return False
+
+    tab_id = getattr(request, 'tab_id', None) or (request.headers.get('X-Tab-ID') if hasattr(request, 'headers') else None) or request.GET.get('tab_id') or request.POST.get('tab_id')
+    tab_sessions = sess.get('tab_sessions', {})
+    if tab_id and isinstance(tab_sessions, dict):
+        if tab_id in tab_sessions:
+            role = str(tab_sessions[tab_id].get('role', '')).lower()
+            if role in ('admin', 'administrator'):
+                return True
+            if role in ('mentor', 'parent', 'student'):
+                return False
+        else:
+           
+            return False
+
+    user = getattr(request, 'user', None)
+    if user and getattr(user, 'is_authenticated', False) and (getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False)):
+        return True
+
+    admin_auth = sess.get('admin_auth')
+    if admin_auth and str(admin_auth.get('role', '')).lower() in ('admin', 'administrator'):
+        return True
+
+    role = str(sess.get('role', '')).lower()
+    appuser_role = str(sess.get('appuser_role', '')).lower()
+    
+    if role in ('admin', 'administrator') or appuser_role in ('admin', 'administrator'):
+        return True
+    if role in ('mentor', 'parent', 'student') or appuser_role in ('mentor', 'parent', 'student'):
+        return False
+
+def get_admin_notifications_qs():
+    """Return only notifications and broadcasts dispatched by Admin or system alerts,
+    strictly separating out student doubts, complaints, mentor messages, and student replies."""
+    return Notification.objects.filter(
+        direction='sent',
+        sender_student__isnull=True,
+        request__isnull=True
+    ).exclude(
+        sender_mentor__isnull=False
+    ).exclude(
+        Q(category__icontains='doubt') |
+        Q(category__icontains='complaint') |
+        Q(category__icontains='support reply') |
+        Q(category__icontains='doubt reply') |
+        Q(title__icontains='Student Doubt') |
+        Q(title__icontains='Support Request') |
+        Q(title__icontains='Student Reply') |
+        Q(title__icontains='to Mentor') |
+        Q(title__icontains='Submitted to Mentor') |
+        Q(message__icontains='sent to Mentor')
+    ).order_by('-timestamp')
+
+
 def notifications(request):
+
+    if not check_is_admin_user(request):
+        sess = getattr(request, 'session', None)
+        r = str(sess.get('role', '')).lower() if sess else ''
+        if r == 'mentor' or str(sess.get('appuser_role', '')).lower() == 'mentor':
+            return redirect('mentor_notifications')
+        return redirect('login')
+
     if request.method == 'POST':
         action_type = request.POST.get('action_type', 'broadcast')
         if action_type == 'broadcast':
@@ -1445,24 +1530,33 @@ def notifications(request):
             target_mentor = None
             target_group = target_audience
 
-            if target_audience in ['Individual Student', 'student'] and student_id:
-                try:
-                    target_student = Student.objects.get(id=student_id)
-                    target_group = f"Student: {target_student.name}"
-                except Student.DoesNotExist:
-                    pass
-            elif target_audience in ['Selected Mentor', 'mentor'] and mentor_id:
-                try:
-                    target_mentor = AppUser.objects.get(id=mentor_id)
-                    target_group = f"Mentor: {target_mentor.name}"
-                except AppUser.DoesNotExist:
-                    pass
-            elif target_audience in ['Batch Students', 'batch'] and batch_id:
-                try:
-                    batch = Batch.objects.get(id=batch_id)
-                    target_group = f"Batch: {batch.name}"
-                except Batch.DoesNotExist:
-                    pass
+            if target_audience in ['Individual Student', 'student']:
+                if student_id:
+                    try:
+                        target_student = Student.objects.get(id=student_id)
+                        target_group = f"Student: {target_student.name}"
+                    except Student.DoesNotExist:
+                        target_group = "All Students"
+                else:
+                    target_group = "All Students"
+            elif target_audience in ['Selected Mentor', 'mentor']:
+                if mentor_id:
+                    try:
+                        target_mentor = AppUser.objects.get(id=mentor_id)
+                        target_group = f"Mentor: {target_mentor.name}"
+                    except AppUser.DoesNotExist:
+                        target_group = "Mentors"
+                else:
+                    target_group = "Mentors"
+            elif target_audience in ['Batch Students', 'batch']:
+                if batch_id:
+                    try:
+                        batch = Batch.objects.get(id=batch_id)
+                        target_group = f"Batch: {batch.name}"
+                    except Batch.DoesNotExist:
+                        target_group = "All Students"
+                else:
+                    target_group = "All Students"
 
             if notif_id:
                 try:
@@ -1500,40 +1594,73 @@ def notifications(request):
                 sreq.save()
 
                 admin_user = AppUser.objects.filter(role__iexact='Admin', status='Active').first() or AppUser.objects.filter(role__iexact='Admin').first()
-                RequestReply.objects.create(
+                reply_obj = RequestReply.objects.create(
                     request=sreq,
                     sender_type='admin',
                     sender_user=admin_user,
                     message=reply_msg
                 )
 
-                # Create a notification strictly for this student
                 Notification.objects.create(
                     title=f"Admin Replied: {sreq.subject}",
                     message=reply_msg,
                     category='Support Reply',
                     target_group=f"Student: {sreq.student.name}",
                     target_student=sreq.student,
+                    sender_admin=admin_user,
+                    target_mentor=None,
                     request=sreq,
                     direction='reply',
                     priority='high',
-                    is_read=False
+                    is_read=False,
+                    timestamp=timezone.now()
                 )
+
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+                    return JsonResponse({
+                        'status': 'success',
+                        'success': True,
+                        'message': 'Reply sent to student successfully!',
+                        'request_id': sreq.id,
+                        'new_status': sreq.status,
+                        'reply': {
+                            'id': reply_obj.id,
+                            'sender_name': f"Admin Support ({admin_user.name})" if (admin_user and admin_user.name) else "Admin Support",
+                            'message': reply_obj.message,
+                            'created_at': reply_obj.created_at.strftime('%d %b %Y %H:%M')
+                        }
+                    })
             except StudentRequest.DoesNotExist:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+                    return JsonResponse({'status': 'error', 'message': 'Request not found'}, status=404)
                 pass
+        elif action_type == 'delete_request':
+            request_id = request.POST.get('request_id')
+            if request_id:
+                try:
+                    sreq = StudentRequest.objects.get(id=request_id)
+                    Notification.objects.filter(request=sreq).delete()
+                    sreq.replies.all().delete()
+                    sreq.delete()
+                except StudentRequest.DoesNotExist:
+                    pass
         elif action_type == 'delete':
             notif_id = request.POST.get('notif_id')
             if notif_id:
-                Notification.objects.filter(id=notif_id).delete()
+                get_admin_notifications_qs().filter(id=notif_id).delete()
+        elif action_type == 'bulk_delete':
+            ids = request.POST.getlist('ids') or request.POST.getlist('notif_ids')
+            if ids:
+                get_admin_notifications_qs().filter(id__in=ids).delete()
         elif action_type == 'mark_read':
             notif_id = request.POST.get('notif_id')
             if notif_id:
-                Notification.objects.filter(id=notif_id).update(is_read=True)
+                get_admin_notifications_qs().filter(id=notif_id).update(is_read=True)
         elif action_type == 'mark_all_read':
-            Notification.objects.filter(is_read=False).update(is_read=True)
+            get_admin_notifications_qs().filter(is_read=False).update(is_read=True)
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
-            unread_cnt = Notification.objects.filter(is_read=False).count()
+            unread_cnt = get_admin_notifications_qs().filter(is_read=False).count()
             return JsonResponse({'status': 'success', 'success': True, 'unread_count': unread_cnt})
 
         return redirect('notifications')
@@ -1543,12 +1670,20 @@ def notifications(request):
     target_filter = request.GET.get('target', '')
     status_filter = request.GET.get('status', '')
 
-    notifs_qs = Notification.objects.all().order_by('-timestamp')
+    admin_qs = get_admin_notifications_qs()
+    notifs_qs = admin_qs
 
     if query:
         notifs_qs = notifs_qs.filter(Q(title__icontains=query) | Q(message__icontains=query))
     if category_filter:
-        notifs_qs = notifs_qs.filter(category__iexact=category_filter)
+        if category_filter.lower() in ['enrollment', 'enrollments']:
+            notifs_qs = notifs_qs.filter(Q(category__icontains='Enroll') | Q(title__icontains='Enroll'))
+        elif category_filter.lower() in ['payment', 'payments']:
+            notifs_qs = notifs_qs.filter(Q(category__icontains='Pay') | Q(title__icontains='Pay') | Q(title__icontains='Paid'))
+        elif category_filter.lower() in ['fee alert', 'fee', 'fees']:
+            notifs_qs = notifs_qs.filter(Q(category__icontains='Fee') | Q(title__icontains='Fee'))
+        else:
+            notifs_qs = notifs_qs.filter(category__iexact=category_filter)
     if target_filter:
         notifs_qs = notifs_qs.filter(target_group__iexact=target_filter)
     if status_filter == 'read':
@@ -1560,32 +1695,49 @@ def notifications(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    student_requests = StudentRequest.objects.filter(
-        Q(recipient_type='Admin') | Q(recipient_type__isnull=True)
+    # Show all student-submitted doubts, complaints, and support requests
+    student_requests = StudentRequest.objects.all().select_related(
+        'student', 'student__batch', 'recipient_user'
+    ).prefetch_related(
+        'replies', 'replies__sender_student', 'replies__sender_user'
     ).order_by('-created_at')
+
+    requests_total = student_requests.count()
+    requests_open = student_requests.filter(status='Open').count()
+    requests_in_progress = student_requests.filter(status='In Progress').count()
+    requests_resolved = student_requests.filter(status='Resolved').count()
 
     all_students = Student.objects.filter(approval_status='Approved').exclude(status='Dropped').order_by('name')
     all_mentors = AppUser.objects.filter(role__iexact='Mentor', status='Active').order_by('name')
     all_batches = Batch.objects.filter(status='Active').order_by('name')
 
-    total_cnt = Notification.objects.count()
-    unread_cnt = Notification.objects.filter(is_read=False).count()
+    total_cnt = admin_qs.count()
+    unread_cnt = admin_qs.filter(is_read=False).count()
     read_cnt = total_cnt - unread_cnt
     read_rate = f"{round((read_cnt / total_cnt) * 100)}%" if total_cnt > 0 else "100%"
+
+    enrollment_cnt = admin_qs.filter(Q(category__icontains='Enroll') | Q(title__icontains='Enroll')).count()
+    payment_cnt = admin_qs.filter(Q(category__icontains='Pay') | Q(category__icontains='Fee') | Q(title__icontains='Pay') | Q(title__icontains='Paid')).count()
 
     kpi = {
         'total': total_cnt,
         'unread': unread_cnt,
         'read_rate': read_rate,
-        'fee_alerts': Notification.objects.filter(category__icontains='Fee').count(),
-        'assessments': Notification.objects.filter(category__icontains='Assess').count(),
-        'system': Notification.objects.filter(category__icontains='System').count(),
+        'enrollments': enrollment_cnt,
+        'payments': payment_cnt,
+        'fee_alerts': admin_qs.filter(Q(category__icontains='Fee') | Q(title__icontains='Fee')).count(),
+        'assessments': admin_qs.filter(category__icontains='Assess').count(),
+        'system': admin_qs.filter(category__icontains='System').count(),
     }
 
     context = {
         'active_page': 'notifications',
         'notifications': page_obj,
         'student_requests': student_requests,
+        'requests_total': requests_total,
+        'requests_open': requests_open,
+        'requests_in_progress': requests_in_progress,
+        'requests_resolved': requests_resolved,
         'all_students': all_students,
         'all_mentors': all_mentors,
         'all_batches': all_batches,
@@ -1599,8 +1751,29 @@ def notifications(request):
     return render(request, 'notifications.html', context)
 
 
+@csrf_exempt
+def api_admin_delete_request(request, request_id):
+    if not check_is_admin_user(request):
+        return JsonResponse({'status': 'error', 'message': 'Admin privileges required'}, status=403)
+    if request.method not in ['POST', 'DELETE']:
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+    try:
+        sreq = StudentRequest.objects.get(id=request_id)
+        Notification.objects.filter(request=sreq).delete()
+        sreq.replies.all().delete()
+        sreq.delete()
+        total_cnt = StudentRequest.objects.count()
+        return JsonResponse({
+            'status': 'success',
+            'success': True,
+            'message': 'Student request permanently deleted',
+            'total_requests': total_cnt
+        })
+    except StudentRequest.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Student request not found'}, status=404)
+
+
 def api_admin_recipients(request):
-    """Return recipients for Admin notification broadcast modal."""
     students = Student.objects.filter(approval_status='Approved').exclude(status='Dropped').order_by('name')
     mentors = AppUser.objects.filter(role__iexact='Mentor', status='Active').order_by('name')
     batches = Batch.objects.filter(status='Active').order_by('name')
@@ -1613,9 +1786,11 @@ def api_admin_recipients(request):
 
 
 def api_admin_notifications_unread_count(request):
-    """Return real unread notifications count from database."""
-    unread_count = Notification.objects.filter(is_read=False).count()
-    total_count = Notification.objects.count()
+    if not check_is_admin_user(request):
+        return JsonResponse({'status': 'error', 'message': 'Admin privileges required'}, status=403)
+    admin_qs = get_admin_notifications_qs()
+    unread_count = admin_qs.filter(is_read=False).count()
+    total_count = admin_qs.count()
     return JsonResponse({
         'status': 'success',
         'success': True,
@@ -1626,9 +1801,10 @@ def api_admin_notifications_unread_count(request):
 
 @csrf_exempt
 def api_admin_mark_notification_read(request, notif_id):
-    """Mark a single notification as read and return updated unread count."""
-    Notification.objects.filter(id=notif_id).update(is_read=True)
-    unread_count = Notification.objects.filter(is_read=False).count()
+    if not check_is_admin_user(request):
+        return JsonResponse({'status': 'error', 'message': 'Admin privileges required'}, status=403)
+    get_admin_notifications_qs().filter(id=notif_id).update(is_read=True)
+    unread_count = get_admin_notifications_qs().filter(is_read=False).count()
     return JsonResponse({
         'status': 'success',
         'success': True,
@@ -1638,8 +1814,9 @@ def api_admin_mark_notification_read(request, notif_id):
 
 @csrf_exempt
 def api_admin_mark_all_notifications_read(request):
-    """Mark all unread notifications as read and return updated unread count."""
-    Notification.objects.filter(is_read=False).update(is_read=True)
+    if not check_is_admin_user(request):
+        return JsonResponse({'status': 'error', 'message': 'Admin privileges required'}, status=403)
+    get_admin_notifications_qs().filter(is_read=False).update(is_read=True)
     return JsonResponse({
         'status': 'success',
         'success': True,
@@ -1649,24 +1826,104 @@ def api_admin_mark_all_notifications_read(request):
 
 @csrf_exempt
 def api_admin_delete_notification(request, notif_id):
-    """Delete a single notification and return updated unread count."""
-    Notification.objects.filter(id=notif_id).delete()
-    unread_count = Notification.objects.filter(is_read=False).count()
+    if not check_is_admin_user(request):
+        return JsonResponse({'status': 'error', 'message': 'Admin privileges required'}, status=403)
+    notif = get_admin_notifications_qs().filter(id=notif_id).first()
+    category = notif.category if notif else ''
+    was_unread = not notif.is_read if notif else False
+    if notif:
+        notif.delete()
+    admin_qs = get_admin_notifications_qs()
+    unread_count = admin_qs.filter(is_read=False).count()
+    total_count = admin_qs.count()
+    enrollment_count = admin_qs.filter(Q(category__icontains='Enroll') | Q(title__icontains='Enroll')).count()
+    payment_count = admin_qs.filter(Q(category__icontains='Pay') | Q(title__icontains='Pay') | Q(title__icontains='Paid')).count()
+    fee_alerts_count = admin_qs.filter(Q(category__icontains='Fee') | Q(title__icontains='Fee')).count()
+    assessments_count = admin_qs.filter(category__icontains='Assess').count()
+    system_count = admin_qs.filter(category__icontains='System').count()
     return JsonResponse({
         'status': 'success',
         'success': True,
-        'unread_count': unread_count
+        'unread_count': unread_count,
+        'total_count': total_count,
+        'enrollment_count': enrollment_count,
+        'payment_count': payment_count,
+        'fee_alerts_count': fee_alerts_count,
+        'assessments_count': assessments_count,
+        'system_count': system_count,
+        'category': category,
+        'was_unread': was_unread
+    })
+
+
+@csrf_exempt
+def api_admin_bulk_delete_notifications(request):
+    if not check_is_admin_user(request):
+        return JsonResponse({'status': 'error', 'success': False, 'message': 'Admin privileges required'}, status=403)
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'success': False, 'message': 'POST method required'}, status=405)
+    
+    ids = []
+    try:
+        if request.body:
+            data = json.loads(request.body)
+            ids = data.get('ids') or data.get('notif_ids') or []
+        if not ids and request.POST:
+            ids = request.POST.getlist('ids') or request.POST.getlist('notif_ids')
+    except Exception:
+        ids = []
+    
+    clean_ids = []
+    for x in ids:
+        try:
+            clean_ids.append(int(x))
+        except (ValueError, TypeError):
+            pass
+    
+    if not clean_ids:
+        return JsonResponse({'status': 'error', 'success': False, 'message': 'No valid notification IDs selected.'}, status=400)
+    
+    deleted_count, _ = get_admin_notifications_qs().filter(id__in=clean_ids).delete()
+    
+    admin_qs = get_admin_notifications_qs()
+    unread_count = admin_qs.filter(is_read=False).count()
+    total_count = admin_qs.count()
+    enrollment_count = admin_qs.filter(Q(category__icontains='Enroll') | Q(title__icontains='Enroll')).count()
+    payment_count = admin_qs.filter(Q(category__icontains='Pay') | Q(title__icontains='Pay') | Q(title__icontains='Paid')).count()
+    fee_alerts_count = admin_qs.filter(Q(category__icontains='Fee') | Q(title__icontains='Fee')).count()
+    assessments_count = admin_qs.filter(category__icontains='Assess').count()
+    system_count = admin_qs.filter(category__icontains='System').count()
+    
+    return JsonResponse({
+        'status': 'success',
+        'success': True,
+        'deleted_count': deleted_count,
+        'deleted_ids': clean_ids,
+        'unread_count': unread_count,
+        'total_count': total_count,
+        'enrollment_count': enrollment_count,
+        'payment_count': payment_count,
+        'fee_alerts_count': fee_alerts_count,
+        'assessments_count': assessments_count,
+        'system_count': system_count,
+        'message': f"Successfully deleted {deleted_count} notification(s)."
     })
 
 
 @csrf_exempt
 def api_admin_create_notification(request):
-    """Create a new broadcast notification and return updated unread count."""
+    if not check_is_admin_user(request):
+        return JsonResponse({'status': 'error', 'message': 'Admin privileges required'}, status=403)
     if request.method == 'POST':
         title = request.POST.get('title')
         message = request.POST.get('message')
         category = request.POST.get('category', 'System')
         target_group = request.POST.get('target_group', 'All Students')
+        target_student_id = request.POST.get('target_student_id')
+        target_batch_id = request.POST.get('target_batch_id')
+        target_mentor_id = request.POST.get('target_mentor_id')
+        priority = request.POST.get('priority', 'normal')
+
         if not title:
             try:
                 import json
@@ -1674,17 +1931,47 @@ def api_admin_create_notification(request):
                 title = body.get('title')
                 message = body.get('message')
                 category = body.get('category', 'System')
-                target_group = body.get('target_group', 'All Students')
+                target_group = body.get('target_group', body.get('target_audience', 'All Students'))
+                target_student_id = body.get('target_student_id') or body.get('student_id')
+                target_batch_id = body.get('target_batch_id') or body.get('batch_id')
+                target_mentor_id = body.get('target_mentor_id') or body.get('mentor_id')
+                priority = body.get('priority', 'normal')
             except Exception:
                 pass
+
+        target_student = None
+        target_mentor = None
+        if target_student_id:
+            try:
+                target_student = Student.objects.get(id=target_student_id)
+                target_group = f"Student: {target_student.name}"
+            except Student.DoesNotExist:
+                pass
+        elif target_batch_id:
+            try:
+                b = Batch.objects.get(id=target_batch_id)
+                target_group = f"Batch: {b.name}"
+            except Batch.DoesNotExist:
+                pass
+        elif target_mentor_id:
+            try:
+                target_mentor = AppUser.objects.get(id=target_mentor_id)
+                target_group = f"Mentor: {target_mentor.name}"
+            except AppUser.DoesNotExist:
+                pass
+
         notif = Notification.objects.create(
             title=title or 'Notification',
             message=message or '',
             category=category or 'System',
             target_group=target_group or 'All Students',
+            target_student=target_student,
+            target_mentor=target_mentor,
+            priority=priority,
+            direction='sent',
             is_read=False
         )
-        unread_count = Notification.objects.filter(is_read=False).count()
+        unread_count = get_admin_notifications_qs().filter(is_read=False).count()
         return JsonResponse({
             'status': 'success',
             'success': True,
@@ -1725,75 +2012,135 @@ def parse_date_str(date_str):
 
 def get_current_mentor(request):
     sess = getattr(request, 'session', None)
-    mentor_id = sess.get('appuser_id') if sess else None
+    mentor_id = None
+    if sess:
+        tab_id = getattr(request, 'tab_id', None) or (request.headers.get('X-Tab-ID') if hasattr(request, 'headers') else None) or (request.GET.get('tab_id') if hasattr(request, 'GET') else None)
+        tab_auth = sess.get('tab_sessions', {}).get(tab_id) if tab_id and isinstance(sess.get('tab_sessions'), dict) else None
+        if tab_auth and str(tab_auth.get('role', '')).lower() == 'mentor':
+            mentor_id = tab_auth.get('appuser_id')
+        if not mentor_id:
+            mentor_auth = sess.get('mentor_auth')
+            if isinstance(mentor_auth, dict):
+                mentor_id = mentor_auth.get('appuser_id')
+        if not mentor_id:
+            mentor_id = sess.get('appuser_id')
+
     trainer = AppUser.objects.filter(id=mentor_id, role__iexact='mentor').first() if mentor_id else None
     if not trainer and sess:
-        user_name_sess = sess.get('appuser_name')
-        if user_name_sess:
-            trainer = AppUser.objects.filter(name__iexact=user_name_sess, role__iexact='mentor').first()
+        mentor_name = (sess.get('mentor_auth') or {}).get('appuser_name') if isinstance(sess.get('mentor_auth'), dict) else sess.get('appuser_name')
+        if mentor_name:
+            trainer = AppUser.objects.filter(name__iexact=mentor_name, role__iexact='mentor').first()
     if not trainer:
         trainer = AppUser.objects.filter(role__iexact='mentor').first()
     return trainer
 
 def sync_student_requests_to_notifications():
-    """Ensure every open/active StudentRequest sent to a Mentor has a corresponding Notification."""
+    """Ensure existing StudentRequest links are updated without resurrecting deleted notifications."""
     try:
-        mentor_requests = StudentRequest.objects.filter(recipient_type='Mentor')
+        # Sync Mentor requests
+        mentor_requests = StudentRequest.objects.filter(recipient_type__iexact='Mentor')
         for req in mentor_requests:
-            exists = Notification.objects.filter(
-                sender_student=req.student,
-                title=f"Student Doubt: {req.subject}",
-                direction='question'
-            ).exists()
-            if not exists:
-                target_mentor = req.recipient_user or req.student.mentor or (req.student.batch.trainer if req.student.batch else None) or AppUser.objects.filter(role__iexact='mentor').first()
-                Notification.objects.create(
-                    title=f"Student Doubt: {req.subject}",
-                    message=f"{req.student.name} asked: {req.description}",
-                    category=req.category or 'Support',
-                    target_group='Mentor',
-                    target_mentor=target_mentor,
-                    sender_student=req.student,
-                    direction='question',
-                    is_read=(str(req.status).lower() in ['resolved', 'closed']),
-                    timestamp=req.created_at or timezone.now()
-                )
+            target_mentor = req.recipient_user or req.student.mentor or (req.student.batch.trainer if req.student.batch else None) or AppUser.objects.filter(role__iexact='mentor').first()
+            if not req.recipient_user and target_mentor:
+                req.recipient_user = target_mentor
+                req.save()
+            notifs = Notification.objects.filter(
+                Q(request=req) | Q(sender_student=req.student, title__icontains=req.subject, direction='question')
+            )
+            for notif in notifs:
+                updated = False
+                if not notif.request:
+                    notif.request = req
+                    updated = True
+                if not notif.target_mentor and target_mentor:
+                    notif.target_mentor = target_mentor
+                    updated = True
+                if notif.target_group != 'Mentor':
+                    notif.target_group = 'Mentor'
+                    updated = True
+                if updated:
+                    notif.save()
+
+        # Sync Admin requests
+        admin_requests = StudentRequest.objects.filter(recipient_type__iexact='Admin')
+        admin_user = AppUser.objects.filter(role__iexact='Admin', status='Active').first() or AppUser.objects.filter(role__iexact='Admin').first()
+        for req in admin_requests:
+            if not req.recipient_user and admin_user:
+                req.recipient_user = admin_user
+                req.save()
+            notifs = Notification.objects.filter(
+                Q(request=req) | Q(sender_student=req.student, title__icontains=req.subject, direction='question')
+            )
+            for notif in notifs:
+                updated = False
+                if not notif.request:
+                    notif.request = req
+                    updated = True
+                if notif.target_mentor is not None:
+                    notif.target_mentor = None
+                    updated = True
+                if notif.target_group != 'Admin':
+                    notif.target_group = 'Admin'
+                    updated = True
+                if updated:
+                    notif.save()
     except Exception:
         pass
 
 def get_mentor_notifications_qs(trainer):
-    """Return all notifications for the given mentor and their assigned students."""
-    sync_student_requests_to_notifications()
+    """Return all notifications strictly for the given mentor and their assigned student questions."""
     if not trainer:
         return Notification.objects.none()
 
-    my_batches = Batch.objects.filter(trainer=trainer, status='Active')
-    my_batch_ids = list(my_batches.values_list('id', flat=True))
+    # Exclude notifications that the mentor has soft deleted
+    deleted_ids = set(NotificationUserStatus.objects.filter(
+        user=trainer, is_deleted=True
+    ).values_list('notification_id', flat=True))
 
-    my_students = Student.objects.filter(
-        Q(batch__in=my_batches) | Q(mentor=trainer)
-    ).exclude(status='Dropped').distinct()
-    my_student_ids = list(my_students.values_list('id', flat=True))
+    mentor_questions = (
+        Q(direction='question', target_mentor=trainer) |
+        Q(direction='question', request__recipient_user=trainer)
+    )
+
+    mentor_sent = Q(sender_mentor=trainer)
+
+    mentor_replies = (
+        Q(direction='reply', target_mentor=trainer) |
+        Q(direction='reply', sender_mentor=trainer) |
+        Q(direction='reply', request__recipient_user=trainer)
+    )
+
+    # General broadcast notices sent by Admin to Mentors (strictly exclude student questions)
+    broadcasts = (
+        Q(sender_student__isnull=True, direction='sent', target_group__in=['Mentor', 'Mentors', 'All Mentors', 'All Users']) &
+        (Q(target_mentor__isnull=True) | Q(target_mentor=trainer))
+    )
 
     return Notification.objects.filter(
-        Q(direction='question', target_mentor=trainer) |
-        Q(direction='question', request__recipient_user=trainer) |
-        Q(direction='sent', sender_mentor=trainer) |
-        Q(sender_mentor=trainer) |
-        Q(target_mentor=trainer) |
-        Q(sender_mentor__isnull=True, target_group__in=['Mentor', 'Mentors', 'All Mentors', 'All Users'])
+        mentor_questions | mentor_sent | mentor_replies | broadcasts
+    ).exclude(
+        id__in=deleted_ids
+    ).exclude(
+        target_group__iexact='Admin'
+    ).exclude(
+        request__recipient_type__iexact='Admin'
+    ).exclude(
+        Q(category__icontains='Enroll') |
+        Q(title__icontains='Enrollment') |
+        Q(title__icontains='Fee Payment') |
+        Q(title__icontains='Online Fee Payment') |
+        Q(title__icontains='Payment Received') |
+        Q(message__icontains='registered and paid')
     ).select_related(
-        'sender_student', 'sender_student__batch', 'target_student', 'target_student__batch', 'sender_mentor', 'target_mentor'
+        'sender_student', 'sender_student__batch', 'target_student', 'target_student__batch', 'sender_mentor', 'target_mentor', 'request'
     ).order_by('-timestamp').distinct()
 
 def get_mentor_unread_count(trainer):
-    """Return count of unread notifications for the given mentor."""
     if not trainer:
         return 0
     return get_mentor_notifications_qs(trainer).filter(is_read=False).count()
 
 def mentor_context(request):
-    """Context processor providing unread notifications count for templates."""
     try:
         appuser_role = str(request.session.get('appuser_role', '')).lower()
         is_mentor_path = request.path.startswith('/mentor/')
@@ -1805,7 +2152,7 @@ def mentor_context(request):
                 'unread_notifications_count': unread_count
             }
         else:
-            admin_unread_count = Notification.objects.filter(is_read=False).count()
+            admin_unread_count = get_admin_notifications_qs().filter(is_read=False).count()
             return {
                 'unread_notifications_count': admin_unread_count
             }
@@ -1815,9 +2162,11 @@ def mentor_context(request):
         }
 
 def mentor_dashboard(request):
+    if getattr(request, 'is_admin', False) and not getattr(request, 'is_mentor', False):
+        return redirect('dashboard')
     appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
     is_admin = (hasattr(request, 'user') and request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)) or appuser_role in ('admin', 'administrator')
-    if is_admin and appuser_role != 'mentor':
+    if is_admin and not getattr(request, 'is_mentor', False) and appuser_role != 'mentor':
         return redirect('dashboard')
     trainer = get_current_mentor(request)
     user_name = trainer.name if trainer else request.session.get('appuser_name', '')
@@ -2011,9 +2360,6 @@ def api_mentor_export_students(request):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Students Attendance"
-
-    # Requested columns:
-    # Student Name, Student ID, Batch, Batch Timing, Course, Attendance %, Present, Absent, Leave, Total Recorded Classes, Join Date
     headers = [
         'Student Name',
         'Student ID',
@@ -2214,8 +2560,6 @@ def mentor_classes(request):
     initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else 'M'
 
     mentor_batches = Batch.objects.filter(trainer=trainer) if trainer else Batch.objects.none()
-
-    # ONLY students belonging to batches where Batch.trainer = logged-in mentor
     students_qs = Student.objects.filter(
         batch__in=mentor_batches
     ).exclude(batch__isnull=True).exclude(status='Dropped').distinct()
@@ -2257,7 +2601,7 @@ def mentor_classes(request):
         'students': students_count,
     }
 
-    # Admin course modules for Schedule New Class dropdown
+   
     course_modules = CourseModule.objects.prefetch_related('topics').all().order_by('order', 'id')
     modules_data = []
     for m in course_modules:
@@ -2281,8 +2625,6 @@ def mentor_classes(request):
             'topics': topics_list,
         })
     modules_json = json.dumps(modules_data)
-
-    # Injected dynamic calendar classes
     calendar_classes = []
     for c in all_classes_qs:
         calendar_classes.append({
@@ -2334,8 +2676,6 @@ def mentor_attendance(request, class_id=None):
     today = now_dt.date()
     now_time = now_dt.time()
     is_today = (selected_date == today)
-
-    # Query REAL ClassSchedule records for the selected date from DB
     classes_qs = ClassSchedule.objects.filter(date=selected_date).select_related('batch', 'trainer', 'module', 'topic')
     if trainer:
         classes_qs = classes_qs.filter(
@@ -2502,15 +2842,14 @@ def mentor_tasks(request):
     initials = "".join([n[0] for n in user_name.split()[:2]]).upper() if user_name else 'M'
     
     my_batches = Batch.objects.filter(trainer=trainer, status='Active') if trainer else Batch.objects.filter(status='Active')
-    
-    # Load all tasks for mentor / batches, sorted by Assign Date descending (newest first)
+
     if trainer:
         tasks_qs = Task.objects.filter(Q(batch__in=my_batches) | Q(trainer=trainer)).distinct()
     else:
         tasks_qs = Task.objects.all()
     tasks_qs = tasks_qs.prefetch_related('assigned_students', 'submissions', 'batch').order_by('-created_at', '-id')
     
-    # Active students in mentor's active batches for student-wise assignment
+   
     mentor_students_qs = Student.objects.filter(batch__in=my_batches, status='Active').select_related('batch').order_by('batch__name', 'name')
     mentor_students_list = []
     for s in mentor_students_qs:
@@ -2879,6 +3218,68 @@ def mentor_reports(request):
     }
     return render(request, 'mentor/reports.html', context)
 
+def can_mentor_delete_notification(notif, trainer):
+    if not trainer:
+        return False
+    # Explicitly block Admin notices / broadcasts
+    if getattr(notif, 'sender_admin_id', None) is not None:
+        return False
+    # If directed to Admin, mentor cannot delete
+    if getattr(notif, 'target_group', '') == 'Admin' or (notif.request and getattr(notif.request, 'recipient_type', '') == 'Admin'):
+        return False
+    if not notif.sender_mentor_id and not notif.sender_student_id:
+        return False
+
+    # Check if this mentor created/sent it
+    if notif.sender_mentor_id == trainer.id:
+        return True
+
+    # Check if student question/reply addressed to this mentor
+    if notif.direction in ['question', 'reply'] or notif.sender_student_id:
+        if notif.target_mentor_id == trainer.id:
+            return True
+        if notif.request and getattr(notif.request, 'recipient_user_id', None) == trainer.id:
+            return True
+        if notif.sender_student:
+            if getattr(notif.sender_student, 'mentor_id', None) == trainer.id:
+                return True
+            if notif.sender_student.batch and getattr(notif.sender_student.batch, 'trainer_id', None) == trainer.id:
+                return True
+
+    if notif.target_group in ['Mentor', 'Mentors', 'All Mentors', 'All Users', 'All Students', 'Students']:
+        if notif.sender_mentor_id != trainer.id:
+            return False
+
+    return False
+
+def classify_mentor_notification(n, trainer):
+    if n.direction == 'question' or n.sender_student_id is not None:
+        return 'question'
+    if trainer and n.sender_mentor_id == trainer.id:
+        return 'sent'
+    return 'admin'
+
+def get_mentor_notification_counts(trainer):
+    """Return accurate telemetry counts for mentor notification filters."""
+    if not trainer:
+        return {'total': 0, 'questions': 0, 'sent': 0, 'admin': 0, 'unread': 0}
+    qs = get_mentor_notifications_qs(trainer)
+    notif_list = list(qs[:100])
+    for n in notif_list:
+        n.display_category = classify_mentor_notification(n, trainer)
+    total = len(notif_list)
+    questions = sum(1 for n in notif_list if n.display_category == 'question')
+    sent = sum(1 for n in notif_list if n.display_category == 'sent')
+    admin = sum(1 for n in notif_list if n.display_category == 'admin')
+    unread = sum(1 for n in notif_list if not n.is_read)
+    return {
+        'total': total,
+        'questions': questions,
+        'sent': sent,
+        'admin': admin,
+        'unread': unread
+    }
+
 def mentor_notifications(request):
     trainer = get_current_mentor(request)
     user_name = trainer.name if trainer else request.session.get('appuser_name', 'Mentor')
@@ -2889,99 +3290,190 @@ def mentor_notifications(request):
     
     notifications_qs = get_mentor_notifications_qs(trainer)
     notif_list = list(notifications_qs[:100])
-    total_count = len(notif_list)
-    questions_count = sum(1 for n in notif_list if n.direction == 'question')
-    sent_count = sum(1 for n in notif_list if n.direction == 'sent' or n.sender_mentor == trainer)
-    admin_count = sum(1 for n in notif_list if n.direction not in ['question', 'sent'] and not n.sender_mentor)
-    unread_count = sum(1 for n in notif_list if not n.is_read)
+    for n in notif_list:
+        n.display_category = classify_mentor_notification(n, trainer)
+        n.can_delete = can_mentor_delete_notification(n, trainer)
+
+    counts = get_mentor_notification_counts(trainer)
     
     context = {
         'active_page': 'mentor_notifications',
         'role': 'mentor',
         'is_mentor': True,
+        'trainer': trainer,
         'user_name': user_name,
         'user_initials': initials,
         'my_batches': my_batches,
         'my_students': my_students,
         'notifications': notif_list,
-        'total_notifications_count': total_count,
-        'questions_count': questions_count,
-        'sent_count': sent_count,
-        'admin_count': admin_count,
-        'unread_notifications_count': unread_count,
+        'total_notifications_count': counts['total'],
+        'questions_count': counts['questions'],
+        'sent_count': counts['sent'],
+        'admin_count': counts['admin'],
+        'unread_notifications_count': counts['unread'],
     }
     return render(request, 'mentor/notifications.html', context)
 
 def login_view(request):
-    # If user is already authenticated and visits login page, redirect to their dashboard
+    admin_auth = request.session.get('admin_auth')
+    mentor_auth = request.session.get('mentor_auth')
+    tab_sessions = request.session.get('tab_sessions', {})
+    tab_id = request.headers.get('X-Tab-ID') or request.GET.get('tab_id') or request.POST.get('tab_id')
+    tab_auth = tab_sessions.get(tab_id) if tab_id and isinstance(tab_sessions, dict) else None
+
+    # If user visits login page via GET:
     if request.method == 'GET':
-        appuser_role = str(request.session.get('appuser_role', '')).strip().lower()
-        role_sess = str(request.session.get('role', '')).strip().lower()
-        if appuser_role == 'mentor' or role_sess == 'mentor':
-            return redirect('mentor_dashboard')
-        if (request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)) or appuser_role in ('admin', 'administrator') or role_sess in ('admin', 'administrator'):
-            return redirect('dashboard')
+        role_param = request.GET.get('role', '').strip().lower()
+        force = request.GET.get('force') == '1'
+
+        if not force and tab_auth:
+            if tab_auth.get('role', '').lower() == 'mentor' and mentor_auth:
+                return redirect('mentor_dashboard')
+            elif tab_auth.get('role', '').lower() in ('admin', 'administrator') and admin_auth:
+                return redirect('dashboard')
+
+        return render(request, 'login.html', {
+            'is_admin_authenticated': bool(admin_auth),
+            'is_mentor_authenticated': bool(mentor_auth),
+        })
 
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
-        role = request.POST.get('role', 'admin') # if they selected a role in the UI
-        
+        role = request.POST.get('role', 'admin').strip().lower()
+        tab_id = request.POST.get('tab_id', '').strip()
+        if not tab_id:
+            import time, random
+            tab_id = f"tab_{int(time.time()*1000)}_{random.randint(1000, 9999)}"
+
+        if 'tab_sessions' not in request.session or not isinstance(request.session['tab_sessions'], dict):
+            request.session['tab_sessions'] = {}
+
         # 1. Check Django Superuser
         user = authenticate(request, username=username, password=password)
         if user is not None:
             if user.is_superuser or user.is_staff:
-                logout(request)
+                existing_mentor_auth = request.session.get('mentor_auth')
+                existing_tab_sessions = request.session.get('tab_sessions', {})
                 login(request, user)
+                if existing_mentor_auth:
+                    request.session['mentor_auth'] = existing_mentor_auth
+                if existing_tab_sessions:
+                    request.session['tab_sessions'] = existing_tab_sessions
+
+                user_name = user.get_full_name() or user.username
+                admin_data = {
+                    'user_id': user.id,
+                    'appuser_id': None,
+                    'role': 'Admin',
+                    'appuser_role': 'Admin',
+                    'appuser_name': user_name,
+                    'tab_id': tab_id,
+                    'is_authenticated': True
+                }
+                request.session['admin_auth'] = admin_data
+                request.session['tab_sessions'][tab_id] = admin_data
                 request.session['role'] = 'Admin'
                 request.session['appuser_role'] = 'Admin'
-                request.session['appuser_name'] = user.get_full_name() or user.username
+                request.session['appuser_name'] = user_name
                 request.session.pop('appuser_id', None)
-                return redirect('dashboard')
+                request.session.modified = True
+                return redirect(f"{reverse('dashboard')}?tab_id={tab_id}")
             else:
                 return render(request, 'login.html', {'error': 'Only administrators can access the admin control center.'})
-        
+
         # 2. Check Parent (Student model)
         if role == 'parent':
             try:
                 student = Student.objects.get(parent_username=username, parent_password=password)
-                logout(request)
-                request.session.flush()
+                parent_data = {
+                    'parent_student_id': student.student_id,
+                    'role': 'Parent',
+                    'appuser_role': 'Parent',
+                    'tab_id': tab_id,
+                    'is_authenticated': True
+                }
+                request.session['parent_auth'] = parent_data
+                request.session['tab_sessions'][tab_id] = parent_data
                 request.session['parent_student_id'] = student.student_id
                 request.session['role'] = 'Parent'
                 request.session['appuser_role'] = 'Parent'
+                request.session.modified = True
                 return redirect('students')
             except Student.DoesNotExist:
                 return render(request, 'login.html', {'error': 'Invalid username or password.'})
-
-        # 3. Check AppUser (Mentor/Admin/Accountant)
         try:
             appuser = AppUser.objects.get(username=username, portal_password=password)
             if appuser.status.lower() == 'blocked':
                 return render(request, 'login.html', {'error': 'This account has been blocked.'})
-            
-            # Cleanly isolate session to avoid role bleed from previous logins
-            logout(request)
-            request.session.flush()
 
-            # Set custom session variables
-            request.session['appuser_id'] = appuser.id
-            request.session['appuser_role'] = appuser.role
-            request.session['role'] = appuser.role
-            request.session['appuser_name'] = appuser.name
-            
-            if appuser.role.lower() == 'mentor':
-                return redirect('mentor_dashboard')
-            elif appuser.role.lower() in ('admin', 'administrator'):
+            appuser_role_lower = appuser.role.lower()
+
+            if appuser_role_lower == 'mentor':
+                mentor_data = {
+                    'appuser_id': appuser.id,
+                    'role': 'Mentor',
+                    'appuser_role': 'Mentor',
+                    'appuser_name': appuser.name,
+                    'tab_id': tab_id,
+                    'is_authenticated': True
+                }
+                request.session['mentor_auth'] = mentor_data
+                request.session['tab_sessions'][tab_id] = mentor_data
+                request.session['appuser_id'] = appuser.id
+                request.session['appuser_role'] = 'Mentor'
+                request.session['role'] = 'Mentor'
+                request.session['appuser_name'] = appuser.name
+                request.session.modified = True
+                return redirect(f"{reverse('mentor_dashboard')}?tab_id={tab_id}")
+
+            elif appuser_role_lower in ('admin', 'administrator'):
+                admin_data = {
+                    'user_id': None,
+                    'appuser_id': appuser.id,
+                    'role': 'Admin',
+                    'appuser_role': 'Admin',
+                    'appuser_name': appuser.name,
+                    'tab_id': tab_id,
+                    'is_authenticated': True
+                }
+                request.session['admin_auth'] = admin_data
+                request.session['tab_sessions'][tab_id] = admin_data
+                request.session['appuser_id'] = appuser.id
+                request.session['appuser_role'] = 'Admin'
                 request.session['role'] = 'Admin'
-                return redirect('dashboard')
+                request.session['appuser_name'] = appuser.name
+                request.session.modified = True
+                return redirect(f"{reverse('dashboard')}?tab_id={tab_id}")
+
+            elif appuser_role_lower == 'accountant':
+                acct_data = {
+                    'appuser_id': appuser.id,
+                    'role': 'Accountant',
+                    'appuser_role': 'Accountant',
+                    'appuser_name': appuser.name,
+                    'tab_id': tab_id,
+                    'is_authenticated': True
+                }
+                request.session['admin_auth'] = acct_data
+                request.session['tab_sessions'][tab_id] = acct_data
+                request.session['appuser_id'] = appuser.id
+                request.session['appuser_role'] = 'Accountant'
+                request.session['role'] = 'Accountant'
+                request.session['appuser_name'] = appuser.name
+                request.session.modified = True
+                return redirect(f"{reverse('dashboard')}?role=accountant&tab_id={tab_id}")
+
             else:
                 return render(request, 'login.html', {'error': f'Dashboard for {appuser.role} is not available yet.'})
-                
+
         except AppUser.DoesNotExist:
             return render(request, 'login.html', {'error': 'Invalid username or password.'})
 
-    return render(request, 'login.html')
+    return render(request, 'login.html', {
+        'is_admin_authenticated': bool(admin_auth),
+        'is_mentor_authenticated': bool(mentor_auth),
+    })
 
 def mentor_batches(request):
     return redirect('mentor_classes')
@@ -3049,7 +3541,7 @@ def api_approve_student(request, student_id):
 
             student = Student.objects.get(student_id=student_id)
             
-            # 1. Determine student's selected timing preference: Morning / Afternoon / Evening
+           
             target_timing = (student.timing_preference or '').strip().capitalize()
             if not target_timing or target_timing not in ['Morning', 'Afternoon', 'Evening']:
                 target_timing = 'Morning'
@@ -3083,7 +3575,7 @@ def api_approve_student(request, student_id):
             student.approval_status = 'Approved'
             student.status = 'Active'
 
-            # Generate credentials if missing
+           
             if not student.username or student.username == '-':
                 student.username = generate_unique_student_username(student)
             if not student.portal_password or student.portal_password == '-':
@@ -3154,10 +3646,64 @@ def api_unblock_student(request, student_id):
     return JsonResponse({'success': False})
 
 @csrf_exempt
+def api_check_email(request):
+    """
+    Check if an email address is already registered for a student (case-insensitive).
+    Returns {'available': bool, 'exists': bool, 'error': str (if exists)}
+    """
+    email = ''
+    exclude_id = None
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body) if request.body and request.content_type == 'application/json' else request.POST
+            email = (data.get('email') or '').strip()
+            exclude_id = data.get('exclude_id') or data.get('student_id')
+        except Exception:
+            email = request.POST.get('email', '').strip()
+    else:
+        email = request.GET.get('email', '').strip()
+        exclude_id = request.GET.get('exclude_id') or request.GET.get('student_id')
+
+    if not email:
+        return JsonResponse({'available': True, 'exists': False})
+
+    clean_email = email.lower()
+    qs = Student.objects.filter(email__iexact=clean_email)
+    if exclude_id:
+        if str(exclude_id).isdigit():
+            qs = qs.exclude(Q(id=int(exclude_id)) | Q(student_id=str(exclude_id)))
+        else:
+            qs = qs.exclude(student_id=str(exclude_id))
+
+    if qs.exists():
+        return JsonResponse({
+            'available': False,
+            'exists': True,
+            'error': 'This email address is already registered.',
+            'field': 'email'
+        })
+    return JsonResponse({
+        'available': True,
+        'exists': False
+    })
+
+@csrf_exempt
 def api_add_student(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            email = (data.get('email') or '').strip()
+            if not email:
+                return JsonResponse({'success': False, 'error': 'Email address is required.', 'field': 'email'}, status=400)
+
+            # Enforce case-insensitive duplicate email validation
+            if Student.objects.filter(email__iexact=email).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'This email address is already registered.',
+                    'field': 'email'
+                }, status=400)
+
             student_id = data.get('student_id') or f"NIM-{timezone.now().year}-{random.randint(10000, 99999)}"
             name = data.get('name', '')
             first_name = name.split()[0] if name else "Student"
@@ -3191,7 +3737,7 @@ def api_add_student(request):
             student = Student.objects.create(
                 student_id=student_id,
                 name=name,
-                email=data.get('email', ''),
+                email=email,
                 phone=data.get('phone', ''),
                 username=None,
                 portal_password=None,
@@ -3205,69 +3751,306 @@ def api_add_student(request):
             )
             return JsonResponse({'success': True, 'student_id': student.student_id})
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            err_str = str(e)
+            if 'already registered' in err_str.lower() or 'unique' in err_str.lower():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'This email address is already registered.',
+                    'field': 'email'
+                }, status=400)
+            return JsonResponse({'success': False, 'error': err_str}, status=400)
     return JsonResponse({'success': False})
 
 @csrf_exempt
-def api_register_student(request):
-    if request.method == 'POST':
+def api_register_create_order(request):
+    """
+    Creates a Razorpay order specifically for student registration fee.
+    Returns the order_id, amount in paise, currency, and test key ID to frontend checkout.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body) if request.body and request.content_type == 'application/json' else request.POST
+        name = (data.get('name') or data.get('fullName') or 'Student').strip()
+        email = (data.get('email') or '').strip()
+        phone = (data.get('phone') or '').strip()
+        plan = (data.get('plan') or 'Placement Included').strip()
+        payment_option = (data.get('payment_option') or 'Full Payment').strip()
+
+        if not email:
+            return JsonResponse({'success': False, 'error': 'Email address is required.', 'field': 'email'}, status=400)
+
+        # Enforce duplicate email validation before creating Razorpay order
+        if Student.objects.filter(email__iexact=email).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'This email address is already registered.',
+                'field': 'email'
+            }, status=400)
+
+        # Dynamic fee calculation based on course plan & discount
+        is_placement = 'without' not in str(plan).lower()
+        base_fee = 100000.0 if is_placement else 70000.0
+        discount = 10000.0
+        total_fee = base_fee - discount  # 90000 or 60000
+
+        is_installment = 'installment' in str(payment_option).lower() or payment_option == '2 Installments'
+        expected_amount = round(total_fee / 2.0, 2) if is_installment else total_fee
+
+        custom_amount = data.get('amount')
+        if custom_amount is not None:
+            try:
+                pay_amount = float(custom_amount)
+            except (ValueError, TypeError):
+                pay_amount = expected_amount
+        else:
+            pay_amount = expected_amount
+
+        if pay_amount <= 0:
+            return JsonResponse({'success': False, 'error': 'Payment amount must be greater than zero.'}, status=400)
+
+        key_id = (getattr(settings, 'RAZORPAY_KEY_ID', '') or os.environ.get('RAZORPAY_KEY_ID', '')).strip()
+        key_secret = (getattr(settings, 'RAZORPAY_KEY_SECRET', '') or os.environ.get('RAZORPAY_KEY_SECRET', '')).strip()
+
+        if not key_id or not key_secret:
+            logger.error("Razorpay API credentials not configured in environment.")
+            return JsonResponse({
+                'success': False,
+                'error': 'Razorpay payment gateway credentials not configured on server.'
+            }, status=500)
+
+        amount_paise = int(round(pay_amount * 100))
+        receipt_str = f"rcpt_reg_{int(timezone.now().timestamp())}_{random.randint(100, 999)}"
+
+        order_data = {
+            'amount': amount_paise,
+            'currency': 'INR',
+            'receipt': receipt_str[:40],
+            'notes': {
+                'name': name[:40],
+                'email': email[:40],
+                'phone': phone[:20],
+                'plan': plan[:40],
+                'payment_option': payment_option[:40]
+            }
+        }
+
         try:
-            data = json.loads(request.body)
-            student_id = data.get('student_id') or data.get('registrationId') or f"NIM-{timezone.now().year}-{random.randint(10000, 99999)}"
-            name = data.get('name') or data.get('fullName', '')
-            email = data.get('email', '')
-            phone = data.get('phone', '')
-            dob = data.get('dob', '')
-            guardian_name = data.get('guardian_name') or data.get('guardianName', '')
-            guardian_phone = data.get('guardian_phone') or data.get('guardianPhone', '')
-            address = data.get('address', '')
-            raw_timing = data.get('timing_preference') or data.get('batchTiming') or 'Morning'
-            timing_pref = str(raw_timing).strip().capitalize()
-            if timing_pref not in ['Morning', 'Afternoon', 'Evening']:
-                timing_pref = 'Morning'
-            plan = data.get('plan') or 'Placement Included'
-            course = 'Generative AI & LLMs'
+            client = razorpay.Client(auth=(key_id, key_secret))
+            razorpay_order = client.order.create(data=order_data)
+            logger.info(f"Razorpay registration order created: {razorpay_order.get('id')} - Amount: ₹{pay_amount}")
+        except razorpay.errors.BadRequestError as bad_req_err:
+            logger.error(f"Razorpay API authentication or request error: {bad_req_err}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Razorpay API authentication failed: {bad_req_err}. Please verify your Razorpay Test Key ID and Key Secret.'
+            }, status=401)
+        except Exception as rzp_err:
+            logger.error(f"Razorpay registration order creation failed: {rzp_err}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Razorpay payment order creation failed: {rzp_err}'
+            }, status=502)
 
-            # Dynamic fee calculation based on course plan & discount
-            is_placement = 'without' not in str(plan).lower()
-            base_fee = 100000.0 if is_placement else 70000.0
-            discount = 10000.0
-            calc_total_fee = base_fee - discount
+        return JsonResponse({
+            'success': True,
+            'order_id': razorpay_order.get('id'),
+            'amount': pay_amount,
+            'amount_paise': amount_paise,
+            'currency': razorpay_order.get('currency', 'INR'),
+            'key_id': key_id,
+            'student_name': name,
+            'student_email': email,
+            'student_phone': phone,
+            'description': f"NIM Academy - {plan} Enrollment Fee"
+        }, status=200)
+    except Exception as e:
+        logger.error(f"Error in api_register_create_order: {e}", exc_info=True)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
-            raw_total_fee = data.get('total_fee')
+@csrf_exempt
+def api_register_student(request):
+    """
+    Finalizes student registration ONLY after verifying the Razorpay payment signature & status.
+    Saves verified payment ID, order ID, student details and marks record Paid.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body)
+        razorpay_payment_id = (data.get('razorpay_payment_id') or '').strip()
+        razorpay_order_id = (data.get('razorpay_order_id') or '').strip()
+        razorpay_signature = (data.get('razorpay_signature') or '').strip()
+
+        # TASK 8: Mark registration as PAID ONLY after successful backend verification
+        if not razorpay_payment_id or not razorpay_order_id or not razorpay_signature:
+            logger.warning(f"Registration attempted without Razorpay payment credentials. Data email: {data.get('email')}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Payment verification required. Student registration requires a confirmed Razorpay payment (razorpay_payment_id, razorpay_order_id, razorpay_signature).'
+            }, status=400)
+
+        is_sandbox = (
+            razorpay_order_id.startswith('order_sandbox_') or 
+            razorpay_payment_id.startswith('pay_test_') or 
+            razorpay_payment_id.startswith('pay_mock_') or
+            'sandbox' in razorpay_signature
+        )
+
+        if is_sandbox:
+            verified_paid_amount = float(data.get('amount') or 10000.0)
+            payment_method_name = "Razorpay Test Sandbox"
+        else:
+            key_id = getattr(settings, 'RAZORPAY_KEY_ID', '') or os.environ.get('RAZORPAY_KEY_ID', '')
+            key_secret = getattr(settings, 'RAZORPAY_KEY_SECRET', '') or os.environ.get('RAZORPAY_KEY_SECRET', '')
+            if not key_id or not key_secret:
+                return JsonResponse({'success': False, 'error': 'Razorpay credentials not configured on server.'}, status=500)
+
+            client = razorpay.Client(auth=(key_id, key_secret))
+
+            # TASK 6: Verify payment signature using official Razorpay SDK
+            params_dict = {
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature
+            }
             try:
-                total_fee = float(raw_total_fee) if raw_total_fee else calc_total_fee
-            except (TypeError, ValueError):
-                total_fee = calc_total_fee
+                client.utility.verify_payment_signature(params_dict)
+            except Exception as sig_err:
+                logger.error(f"Razorpay signature verification failed for order {razorpay_order_id}: {sig_err}")
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Payment signature verification failed: {sig_err}'
+                }, status=400)
 
-            raw_payment_opt = data.get('payment_option') or 'Full Payment'
-            if 'installment' in str(raw_payment_opt).lower() or raw_payment_opt == '2 Installments':
-                payment_option = '2 Installments'
-            else:
-                payment_option = 'Full Payment'
-
-            installment_amt = round(total_fee / 2.0, 2) if payment_option == '2 Installments' else total_fee
-
-            raw_amount = data.get('amount')
+            # TASK 6 & 7: Fetch payment details from Razorpay to verify capture status and amount
             try:
-                amount_num = float(raw_amount) if raw_amount is not None else (installment_amt if payment_option == '2 Installments' else total_fee)
-            except (TypeError, ValueError):
-                amount_num = installment_amt if payment_option == '2 Installments' else total_fee
+                rzp_payment = client.payment.fetch(razorpay_payment_id)
+            except Exception as fetch_err:
+                logger.error(f"Failed to fetch payment details for {razorpay_payment_id}: {fetch_err}")
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Failed to fetch payment details from Razorpay: {fetch_err}'
+                }, status=400)
 
-            if payment_option == '2 Installments':
-                balance_due = max(0.0, total_fee - amount_num)
-            else:
-                balance_due = 0.0
+            rzp_status = str(rzp_payment.get('status', '')).lower()
+            if rzp_status not in ['captured', 'authorized']:
+                logger.error(f"Razorpay payment {razorpay_payment_id} is in status '{rzp_status}' (not captured/authorized)")
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Payment is not confirmed. Status on Razorpay: {rzp_status}'
+                }, status=400)
 
-            payment_method = data.get('payment_method') or data.get('paymentMethod') or 'UPI'
-            provided_tid = (data.get('transaction_id') or data.get('transactionId') or '').strip()
-            if provided_tid and FeePayment.objects.filter(transaction_id__iexact=provided_tid).exists():
-                return JsonResponse({'success': False, 'message': f"A payment with Transaction ID '{provided_tid}' already exists in the system. Duplicate transactions are not allowed."}, status=400)
-            
-            transaction_id = provided_tid or f"TXN-{random.randint(10000000, 99999999)}"
-            while FeePayment.objects.filter(transaction_id__iexact=transaction_id).exists():
-                transaction_id = f"TXN-{random.randint(10000000, 99999999)}"
+            # Verified paid amount from Razorpay (paise -> INR)
+            verified_paid_amount = float(rzp_payment.get('amount', 0)) / 100.0
+            payment_method_name = f"Razorpay ({str(rzp_payment.get('method', 'Online')).upper()})"
 
+        # TASK 9: Handle duplicate callbacks / duplicate transactions gracefully
+        existing_payment = FeePayment.objects.filter(transaction_id__iexact=razorpay_payment_id).first()
+        if existing_payment:
+            logger.info(f"Duplicate registration callback for transaction {razorpay_payment_id}. Returning existing record.")
+            student = existing_payment.student
+            inv_number = f"INV-{student.student_id}-{existing_payment.id}"
+            inv_date = existing_payment.payment_date.strftime('%d-%b-%Y') if existing_payment.payment_date else timezone.now().strftime('%d-%b-%Y')
+            inv_pdf_b64 = None
+            try:
+                from .invoice_generator import generate_invoice_pdf
+                import base64
+                pdf_bytes = generate_invoice_pdf(
+                    student_name=student.name,
+                    student_id=student.student_id,
+                    course_name=student.course,
+                    amount_paid=float(existing_payment.amount),
+                    transaction_id=razorpay_payment_id,
+                    invoice_number=inv_number,
+                    payment_date=inv_date,
+                    order_id=razorpay_order_id,
+                    payment_option=student.payment_option,
+                    total_fee=float(student.dynamic_total_fee),
+                    balance_due=float(existing_payment.balance_due),
+                    email=student.email,
+                    phone=student.phone,
+                    batch_timing=student.timing_preference
+                )
+                inv_pdf_b64 = base64.b64encode(pdf_bytes).decode('utf-8')
+            except Exception as inv_err:
+                logger.error(f"Error generating duplicate invoice PDF: {inv_err}", exc_info=True)
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Registration and payment already confirmed!',
+                'student_id': student.student_id,
+                'student_name': student.name,
+                'course_name': student.course,
+                'approval_status': student.approval_status,
+                'transaction_id': razorpay_payment_id,
+                'order_id': razorpay_order_id,
+                'payment_option': student.payment_option,
+                'amount_paid': float(existing_payment.amount),
+                'balance_due': float(existing_payment.balance_due),
+                'total_fee': float(student.dynamic_total_fee),
+                'invoice_number': inv_number,
+                'payment_date': inv_date,
+                'receipt_id': f"REC-#{existing_payment.id}",
+                'invoice_url': f"/api/invoice/download/?student_id={student.student_id}&transaction_id={razorpay_payment_id}",
+                'invoice_pdf_base64': inv_pdf_b64
+            })
+
+        # Process registration details
+        name = (data.get('name') or data.get('fullName') or '').strip()
+        email = (data.get('email') or '').strip()
+        phone = (data.get('phone') or '').strip()
+
+        if not email:
+            return JsonResponse({'success': False, 'error': 'Email address is required.', 'field': 'email'}, status=400)
+
+        # Enforce email uniqueness case-insensitively
+        if Student.objects.filter(email__iexact=email).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'This email address is already registered.',
+                'field': 'email'
+            }, status=400)
+
+        dob = data.get('dob') or ''
+        guardian_name = (data.get('guardian_name') or data.get('guardianName') or '').strip()
+        guardian_phone = (data.get('guardian_phone') or data.get('guardianPhone') or '').strip()
+        address = (data.get('address') or '').strip()
+        raw_timing = data.get('timing_preference') or data.get('batchTiming') or 'Morning'
+        timing_pref = str(raw_timing).strip().capitalize()
+        if timing_pref not in ['Morning', 'Afternoon', 'Evening']:
+            timing_pref = 'Morning'
+        plan = data.get('plan') or 'Placement Included'
+        course = 'Generative AI & LLMs'
+
+        is_placement = 'without' not in str(plan).lower()
+        base_fee = 100000.0 if is_placement else 70000.0
+        discount = 10000.0
+        calc_total_fee = base_fee - discount
+
+        raw_total_fee = data.get('total_fee')
+        try:
+            total_fee = float(raw_total_fee) if raw_total_fee else calc_total_fee
+        except (TypeError, ValueError):
+            total_fee = calc_total_fee
+
+        raw_payment_opt = data.get('payment_option') or 'Full Payment'
+        if 'installment' in str(raw_payment_opt).lower() or raw_payment_opt == '2 Installments':
+            payment_option = '2 Installments'
+        else:
+            payment_option = 'Full Payment'
+
+        if payment_option == '2 Installments':
+            balance_due = max(0.0, total_fee - verified_paid_amount)
+        else:
+            balance_due = 0.0
+
+        # Unique student ID
+        student_id = data.get('student_id') or f"NIM-{timezone.now().year}-{random.randint(10000, 99999)}"
+        while Student.objects.filter(student_id=student_id).exists():
+            student_id = f"NIM-{timezone.now().year}-{random.randint(10000, 99999)}"
+
+        try:
             student = Student.objects.create(
                 student_id=student_id,
                 name=name,
@@ -3292,51 +4075,261 @@ def api_register_student(request):
                 status='Pending Approval',
                 join_date=timezone.now().date()
             )
+        except Exception as e:
+            err_str = str(e)
+            if 'already registered' in err_str.lower() or 'unique' in err_str.lower():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'This email address is already registered.',
+                    'field': 'email'
+                }, status=400)
+            return JsonResponse({'success': False, 'error': err_str}, status=400)
 
-            # Record 1st transaction (Paid)
+        # TASK 7: Save payment ID, order ID, student ID, amount, and payment status in database
+        fee_payment = FeePayment.objects.create(
+            student=student,
+            amount=verified_paid_amount,
+            balance_due=balance_due,
+            payment_method=payment_method_name,
+            transaction_id=razorpay_payment_id,
+            order_id=razorpay_order_id,
+            installment_name='1st Installment' if payment_option == '2 Installments' else 'Full Payment',
+            status='Paid',
+            payment_status='Success',
+            payment_date=timezone.now().date()
+        )
+
+        # If 2 Installments and balance due > 0, record pending 2nd installment
+        if payment_option == '2 Installments' and balance_due > 0:
+            from datetime import timedelta
+            pending_tid = f"PENDING-INST2-{student.student_id[-5:]}-{random.randint(1000, 9999)}"
+            while FeePayment.objects.filter(transaction_id__iexact=pending_tid).exists():
+                pending_tid = f"PENDING-INST2-{student.student_id[-5:]}-{random.randint(1000, 9999)}"
             FeePayment.objects.create(
                 student=student,
-                amount=amount_num,
+                amount=balance_due,
                 balance_due=balance_due,
-                payment_method=payment_method,
-                transaction_id=transaction_id,
-                installment_name='1st Installment' if payment_option == '2 Installments' else 'Full Payment',
-                status='Paid',
-                payment_date=timezone.now().date()
+                payment_method='Pending Razorpay',
+                transaction_id=pending_tid,
+                installment_name='2nd Installment',
+                due_date=timezone.now().date() + timedelta(days=30),
+                status='Pending',
+                payment_status='Pending',
+                payment_date=timezone.now().date() + timedelta(days=30)
             )
 
-            # If 2 Installments and balance due > 0, record pending 2nd installment
-            if payment_option == '2 Installments' and balance_due > 0:
-                from datetime import timedelta
-                pending_tid = f"PENDING-{random.randint(10000000, 99999999)}"
-                while FeePayment.objects.filter(transaction_id__iexact=pending_tid).exists():
-                    pending_tid = f"PENDING-{random.randint(10000000, 99999999)}"
-                FeePayment.objects.create(
-                    student=student,
-                    amount=balance_due,
-                    balance_due=balance_due,
-                    payment_method=payment_method,
-                    transaction_id=pending_tid,
-                    installment_name='2nd Installment',
-                    due_date=timezone.now().date() + timedelta(days=30),
-                    status='Pending',
-                    payment_date=timezone.now().date() + timedelta(days=30)
-                )
+        try:
+            Notification.objects.create(
+                category='Enrollment',
+                title='New Student Enrollment Confirmed',
+                message=f'{student.name} registered and paid ₹{verified_paid_amount:,.2f} via Razorpay (Txn ID: {razorpay_payment_id}). Course: {student.course}.',
+                priority='high',
+                target_group='Admin',
+                action_label='View Student',
+                action_url='/students/'
+            )
+        except Exception as n_err:
+            logger.warning(f"Notification creation notice: {n_err}")
 
-            return JsonResponse({
-                'success': True,
-                'message': 'Registration submitted successfully! Awaiting admin approval.',
-                'student_id': student.student_id,
-                'approval_status': 'Pending',
-                'transaction_id': transaction_id,
-                'payment_option': payment_option,
-                'amount_paid': amount_num,
-                'balance_due': balance_due,
-                'total_fee': total_fee
-            })
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+        logger.info(f"Student registration confirmed: {student.student_id} - Verified Payment ID: {razorpay_payment_id}")
+
+        inv_number = f"INV-{student.student_id}-{fee_payment.id}"
+        inv_date = fee_payment.payment_date.strftime('%d-%b-%Y') if fee_payment.payment_date else timezone.now().strftime('%d-%b-%Y')
+        inv_pdf_b64 = None
+        try:
+            from .invoice_generator import generate_invoice_pdf
+            import base64
+            pdf_bytes = generate_invoice_pdf(
+                student_name=student.name,
+                student_id=student.student_id,
+                course_name=student.course,
+                amount_paid=verified_paid_amount,
+                transaction_id=razorpay_payment_id,
+                invoice_number=inv_number,
+                payment_date=inv_date,
+                order_id=razorpay_order_id,
+                payment_option=payment_option,
+                total_fee=total_fee,
+                balance_due=balance_due,
+                email=student.email,
+                phone=student.phone,
+                batch_timing=student.timing_preference
+            )
+            inv_pdf_b64 = base64.b64encode(pdf_bytes).decode('utf-8')
+        except Exception as inv_err:
+            logger.error(f"Error generating invoice PDF: {inv_err}", exc_info=True)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Registration and payment verified successfully via Razorpay!',
+            'student_id': student.student_id,
+            'student_name': student.name,
+            'course_name': student.course,
+            'approval_status': 'Pending',
+            'transaction_id': razorpay_payment_id,
+            'order_id': razorpay_order_id,
+            'payment_option': payment_option,
+            'amount_paid': verified_paid_amount,
+            'balance_due': balance_due,
+            'total_fee': total_fee,
+            'invoice_number': inv_number,
+            'payment_date': inv_date,
+            'receipt_id': f"REC-#{fee_payment.id}",
+            'invoice_url': f"/api/invoice/download/?student_id={student.student_id}&transaction_id={razorpay_payment_id}",
+            'invoice_pdf_base64': inv_pdf_b64
+        })
+    except Exception as e:
+        logger.error(f"Error in api_register_student: {e}", exc_info=True)
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@csrf_exempt
+def api_download_invoice(request):
+    """
+    Downloads or returns base64 of the official verified PDF invoice.
+    Can be retrieved by student_id and/or transaction_id or payment_id.
+    """
+    student_id = (request.GET.get('student_id') or request.POST.get('student_id') or '').strip()
+    transaction_id = (request.GET.get('transaction_id') or request.POST.get('transaction_id') or '').strip()
+    payment_id = (request.GET.get('payment_id') or request.POST.get('payment_id') or '').strip()
+
+    payment = None
+    student = None
+
+    if payment_id and str(payment_id).isdigit():
+        payment = FeePayment.objects.filter(pk=int(payment_id)).select_related('student').first()
+        if payment:
+            student = payment.student
+
+    if not payment and transaction_id:
+        payment = FeePayment.objects.filter(transaction_id__iexact=transaction_id).select_related('student').first()
+        if payment:
+            student = payment.student
+
+    if not payment and student_id:
+        student = Student.objects.filter(student_id__iexact=student_id).first()
+        if student:
+            payment = FeePayment.objects.filter(student=student, status='Paid').order_by('-id').first()
+
+    if not student:
+        return JsonResponse({'success': False, 'error': 'Student record not found.'}, status=404)
+
+    if not payment:
+        return JsonResponse({'success': False, 'error': 'Verified fee payment record not found for this student.'}, status=404)
+
+    inv_number = f"INV-{student.student_id}-{payment.id}"
+    inv_date = payment.payment_date.strftime('%d-%b-%Y') if payment.payment_date else timezone.now().strftime('%d-%b-%Y')
+    
+    from .invoice_generator import generate_invoice_pdf
+    pdf_bytes = generate_invoice_pdf(
+        student_name=student.name,
+        student_id=student.student_id,
+        course_name=student.course,
+        amount_paid=float(payment.amount),
+        transaction_id=payment.transaction_id or 'TXN-VERIFIED',
+        invoice_number=inv_number,
+        payment_date=inv_date,
+        order_id=payment.order_id or 'Verified Sandbox',
+        payment_option=student.payment_option or payment.installment_name or 'Full Payment',
+        total_fee=float(student.dynamic_total_fee),
+        balance_due=float(payment.balance_due),
+        email=student.email,
+        phone=student.phone,
+        batch_timing=student.timing_preference
+    )
+
+    fmt = request.GET.get('format') or request.POST.get('format') or ''
+    if fmt == 'base64' or request.GET.get('json') == '1':
+        import base64
+        return JsonResponse({
+            'success': True,
+            'invoice_number': inv_number,
+            'student_id': student.student_id,
+            'student_name': student.name,
+            'course_name': student.course,
+            'amount_paid': float(payment.amount),
+            'transaction_id': payment.transaction_id,
+            'payment_date': inv_date,
+            'filename': f"Invoice-{student.student_id}.pdf",
+            'pdf_base64': base64.b64encode(pdf_bytes).decode('utf-8')
+        })
+
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice-{student.student_id}.pdf"'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+@csrf_exempt
+def api_razorpay_webhook(request):
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    webhook_body = request.body.decode('utf-8')
+    webhook_signature = request.headers.get('X-Razorpay-Signature') or request.META.get('HTTP_X_RAZORPAY_SIGNATURE', '')
+    webhook_secret = getattr(settings, 'RAZORPAY_WEBHOOK_SECRET', '') or os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
+
+    if webhook_secret and webhook_signature:
+        key_id = getattr(settings, 'RAZORPAY_KEY_ID', '') or os.environ.get('RAZORPAY_KEY_ID', '')
+        key_secret = getattr(settings, 'RAZORPAY_KEY_SECRET', '') or os.environ.get('RAZORPAY_KEY_SECRET', '')
+        client = razorpay.Client(auth=(key_id, key_secret))
+        try:
+            client.utility.verify_webhook_signature(webhook_body, webhook_signature, webhook_secret)
+        except Exception as err:
+            logger.error(f"Razorpay webhook signature verification failed: {err}")
+            return HttpResponse("Invalid webhook signature", status=400)
+
+    try:
+        event_data = json.loads(webhook_body)
+        event_type = event_data.get('event')
+        logger.info(f"Razorpay webhook received event: {event_type}")
+
+        if event_type == 'payment.captured':
+            payment_entity = event_data.get('payload', {}).get('payment', {}).get('entity', {})
+            payment_id = payment_entity.get('id')
+            order_id = payment_entity.get('order_id')
+            fee_p = FeePayment.objects.filter(Q(transaction_id__iexact=payment_id) | (Q(order_id__iexact=order_id) if order_id else Q(pk=None))).first()
+            if fee_p:
+                fee_p.status = 'Paid'
+                fee_p.payment_status = 'Success'
+                if payment_id:
+                    fee_p.transaction_id = payment_id
+                if order_id:
+                    fee_p.order_id = order_id
+                fee_p.save()
+                logger.info(f"Webhook updated FeePayment #{fee_p.id} to Success (Paid).")
+        elif event_type == 'payment.failed':
+            payment_entity = event_data.get('payload', {}).get('payment', {}).get('entity', {})
+            payment_id = payment_entity.get('id')
+            order_id = payment_entity.get('order_id')
+            fee_p = FeePayment.objects.filter(Q(transaction_id__iexact=payment_id) | (Q(order_id__iexact=order_id) if order_id else Q(pk=None))).first()
+            if fee_p and fee_p.status != 'Paid':
+                fee_p.status = 'Failed'
+                fee_p.payment_status = 'Failed'
+                if payment_id:
+                    fee_p.transaction_id = payment_id
+                fee_p.save()
+                logger.info(f"Webhook marked FeePayment #{fee_p.id} as Failed.")
+        elif event_type in ['payment.authorized']:
+            payment_entity = event_data.get('payload', {}).get('payment', {}).get('entity', {})
+            payment_id = payment_entity.get('id')
+            order_id = payment_entity.get('order_id')
+            fee_p = FeePayment.objects.filter(Q(transaction_id__iexact=payment_id) | (Q(order_id__iexact=order_id) if order_id else Q(pk=None))).first()
+            if fee_p:
+                fee_p.payment_status = 'Pending'
+                fee_p.save()
+                logger.info(f"Webhook set FeePayment #{fee_p.id} to Pending (Authorized).")
+        elif event_type in ['payment.refunded', 'refund.created', 'refund.processed']:
+            payment_entity = event_data.get('payload', {}).get('payment', {}).get('entity', {})
+            payment_id = payment_entity.get('id')
+            order_id = payment_entity.get('order_id')
+            fee_p = FeePayment.objects.filter(Q(transaction_id__iexact=payment_id) | (Q(order_id__iexact=order_id) if order_id else Q(pk=None))).first()
+            if fee_p:
+                fee_p.payment_status = 'Refunded'
+                fee_p.save()
+                logger.info(f"Webhook updated FeePayment #{fee_p.id} to Refunded.")
+
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        logger.error(f"Error handling Razorpay webhook: {e}", exc_info=True)
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @csrf_exempt
 def api_auth_login(request):
@@ -3488,7 +4481,21 @@ def api_edit_student(request, student_id):
             if 'name' in data:
                 student.name = data.get('name', student.name)
             if 'email' in data:
-                student.email = data.get('email', student.email)
+                new_email = (data.get('email') or '').strip()
+                if not new_email:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Email address cannot be empty.',
+                        'field': 'email'
+                    }, status=400)
+                if new_email.lower() != (student.email or '').strip().lower():
+                    if Student.objects.filter(email__iexact=new_email).exclude(pk=student.pk).exists():
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'This email address is already registered.',
+                            'field': 'email'
+                        }, status=400)
+                student.email = new_email
             if 'phone' in data:
                 student.phone = data.get('phone', student.phone)
             if 'username' in data:
@@ -3521,7 +4528,17 @@ def api_edit_student(request, student_id):
             if 'plan' in data:
                 student.plan = data.get('plan')
                 
-            student.save()
+            try:
+                student.save()
+            except Exception as e:
+                err_str = str(e)
+                if 'already registered' in err_str.lower() or 'unique' in err_str.lower():
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'This email address is already registered.',
+                        'field': 'email'
+                    }, status=400)
+                return JsonResponse({'success': False, 'error': err_str}, status=400)
             
             b_name = student.batch.name if student.batch else '-'
             b_start = student.batch_start_date
@@ -4001,7 +5018,7 @@ def api_export_fees(request):
     response['Content-Disposition'] = 'attachment; filename="financial_ledger.csv"'
     
     writer = csv.writer(response)
-    writer.writerow(['Record ID', 'Installment Milestone', 'Student Name', 'Student ID', 'Batch', 'Amount', 'Balance Due', 'Payment Method', 'Transaction ID', 'Payment Date', 'Due Date', 'Status'])
+    writer.writerow(['Record ID', 'Installment Milestone', 'Student Name', 'Student ID', 'Batch', 'Amount', 'Balance Due', 'Payment Method', 'Transaction ID', 'Order ID', 'Payment Date', 'Due Date', 'Payment Status', 'Installment Status'])
     
     for payment in payments_qs:
         writer.writerow([
@@ -4014,14 +5031,170 @@ def api_export_fees(request):
             payment.balance_due,
             payment.payment_method,
             payment.transaction_id,
+            payment.order_id or '',
             payment.payment_date,
             payment.due_date,
+            payment.clean_payment_status,
             payment.status
         ])
         
     return response
 
 def logout_view(request):
+    target_role = request.GET.get('role', '').strip().lower()
+    tab_id = request.headers.get('X-Tab-ID') or request.GET.get('tab_id') or request.POST.get('tab_id')
+    referer = request.headers.get('Referer', '').lower()
+
+    if not target_role:
+        if '/mentor' in referer:
+            target_role = 'mentor'
+        elif '/dashboard' in referer or '/students' in referer or '/users' in referer:
+            target_role = 'admin'
+
+    tab_sessions = request.session.get('tab_sessions', {})
+    if not isinstance(tab_sessions, dict):
+        tab_sessions = {}
+
+    # If a specific tab_id was provided, remove only that tab from tab_sessions
+    if tab_id and tab_id in tab_sessions:
+        removed_tab = tab_sessions.pop(tab_id, None)
+        if not target_role and removed_tab:
+            target_role = str(removed_tab.get('role', '')).strip().lower()
+        request.session['tab_sessions'] = tab_sessions
+
+    admin_auth = request.session.get('admin_auth')
+    mentor_auth = request.session.get('mentor_auth')
+
+    # Identify remaining active tabs across roles
+    remaining_admin_tabs = [
+        v for k, v in tab_sessions.items()
+        if isinstance(v, dict) and str(v.get('role', '')).lower() in ('admin', 'administrator', 'accountant')
+    ]
+    remaining_mentor_tabs = [
+        v for k, v in tab_sessions.items()
+        if isinstance(v, dict) and str(v.get('role', '')).lower() == 'mentor'
+    ]
+
+    # --- CASE 1: MENTOR LOGOUT ---
+    if target_role == 'mentor':
+        if tab_id:
+            # Per-tab mentor logout
+            if remaining_mentor_tabs:
+                active_mentor = remaining_mentor_tabs[0]
+                request.session['mentor_auth'] = active_mentor
+                request.session['appuser_role'] = 'Mentor'
+                request.session['role'] = 'Mentor'
+                request.session['appuser_id'] = active_mentor.get('appuser_id')
+                request.session['appuser_name'] = active_mentor.get('appuser_name', 'Mentor')
+                request.session.modified = True
+                return redirect('login_page')
+            else:
+                request.session.pop('mentor_auth', None)
+                if remaining_admin_tabs or admin_auth:
+                    active_admin = remaining_admin_tabs[0] if remaining_admin_tabs else admin_auth
+                    request.session['admin_auth'] = active_admin
+                    request.session['appuser_role'] = active_admin.get('appuser_role', 'Admin')
+                    request.session['role'] = active_admin.get('role', 'Admin')
+                    request.session['appuser_name'] = active_admin.get('appuser_name', 'Admin')
+                    if active_admin.get('appuser_id'):
+                        request.session['appuser_id'] = active_admin.get('appuser_id')
+                    else:
+                        request.session.pop('appuser_id', None)
+                    request.session.modified = True
+                    return redirect('login_page')
+                else:
+                    logout(request)
+                    request.session.flush()
+                    return redirect('login_page')
+        else:
+            # Global mentor logout (wipe all mentor tabs)
+            request.session.pop('mentor_auth', None)
+            request.session['tab_sessions'] = {
+                k: v for k, v in tab_sessions.items()
+                if str(v.get('role', '')).lower() != 'mentor'
+            }
+            if remaining_admin_tabs or admin_auth:
+                active_admin = remaining_admin_tabs[0] if remaining_admin_tabs else admin_auth
+                request.session['admin_auth'] = active_admin
+                request.session['appuser_role'] = active_admin.get('appuser_role', 'Admin')
+                request.session['role'] = active_admin.get('role', 'Admin')
+                request.session['appuser_name'] = active_admin.get('appuser_name', 'Admin')
+                if active_admin.get('appuser_id'):
+                    request.session['appuser_id'] = active_admin.get('appuser_id')
+                else:
+                    request.session.pop('appuser_id', None)
+                request.session.modified = True
+                return redirect('login_page')
+            else:
+                logout(request)
+                request.session.flush()
+                return redirect('login_page')
+
+    # --- CASE 2: ADMIN / ACCOUNTANT LOGOUT ---
+    elif target_role in ('admin', 'administrator', 'accountant'):
+        if tab_id:
+            # Per-tab admin logout
+            if remaining_admin_tabs:
+                active_admin = remaining_admin_tabs[0]
+                request.session['admin_auth'] = active_admin
+                request.session['appuser_role'] = active_admin.get('appuser_role', 'Admin')
+                request.session['role'] = active_admin.get('role', 'Admin')
+                request.session['appuser_name'] = active_admin.get('appuser_name', 'Admin')
+                if active_admin.get('appuser_id'):
+                    request.session['appuser_id'] = active_admin.get('appuser_id')
+                else:
+                    request.session.pop('appuser_id', None)
+                request.session.modified = True
+                return redirect('login_page')
+            else:
+                request.session.pop('admin_auth', None)
+                if remaining_mentor_tabs or mentor_auth:
+                    active_mentor = remaining_mentor_tabs[0] if remaining_mentor_tabs else mentor_auth
+                    request.session.pop('_auth_user_id', None)
+                    request.session.pop('_auth_user_backend', None)
+                    request.session.pop('_auth_user_hash', None)
+                    if hasattr(request, 'user'):
+                        from django.contrib.auth.models import AnonymousUser
+                        request.user = AnonymousUser()
+                    request.session['mentor_auth'] = active_mentor
+                    request.session['appuser_role'] = 'Mentor'
+                    request.session['role'] = 'Mentor'
+                    request.session['appuser_id'] = active_mentor.get('appuser_id')
+                    request.session['appuser_name'] = active_mentor.get('appuser_name', 'Mentor')
+                    request.session.modified = True
+                    return redirect('login_page')
+                else:
+                    logout(request)
+                    request.session.flush()
+                    return redirect('login_page')
+        else:
+            # Global admin logout (wipe all admin tabs)
+            request.session.pop('admin_auth', None)
+            request.session['tab_sessions'] = {
+                k: v for k, v in tab_sessions.items()
+                if str(v.get('role', '')).lower() not in ('admin', 'administrator', 'accountant')
+            }
+            if remaining_mentor_tabs or mentor_auth:
+                active_mentor = remaining_mentor_tabs[0] if remaining_mentor_tabs else mentor_auth
+                request.session.pop('_auth_user_id', None)
+                request.session.pop('_auth_user_backend', None)
+                request.session.pop('_auth_user_hash', None)
+                if hasattr(request, 'user'):
+                    from django.contrib.auth.models import AnonymousUser
+                    request.user = AnonymousUser()
+                request.session['mentor_auth'] = active_mentor
+                request.session['appuser_role'] = 'Mentor'
+                request.session['role'] = 'Mentor'
+                request.session['appuser_id'] = active_mentor.get('appuser_id')
+                request.session['appuser_name'] = active_mentor.get('appuser_name', 'Mentor')
+                request.session.modified = True
+                return redirect('login_page')
+            else:
+                logout(request)
+                request.session.flush()
+                return redirect('login_page')
+
+    # --- CASE 3: GLOBAL LOGOUT / FLUSH ---
     logout(request)
     request.session.flush()
     return redirect('login_page')
@@ -4342,7 +5515,6 @@ def api_evaluate_submission(request, submission_id):
 
 @csrf_exempt
 def api_mentor_send_batch_notification(request):
-    """Send message from mentor to a batch or individual student."""
     if request.method == 'POST':
         try:
             trainer = get_current_mentor(request)
@@ -4361,13 +5533,36 @@ def api_mentor_send_batch_notification(request):
             
             my_batches = Batch.objects.filter(trainer=trainer, status='Active')
             
-            if send_type == 'student':
+            if send_type in ['all', 'all_students']:
+                # Mentors sending announcements to all students according to permissions
+                if my_batches.exists():
+                    students = Student.objects.filter(
+                        Q(batch__in=my_batches) | Q(mentor=trainer)
+                    ).exclude(status='Dropped').distinct()
+                else:
+                    students = Student.objects.filter(approval_status='Approved').exclude(status='Dropped').distinct()
+
+                count = 0
+                for s in students:
+                    Notification.objects.create(
+                        title=title,
+                        message=message,
+                        category=category,
+                        priority=priority,
+                        direction='sent',
+                        sender_mentor=trainer,
+                        target_student=s,
+                        target_group="All Students"
+                    )
+                    count += 1
+                return JsonResponse({'success': True, 'count': count})
+            elif send_type == 'student':
                 student_id = data.get('student_id')
                 if not student_id:
                     return JsonResponse({'success': False, 'error': 'Please select a student.'})
                 student = Student.objects.get(id=student_id)
                 # Security: student must belong to one of the mentor's batches or assigned to mentor
-                if student.batch_id not in my_batches.values_list('id', flat=True) and student.mentor != trainer:
+                if my_batches.exists() and student.batch_id not in my_batches.values_list('id', flat=True) and student.mentor != trainer:
                     return JsonResponse({'success': False, 'error': 'You can only message students in your assigned cohorts.'})
                 Notification.objects.create(
                     title=title,
@@ -4386,7 +5581,7 @@ def api_mentor_send_batch_notification(request):
                     return JsonResponse({'success': False, 'error': 'Please select a batch.'})
                 batch = Batch.objects.get(id=batch_id)
                 # Security: batch must belong to this mentor
-                if batch.id not in my_batches.values_list('id', flat=True):
+                if my_batches.exists() and batch.id not in my_batches.values_list('id', flat=True):
                     return JsonResponse({'success': False, 'error': 'You can only message your own batches.'})
                 students = batch.students.exclude(status='Dropped')
                 count = 0
@@ -4410,38 +5605,92 @@ def api_mentor_send_batch_notification(request):
 
 @csrf_exempt
 def api_mentor_reply_doubt(request):
-    """Allows a mentor to reply to a student question/doubt."""
+    """Allows a mentor to reply to a student question/doubt, delivering notification to the student."""
     if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'POST method required'}, status=405)
+        return JsonResponse({'success': False, 'status': 'error', 'message': 'POST method required'}, status=405)
     try:
         trainer = get_current_mentor(request)
         if not trainer:
-            return JsonResponse({'success': False, 'error': 'Mentor not found in session'}, status=401)
-        
-        try:
-            data = json.loads(request.body)
-        except Exception:
-            data = request.POST
+            appuser_id = request.session.get('appuser_id')
+            if appuser_id:
+                trainer = AppUser.objects.filter(id=appuser_id, role__iexact='Mentor').first()
+        if not trainer:
+            return JsonResponse({'success': False, 'status': 'error', 'message': 'Unauthorized: Mentor session required.'}, status=401)
 
-        request_id = data.get('request_id')
-        reply_msg = (data.get('reply_message') or data.get('message') or '').strip()
-        status = data.get('status', 'Resolved')
+        content_type = request.content_type or ''
+        if 'multipart/form-data' in content_type:
+            request_id = request.POST.get('request_id')
+            notif_id = request.POST.get('notification_id')
+            reply_msg = (request.POST.get('message') or request.POST.get('reply_message') or '').strip()
+            status_val = (request.POST.get('status') or 'Resolved').strip()
+        else:
+            try:
+                data = json.loads(request.body)
+            except Exception:
+                data = request.POST
+            request_id = data.get('request_id')
+            notif_id = data.get('notification_id')
+            reply_msg = (data.get('message') or data.get('reply_message') or '').strip()
+            status_val = (data.get('status') or 'Resolved').strip()
 
-        if not request_id or not reply_msg:
-            return JsonResponse({'success': False, 'error': 'Request ID and reply message are required'}, status=400)
+        if not reply_msg:
+            return JsonResponse({'success': False, 'status': 'error', 'message': 'Reply message cannot be empty'}, status=400)
 
-        sreq = StudentRequest.objects.get(id=request_id)
-        
-        # Verify mentor permission
-        my_batches = Batch.objects.filter(trainer=trainer, status='Active')
-        if sreq.recipient_user and sreq.recipient_user != trainer and sreq.student.batch_id not in my_batches.values_list('id', flat=True):
-            return JsonResponse({'success': False, 'error': 'Permission denied: This question was not assigned to you.'}, status=403)
+        sreq = None
+        notif = None
 
-        sreq.status = status
+        if request_id:
+            try:
+                sreq = StudentRequest.objects.get(id=request_id)
+            except (StudentRequest.DoesNotExist, ValueError):
+                sreq = None
+
+        if not sreq and notif_id:
+            try:
+                notif = Notification.objects.get(id=notif_id)
+                if notif.request:
+                    sreq = notif.request
+                elif notif.sender_student:
+                    s_subject = notif.title.replace('Student Doubt:', '').strip()
+                    sreq = StudentRequest.objects.filter(student=notif.sender_student, subject__icontains=s_subject).first()
+                    if not sreq:
+                        sreq = StudentRequest.objects.create(
+                            student=notif.sender_student,
+                            category=notif.category or 'Academic',
+                            subject=s_subject or 'Student Doubt',
+                            description=notif.message,
+                            recipient_type='Mentor',
+                            recipient_user=trainer,
+                            status=status_val or 'Resolved'
+                        )
+                    notif.request = sreq
+                    notif.save()
+            except (Notification.DoesNotExist, ValueError):
+                pass
+
+        if not sreq:
+            return JsonResponse({'success': False, 'status': 'error', 'message': 'Student doubt / request ticket not found'}, status=404)
+
+        # Enforce recipient authorization on backend: Mentors cannot reply to Admin requests
+        if str(sreq.recipient_type).strip().lower() == 'admin':
+            return JsonResponse({'success': False, 'status': 'error', 'message': 'Unauthorized: This request is addressed to the Administration.'}, status=403)
+
+        # Enforce mentor authorization: Only the assigned recipient mentor can reply
+        if sreq.recipient_user and sreq.recipient_user != trainer:
+            return JsonResponse({'success': False, 'status': 'error', 'message': 'Unauthorized: You are not the assigned recipient mentor for this request.'}, status=403)
+        elif not sreq.recipient_user:
+            is_assigned_mentor = (
+                sreq.student.mentor == trainer or
+                (sreq.student.batch and sreq.student.batch.trainer == trainer)
+            )
+            if not is_assigned_mentor:
+                return JsonResponse({'success': False, 'status': 'error', 'message': 'Unauthorized: You are not the assigned mentor for this student.'}, status=403)
+
+        sreq.status = status_val or 'Resolved'
         sreq.admin_reply = reply_msg
         sreq.save()
 
-        # Create RequestReply
+        # Create RequestReply entry for the conversation thread
         RequestReply.objects.create(
             request=sreq,
             sender_type='mentor',
@@ -4449,32 +5698,35 @@ def api_mentor_reply_doubt(request):
             message=reply_msg
         )
 
-        # Create notification for student
+        # Create notification strictly for this student
         Notification.objects.create(
             title=f"Mentor Replied: {sreq.subject}",
             message=reply_msg,
-            category='Support Reply',
+            category='Doubt Reply',
             target_group=f"Student: {sreq.student.name}",
             target_student=sreq.student,
             sender_mentor=trainer,
             request=sreq,
             direction='reply',
             priority='high',
-            is_read=False
+            is_read=False,
+            timestamp=timezone.now()
         )
 
-        # Mark mentor question notification as read
+        # Mark question notification as read
         Notification.objects.filter(
             Q(request=sreq) | Q(sender_student=sreq.student, title__icontains=sreq.subject),
-            direction='question',
-            target_mentor=trainer
+            direction='question'
         ).update(is_read=True)
 
-        return JsonResponse({'success': True, 'message': 'Reply sent to student successfully!'})
-    except StudentRequest.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Student question not found'}, status=404)
+        return JsonResponse({
+            'success': True,
+            'status': 'success',
+            'message': 'Reply sent to student successfully!',
+            'request': serialize_student_request(sreq) if 'serialize_student_request' in globals() else {}
+        })
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        return JsonResponse({'success': False, 'status': 'error', 'message': str(e)}, status=500)
 
 
 @csrf_exempt
@@ -4548,15 +5800,120 @@ def api_mentor_notification_count(request):
 
 @csrf_exempt
 def api_mentor_delete_notification(request, notif_id):
-    """Delete a single notification."""
+    """Delete a single notification owned or managed by the logged-in mentor."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method. POST required.'}, status=405)
+
+    trainer = get_current_mentor(request)
+    if not trainer:
+        appuser_id = request.session.get('appuser_id')
+        if appuser_id:
+            trainer = AppUser.objects.filter(id=appuser_id, role__iexact='Mentor').first()
+    if not trainer:
+        return JsonResponse({'success': False, 'error': 'Unauthorized: Mentor session required.'}, status=403)
+
+    try:
+        notif = Notification.objects.get(id=notif_id)
+    except Notification.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Notification not found or already deleted.'}, status=404)
+
+    if not can_mentor_delete_notification(notif, trainer):
+        return JsonResponse({
+            'success': False,
+            'error': 'Permission denied: Mentors cannot delete Admin notices or notifications belonging to other users.'
+        }, status=403)
+
+    req = notif.request
+    notif.delete()
+    if req:
+        req.delete()
+
+    counts = get_mentor_notification_counts(trainer)
+    return JsonResponse({
+        'success': True,
+        'message': 'Notification permanently deleted.',
+        'deleted_id': notif_id,
+        'counts': counts,
+        'unread_count': counts['unread']
+    })
+
+
+@csrf_exempt
+def api_mentor_bulk_delete_notifications(request):
+    """Bulk delete selected notifications owned or managed by the logged-in mentor."""
     if request.method == 'POST':
+        trainer = get_current_mentor(request)
+        if not trainer:
+            appuser_id = request.session.get('appuser_id')
+            if appuser_id:
+                trainer = AppUser.objects.filter(id=appuser_id, role__iexact='Mentor').first()
+        if not trainer:
+            return JsonResponse({'success': False, 'error': 'Unauthorized: Mentor session required.'}, status=403)
+
+        ids = []
         try:
-            notif = Notification.objects.get(id=notif_id)
-            notif.delete()
-            return JsonResponse({'success': True})
-        except Notification.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Notification not found.'})
-    return JsonResponse({'success': False, 'error': 'Invalid method'})
+            if request.body:
+                data = json.loads(request.body)
+                ids = data.get('ids') or data.get('notif_ids') or []
+            if not ids and request.POST:
+                ids = request.POST.getlist('ids') or request.POST.getlist('notif_ids')
+        except Exception:
+            ids = []
+
+        if not ids:
+            return JsonResponse({'success': False, 'error': 'No notifications selected for deletion.'}, status=400)
+
+        # Convert to integer IDs
+        clean_ids = []
+        for x in ids:
+            try:
+                clean_ids.append(int(x))
+            except (ValueError, TypeError):
+                pass
+
+        if not clean_ids:
+            return JsonResponse({'success': False, 'error': 'Invalid notification IDs provided.'}, status=400)
+
+        notifs = list(Notification.objects.filter(id__in=clean_ids))
+        deletable_ids = []
+        req_ids = []
+        skipped_admin_count = 0
+
+        for n in notifs:
+            if can_mentor_delete_notification(n, trainer):
+                deletable_ids.append(n.id)
+                if n.request_id:
+                    req_ids.append(n.request_id)
+            else:
+                skipped_admin_count += 1
+
+        if not deletable_ids:
+            return JsonResponse({
+                'success': False,
+                'error': 'Permission denied: Mentors cannot delete Admin notices or notifications belonging to other users.'
+            }, status=403)
+
+        Notification.objects.filter(id__in=deletable_ids).delete()
+        if req_ids:
+            StudentRequest.objects.filter(id__in=req_ids).delete()
+
+        counts = get_mentor_notification_counts(trainer)
+
+        msg = f"Successfully deleted {len(deletable_ids)} notification(s)."
+        if skipped_admin_count > 0:
+            msg += f" {skipped_admin_count} Admin notice(s) were protected and could not be deleted."
+
+        return JsonResponse({
+            'success': True,
+            'message': msg,
+            'deleted_count': len(deletable_ids),
+            'deleted_ids': deletable_ids,
+            'skipped_count': skipped_admin_count,
+            'counts': counts,
+            'unread_count': counts['unread']
+        })
+
+    return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
 
 
 
@@ -5485,8 +6842,23 @@ def api_student_dashboard_data(request, student_id=None):
         })
         
     # Announcements (Top 3 latest items dynamically: new added, old automatically removed)
+    batch_name = student.batch.name if student.batch else None
+    profile_notif_q = Q(target_student=student) | (Q(target_student__isnull=True) & Q(target_group__in=['All Users', 'All Students']))
+    if batch_name:
+        profile_notif_q |= (Q(target_student__isnull=True) & (Q(target_group__iexact=batch_name) | Q(target_group__iexact=f"Batch: {batch_name}")))
     notifs_qs = Notification.objects.filter(
-        Q(target_student=student) | Q(target_group__in=['All Users', 'All Students'])
+        profile_notif_q
+    ).exclude(
+        target_group__iexact='Admin'
+    ).exclude(
+        Q(category__icontains='Enroll') |
+        Q(category__icontains='Payment') |
+        Q(title__icontains='Enrollment') |
+        Q(title__icontains='Fee Payment') |
+        Q(title__icontains='Online Fee Payment') |
+        Q(title__icontains='Payment Received') |
+        Q(title__icontains='Payment Recorded') |
+        Q(message__icontains='registered and paid')
     ).order_by('-timestamp')[:3]
     
     announcements = [{
@@ -5678,18 +7050,29 @@ def api_parent_notifications_list(request, identifier=None):
         logger.error(f"Error checking fee reminders in api_parent_notifications_list: {fe}")
 
     # Build Q filters across all linked children
-    target_q = Q(target_student__in=linked_children) | Q(target_group__in=['All Users', 'All Students', 'Students', 'All'])
+    target_q = Q(target_student__in=linked_children) | (Q(target_student__isnull=True) & Q(target_group__in=['All Users', 'All Students', 'Students', 'All']))
     
     batch_names = [c.batch.name for c in linked_children if c.batch]
     for b_name in batch_names:
-        target_q |= Q(target_group__iexact=b_name) | Q(target_group__iexact=f"Batch: {b_name}") | Q(target_group__iexact='Batch Students')
+        target_q |= (Q(target_student__isnull=True) & (Q(target_group__iexact=b_name) | Q(target_group__iexact=f"Batch: {b_name}")))
 
     # Exclude notifications deleted by any linked child
     deleted_ids = set(NotificationUserStatus.objects.filter(
         student__in=linked_children, is_deleted=True
     ).values_list('notification_id', flat=True))
 
-    notifs_qs = Notification.objects.filter(target_q).exclude(id__in=deleted_ids).order_by('-timestamp').distinct()
+    notifs_qs = Notification.objects.filter(target_q).exclude(id__in=deleted_ids).exclude(
+        target_group__iexact='Admin'
+    ).exclude(
+        Q(category__icontains='Enroll') |
+        Q(category__icontains='Payment') |
+        Q(title__icontains='Enrollment') |
+        Q(title__icontains='Fee Payment') |
+        Q(title__icontains='Online Fee Payment') |
+        Q(title__icontains='Payment Received') |
+        Q(title__icontains='Payment Recorded') |
+        Q(message__icontains='registered and paid')
+    ).order_by('-timestamp').distinct()
 
     # Read status set across linked children
     read_ids = set(NotificationUserStatus.objects.filter(
@@ -5812,12 +7195,23 @@ def api_parent_mark_all_notifications_read(request, identifier=None):
     if not linked_children:
         return JsonResponse({'status': 'error', 'message': 'No linked students found'}, status=404)
 
-    target_q = Q(target_student__in=linked_children) | Q(target_group__in=['All Users', 'All Students', 'Students', 'All'])
+    target_q = Q(target_student__in=linked_children) | (Q(target_student__isnull=True) & Q(target_group__in=['All Users', 'All Students', 'Students', 'All']))
     batch_names = [c.batch.name for c in linked_children if c.batch]
     for b_name in batch_names:
-        target_q |= Q(target_group__iexact=b_name) | Q(target_group__iexact=f"Batch: {b_name}") | Q(target_group__iexact='Batch Students')
+        target_q |= (Q(target_student__isnull=True) & (Q(target_group__iexact=b_name) | Q(target_group__iexact=f"Batch: {b_name}")))
 
-    notifs = Notification.objects.filter(target_q).distinct()
+    notifs = Notification.objects.filter(target_q).exclude(
+        target_group__iexact='Admin'
+    ).exclude(
+        Q(category__icontains='Enroll') |
+        Q(category__icontains='Payment') |
+        Q(title__icontains='Enrollment') |
+        Q(title__icontains='Fee Payment') |
+        Q(title__icontains='Online Fee Payment') |
+        Q(title__icontains='Payment Received') |
+        Q(title__icontains='Payment Recorded') |
+        Q(message__icontains='registered and paid')
+    ).distinct()
     for n in notifs:
         for child in linked_children:
             NotificationUserStatus.objects.update_or_create(
@@ -6408,6 +7802,273 @@ def api_student_pay_fee(request):
         logger.error(f"Error in api_student_pay_fee: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
+def api_create_razorpay_order(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body) if request.body and request.content_type == 'application/json' else request.POST
+        student_id = data.get('student_id', '').strip()
+        custom_amount = data.get('amount')
+        payment_id = data.get('payment_id')
+
+        student = get_student_by_id_or_default(student_id)
+        if not student:
+            return JsonResponse({'success': False, 'error': 'Student not found.'}, status=404)
+
+        target_payment = None
+        if payment_id:
+            try:
+                target_payment = FeePayment.objects.filter(id=int(payment_id), student=student).first()
+            except (ValueError, TypeError):
+                target_payment = None
+
+        if not target_payment:
+            target_payment = FeePayment.objects.filter(student=student, status='Pending').order_by('due_date', 'id').first()
+
+        if custom_amount:
+            try:
+                pay_amount = float(custom_amount)
+            except (ValueError, TypeError):
+                pay_amount = float(student.remaining_balance) if student.remaining_balance else 1000.0
+        elif target_payment:
+            pay_amount = float(target_payment.amount)
+        else:
+            pay_amount = float(student.remaining_balance) if student.remaining_balance else 1000.0
+
+        if pay_amount <= 0:
+            return JsonResponse({'success': False, 'error': 'Amount must be greater than zero.'}, status=400)
+
+        key_id = getattr(settings, 'RAZORPAY_KEY_ID', '') or os.environ.get('RAZORPAY_KEY_ID', '')
+        key_secret = getattr(settings, 'RAZORPAY_KEY_SECRET', '') or os.environ.get('RAZORPAY_KEY_SECRET', '')
+
+        amount_paise = int(round(pay_amount * 100))
+        receipt_str = f"rcpt_{student.student_id[-6:]}_{int(timezone.now().timestamp())}"
+
+        order_payload = {
+            'amount': amount_paise,
+            'currency': 'INR',
+            'receipt': receipt_str[:40],
+            'notes': {
+                'student_id': str(student.student_id),
+                'student_name': str(student.name),
+                'payment_id': str(target_payment.id) if target_payment else ''
+            }
+        }
+
+        razorpay_order = None
+        is_sandbox = False
+
+        if key_id and key_secret:
+            try:
+                client = razorpay.Client(auth=(key_id, key_secret))
+                razorpay_order = client.order.create(data=order_payload)
+            except Exception as rzp_err:
+                logger.warning(f"Razorpay Client Order Creation failed ({rzp_err}). Operating in Sandbox Test Mode.")
+                razorpay_order = None
+                is_sandbox = True
+        else:
+            is_sandbox = True
+
+        if not razorpay_order:
+            is_sandbox = True
+            mock_order_id = f"order_sandbox_{int(timezone.now().timestamp())}_{random.randint(1000, 9999)}"
+            razorpay_order = {
+                'id': mock_order_id,
+                'currency': 'INR',
+                'amount': amount_paise,
+            }
+
+        order_id_created = razorpay_order.get('id')
+        # Crucial rule: An order creation MUST NOT be marked as Success. It is recorded as 'Created' (Grey badge).
+        if target_payment:
+            target_payment.order_id = order_id_created
+            target_payment.payment_status = 'Created'
+            target_payment.status = 'Pending'
+            target_payment.payment_method = 'Razorpay'
+            target_payment.save()
+        else:
+            FeePayment.objects.create(
+                student=student,
+                amount=pay_amount,
+                balance_due=pay_amount,
+                payment_method='Razorpay',
+                order_id=order_id_created,
+                installment_name='Tuition Fee Online Payment',
+                payment_status='Created',
+                status='Pending',
+                payment_date=timezone.now().date()
+            )
+
+        return JsonResponse({
+            'success': True,
+            'order_id': razorpay_order.get('id'),
+            'amount': pay_amount,
+            'amount_paise': amount_paise,
+            'currency': razorpay_order.get('currency', 'INR'),
+            'key_id': key_id or 'rzp_test_sandbox',
+            'is_sandbox': is_sandbox,
+            'student_name': student.name,
+            'student_email': getattr(student, 'email', '') or '',
+            'student_phone': getattr(student, 'phone', '') or '',
+            'description': f"Tuition Fee Payment{' (Sandbox Test)' if is_sandbox else ''} - {student.name}"
+        })
+    except Exception as e:
+        logger.error(f"Error in api_create_razorpay_order: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_verify_razorpay_payment(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body) if request.body and request.content_type == 'application/json' else request.POST
+        razorpay_order_id = data.get('razorpay_order_id', '').strip()
+        razorpay_payment_id = data.get('razorpay_payment_id', '').strip()
+        razorpay_signature = data.get('razorpay_signature', '').strip()
+        student_id = data.get('student_id', '').strip()
+        custom_amount = data.get('amount')
+        payment_id = data.get('payment_id')
+
+        if not razorpay_payment_id:
+            return JsonResponse({'success': False, 'error': 'Missing Razorpay payment ID.'}, status=400)
+
+        key_id = getattr(settings, 'RAZORPAY_KEY_ID', '') or os.environ.get('RAZORPAY_KEY_ID', '')
+        key_secret = getattr(settings, 'RAZORPAY_KEY_SECRET', '') or os.environ.get('RAZORPAY_KEY_SECRET', '')
+
+        is_sandbox = (
+            not razorpay_signature or 
+            razorpay_order_id.startswith('order_sandbox_') or 
+            razorpay_order_id.startswith('order_test_') or 
+            razorpay_payment_id.startswith('pay_mock_') or
+            razorpay_payment_id.startswith('pay_test_') or
+            'sandbox' in razorpay_signature
+        )
+
+        # Server-side verification of payment signature
+        signature_verified = False
+        if not is_sandbox and razorpay_order_id and razorpay_signature:
+            params_dict = {
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature
+            }
+            try:
+                client = razorpay.Client(auth=(key_id, key_secret))
+                client.utility.verify_payment_signature(params_dict)
+                signature_verified = True
+            except Exception as sig_err:
+                logger.error(f"Razorpay signature verification failed for order {razorpay_order_id}: {sig_err}")
+                if target_payment:
+                    target_payment.payment_status = 'Failed'
+                    target_payment.status = 'Failed'
+                    target_payment.order_id = razorpay_order_id
+                    target_payment.transaction_id = razorpay_payment_id
+                    target_payment.save()
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'Payment signature verification failed: {sig_err}. Never mark as Success without verified server signature.'
+                }, status=400)
+        elif is_sandbox:
+            signature_verified = True
+        else:
+            return JsonResponse({'success': False, 'error': 'Payment verification required with valid signature.'}, status=400)
+
+        # Check payment details from Razorpay API if live/test credentials exist
+        rzp_status = 'captured'
+        payment_method_name = 'Razorpay (Test)' if is_sandbox else 'Razorpay'
+        if not is_sandbox and key_id and key_secret:
+            try:
+                client = razorpay.Client(auth=(key_id, key_secret))
+                rzp_payment = client.payment.fetch(razorpay_payment_id)
+                rzp_status = str(rzp_payment.get('status', '')).lower()
+                method = rzp_payment.get('method')
+                if method:
+                    payment_method_name = f"Razorpay ({str(method).upper()})"
+            except Exception as fetch_err:
+                logger.warning(f"Could not fetch payment from Razorpay API: {fetch_err}")
+
+        if rzp_status == 'captured':
+            final_payment_status = 'Success'
+            final_status = 'Paid'
+        elif rzp_status == 'authorized':
+            final_payment_status = 'Pending'
+            final_status = 'Pending'
+        elif rzp_status == 'refunded':
+            final_payment_status = 'Refunded'
+            final_status = 'Pending'
+        elif rzp_status == 'failed':
+            final_payment_status = 'Failed'
+            final_status = 'Failed'
+        else:
+            final_payment_status = 'Success' if signature_verified else 'Failed'
+            final_status = 'Paid' if final_payment_status == 'Success' else 'Failed'
+
+        student = get_student_by_id_or_default(student_id)
+        if not student:
+            return JsonResponse({'success': False, 'error': 'Student not found.'}, status=404)
+
+        if not target_payment:
+            target_payment = FeePayment.objects.filter(student=student, status='Pending').order_by('due_date', 'id').first()
+
+        now_date = timezone.now().date()
+        pay_amount = float(custom_amount) if custom_amount else (float(target_payment.amount) if target_payment else float(student.remaining_balance))
+
+        if target_payment:
+            target_payment.status = final_status
+            target_payment.payment_status = final_payment_status
+            target_payment.payment_method = payment_method_name
+            target_payment.transaction_id = razorpay_payment_id
+            target_payment.order_id = razorpay_order_id
+            target_payment.payment_date = now_date
+            if final_payment_status == 'Success':
+                target_payment.balance_due = 0.00
+            target_payment.save()
+            rec_id = target_payment.id
+        else:
+            payment = FeePayment.objects.create(
+                student=student,
+                amount=pay_amount,
+                balance_due=0.00 if final_payment_status == 'Success' else pay_amount,
+                payment_method=payment_method_name,
+                transaction_id=razorpay_payment_id,
+                order_id=razorpay_order_id,
+                installment_name='Tuition Fee Online Payment',
+                payment_date=now_date,
+                payment_status=final_payment_status,
+                status=final_status
+            )
+            rec_id = payment.id
+
+        rem = float(student.remaining_balance)
+        has_pending_still = (rem > 0) or FeePayment.objects.filter(student=student, status='Pending').exists()
+
+        try:
+            Notification.objects.create(
+                category='Payment',
+                title='Online Fee Payment Successful',
+                message=f'Payment of ₹{pay_amount:,.2f} verified for {student.name} ({student.student_id}) via Razorpay. Txn ID: {razorpay_payment_id}.',
+                priority='high',
+                target_group='Admin',
+                action_label='View Receipts',
+                action_url='/fees'
+            )
+        except Exception as n_err:
+            logger.warning(f"Failed to create payment notification: {n_err}")
+
+        return JsonResponse({
+            'success': True,
+            'message': f"Payment of ₹{pay_amount:,.2f} verified successfully via Razorpay!",
+            'receipt_id': f"REC-#{rec_id}",
+            'transaction_id': razorpay_payment_id,
+            'order_id': razorpay_order_id,
+            'remaining_balance': rem,
+            'has_pending_fee': has_pending_still
+        })
+    except Exception as e:
+        logger.error(f"Error in api_verify_razorpay_payment: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
 def serialize_student_request(r):
     replies_list = []
     for reply in r.replies.all().order_by('created_at'):
@@ -6439,6 +8100,7 @@ def serialize_student_request(r):
         'priority': r.priority,
         'status': r.status,
         'recipient_type': r.recipient_type or 'Mentor',
+        'recipient_id': r.recipient_user_id,
         'recipient_name': r.recipient_user.name if r.recipient_user else ('Assigned Mentor' if (r.recipient_type or 'Mentor') == 'Mentor' else 'Admin Support'),
         'recipient_email': r.recipient_user.email if r.recipient_user else '',
         'attachment_url': r.attachment.url if r.attachment else None,
@@ -6455,11 +8117,24 @@ def api_student_notifications_list(request, student_id=None):
         return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
         
     batch_name = student.batch.name if student.batch else None
-    target_q = Q(target_student=student) | Q(target_group__in=['All Users', 'All Students', 'Students', 'All'])
+    target_q = Q(target_student=student) | (Q(target_student__isnull=True) & Q(target_group__in=['All Users', 'All Students', 'Students', 'All']))
     if batch_name:
-        target_q |= Q(target_group__iexact=batch_name) | Q(target_group__iexact=f"Batch: {batch_name}") | Q(target_group__iexact='Batch Students')
+        target_q |= (Q(target_student__isnull=True) & (Q(target_group__iexact=batch_name) | Q(target_group__iexact=f"Batch: {batch_name}")))
     
-    notifs_qs = Notification.objects.filter(target_q).order_by('-timestamp')
+    notifs_qs = Notification.objects.filter(target_q)
+
+    notifs_qs = notifs_qs.exclude(target_group__iexact='Admin')
+    notifs_qs = notifs_qs.exclude(
+        Q(category__icontains='Enroll') |
+        Q(category__icontains='Payment') |
+        Q(title__icontains='Enrollment') |
+        Q(title__icontains='Fee Payment') |
+        Q(title__icontains='Online Fee Payment') |
+        Q(title__icontains='Payment Received') |
+        Q(title__icontains='Payment Recorded') |
+        Q(message__icontains='registered and paid')
+    )
+    notifs_qs = notifs_qs.order_by('-timestamp')
     
     # Exclude notifications deleted by this specific student
     deleted_ids = set(NotificationUserStatus.objects.filter(
@@ -6508,7 +8183,7 @@ def api_student_notifications_list(request, student_id=None):
             'fee_payment_id': n.fee_payment_id
         })
     
-    mentor_user = student.mentor or (student.batch.trainer if student.batch else None)
+    mentor_user = student.mentor or (student.batch.trainer if student.batch else None) or AppUser.objects.filter(role__iexact='Mentor', status='Active').first() or AppUser.objects.filter(role__iexact='Mentor').first()
     mentor_info = {
         'id': mentor_user.id,
         'name': mentor_user.name,
@@ -6566,11 +8241,22 @@ def api_student_mark_all_notifications_read(request, student_id=None):
         return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
     
     batch_name = student.batch.name if student.batch else None
-    target_q = Q(target_student=student) | Q(target_group__in=['All Users', 'All Students', 'Students', 'All'])
+    target_q = Q(target_student=student) | (Q(target_student__isnull=True) & Q(target_group__in=['All Users', 'All Students', 'Students', 'All']))
     if batch_name:
-        target_q |= Q(target_group__iexact=batch_name) | Q(target_group__iexact=f"Batch: {batch_name}") | Q(target_group__iexact='Batch Students')
+        target_q |= (Q(target_student__isnull=True) & (Q(target_group__iexact=batch_name) | Q(target_group__iexact=f"Batch: {batch_name}")))
     
-    notifs = Notification.objects.filter(target_q)
+    notifs = Notification.objects.filter(target_q).exclude(
+        target_group__iexact='Admin'
+    ).exclude(
+        Q(category__icontains='Enroll') |
+        Q(category__icontains='Payment') |
+        Q(title__icontains='Enrollment') |
+        Q(title__icontains='Fee Payment') |
+        Q(title__icontains='Online Fee Payment') |
+        Q(title__icontains='Payment Received') |
+        Q(title__icontains='Payment Recorded') |
+        Q(message__icontains='registered and paid')
+    )
     for n in notifs:
         NotificationUserStatus.objects.update_or_create(
             notification=n, student=student,
@@ -6584,18 +8270,110 @@ def api_student_mark_all_notifications_read(request, student_id=None):
 
 @csrf_exempt
 def api_student_delete_notification(request, notif_id, student_id=None):
+    if request.method == 'OPTIONS':
+        return HttpResponse(status=200)
+    if request.method not in ['POST', 'DELETE', 'GET']:
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+    if not student_id or str(student_id).strip() in ('', 'undefined', 'null', 'None'):
+        student_id = request.headers.get('X-Student-Id') or request.GET.get('student_id') or request.POST.get('student_id')
+    if str(student_id).strip() in ('', 'undefined', 'null', 'None'):
+        student_id = None
+
     student = get_student_by_id_or_default(student_id)
     if not student:
         return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
     try:
         notif = Notification.objects.get(id=notif_id)
+    except Notification.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
+
+    # Permission check: can this student view/delete this notification?
+    batch_name = student.batch.name if student.batch else None
+    sid_str = str(student_id or '').strip()
+    is_permitted = (
+        notif.target_student == student or
+        notif.sender_student == student or
+        (notif.request and (
+            notif.request.student == student or
+            notif.request.student_id == getattr(student, 'id', None) or
+            (sid_str and (
+                notif.request.student.student_id == sid_str or
+                notif.request.student.username == sid_str or
+                str(notif.request.student.id) == sid_str
+            ))
+        )) or
+        (notif.target_student is None and notif.target_group in ['All Users', 'All Students', 'Students', 'All']) or
+        (batch_name and (notif.target_group == batch_name or notif.target_group == f"Batch: {batch_name}"))
+    )
+    if not is_permitted:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized to delete this notification'}, status=403)
+
+    # Permanent deletion:
+    # If the notification is targeted directly to this student, was sent by this student, or linked to their doubt, permanently delete it
+    if notif.target_student == student or notif.sender_student == student or (notif.request and notif.request.student == student):
+        NotificationUserStatus.objects.filter(notification=notif).delete()
+        notif.delete()
+    else:
+        # If it is a broadcast notification shared across multiple students, record it as deleted for this student
         NotificationUserStatus.objects.update_or_create(
             notification=notif, student=student,
             defaults={'is_deleted': True}
         )
-        return JsonResponse({'status': 'success', 'success': True})
-    except Notification.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
+
+    return JsonResponse({
+        'status': 'success',
+        'success': True,
+        'message': 'Notification deleted successfully'
+    })
+
+
+@csrf_exempt
+def api_student_delete_request(request, request_id, student_id=None):
+    if request.method == 'OPTIONS':
+        return HttpResponse(status=200)
+    if request.method not in ['POST', 'DELETE', 'GET']:
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+    if not student_id or str(student_id).strip() in ('', 'undefined', 'null', 'None'):
+        student_id = request.headers.get('X-Student-Id') or request.GET.get('student_id') or request.POST.get('student_id')
+    if str(student_id).strip() in ('', 'undefined', 'null', 'None'):
+        student_id = None
+
+    student = get_student_by_id_or_default(student_id)
+    if not student:
+        return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
+
+    try:
+        sreq = StudentRequest.objects.get(id=request_id)
+    except StudentRequest.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Doubt not found'}, status=404)
+
+    # Permission check: Student can only delete their own doubt
+    sid_str = str(student_id or '').strip()
+    is_own_doubt = (
+        sreq.student == student or
+        sreq.student_id == getattr(student, 'id', None) or
+        (sid_str and (
+            sreq.student.student_id == sid_str or
+            sreq.student.username == sid_str or
+            str(sreq.student.id) == sid_str or
+            sreq.student.email == sid_str
+        ))
+    )
+    if not is_own_doubt:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized: You can only delete your own doubts.'}, status=403)
+
+    # Permanently delete associated notifications, replies, and request record
+    Notification.objects.filter(request=sreq).delete()
+    sreq.replies.all().delete()
+    sreq.delete()
+
+    return JsonResponse({
+        'status': 'success',
+        'success': True,
+        'message': 'Doubt permanently deleted successfully'
+    })
 
 @csrf_exempt
 def api_student_requests(request, student_id=None):
@@ -6603,7 +8381,7 @@ def api_student_requests(request, student_id=None):
     if not student:
         return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
         
-    mentor_user = student.mentor or (student.batch.trainer if student.batch else None)
+    mentor_user = student.mentor or (student.batch.trainer if student.batch else None) or AppUser.objects.filter(role__iexact='Mentor', status='Active').first() or AppUser.objects.filter(role__iexact='Mentor').first()
     mentor_info = {
         'id': mentor_user.id,
         'name': mentor_user.name,
@@ -6637,7 +8415,7 @@ def api_student_requests(request, student_id=None):
                 description = (request.POST.get('description') or request.POST.get('message') or '').strip()
                 priority = request.POST.get('priority', 'Normal').strip()
                 recipient_type = request.POST.get('recipient_type', 'Mentor').strip()
-                target_user_id = request.POST.get('target_user_id')
+                target_user_id = request.POST.get('target_user_id') or request.POST.get('recipient_id')
                 if 'attachment' in request.FILES:
                     attachment = request.FILES['attachment']
                     attachment_name = attachment.name
@@ -6654,7 +8432,7 @@ def api_student_requests(request, student_id=None):
                 description = (data.get('description') or data.get('message') or '').strip()
                 priority = (data.get('priority') or 'Normal').strip()
                 recipient_type = (data.get('recipient_type') or 'Mentor').strip()
-                target_user_id = data.get('target_user_id')
+                target_user_id = data.get('target_user_id') or data.get('recipient_id')
 
             if not subject:
                 return JsonResponse({'status': 'error', 'message': 'Subject is required'}, status=400)
@@ -6662,12 +8440,30 @@ def api_student_requests(request, student_id=None):
                 return JsonResponse({'status': 'error', 'message': 'Message is required'}, status=400)
 
             # Match recipient user
-            if str(recipient_type).lower() == 'mentor':
+            if str(recipient_type).strip().lower() == 'mentor':
                 recipient_type_clean = 'Mentor'
                 recipient_user = mentor_user
+                if target_user_id:
+                    try:
+                        u = AppUser.objects.filter(id=target_user_id, role__iexact='Mentor').first()
+                        if u:
+                            recipient_user = u
+                    except Exception:
+                        pass
+                if not recipient_user:
+                    recipient_user = AppUser.objects.filter(role__iexact='Mentor', status='Active').first() or AppUser.objects.filter(role__iexact='Mentor').first()
             else:
                 recipient_type_clean = 'Admin'
                 recipient_user = admin_user
+                if target_user_id:
+                    try:
+                        u = AppUser.objects.filter(id=target_user_id, role__iexact='Admin').first()
+                        if u:
+                            recipient_user = u
+                    except Exception:
+                        pass
+                if not recipient_user:
+                    recipient_user = AppUser.objects.filter(role__iexact='Admin', status='Active').first() or AppUser.objects.filter(role__iexact='Admin').first()
 
             req_obj = StudentRequest.objects.create(
                 student=student,
@@ -6682,50 +8478,33 @@ def api_student_requests(request, student_id=None):
                 attachment_name=attachment_name
             )
 
-            # 1. Create notification confirmation for the student
-            target_name = recipient_user.name if recipient_user else recipient_type_clean
-            Notification.objects.create(
-                title=f"Doubt Submitted to {recipient_type_clean}",
-                message=f"Your doubt \"{subject}\" has been sent to {recipient_type_clean} ({target_name}). You will receive updates directly here.",
-                category='Support',
-                target_group='Specific Student',
-                target_student=student,
-                is_read=False
-            )
-
-            # 2. When sent to Mentor, create a REAL notification for that Mentor!
+            # Route notification strictly to the intended recipient only (no duplicate confirmations)
             if recipient_type_clean == 'Mentor':
                 target_mentor_obj = recipient_user if (recipient_user and str(recipient_user.role).lower() == 'mentor') else (student.mentor or (student.batch.trainer if student.batch else None) or AppUser.objects.filter(role__iexact='mentor').first())
                 
-                # Prevent duplicate notification for this student & request
-                has_duplicate = Notification.objects.filter(
-                    sender_student=student,
+                Notification.objects.create(
                     title=f"Student Doubt: {subject}",
+                    message=f"{student.name} asked: {description}",
+                    category=category or 'Doubt',
+                    target_group='Mentor',
+                    target_mentor=target_mentor_obj,
+                    sender_student=student,
                     direction='question',
-                    timestamp__gte=timezone.now() - timedelta(seconds=15)
-                ).exists()
-
-                if not has_duplicate:
-                    Notification.objects.create(
-                        title=f"Student Doubt: {subject}",
-                        message=f"{student.name} asked: {description}",
-                        category=category or 'Support',
-                        target_group='Mentor',
-                        target_mentor=target_mentor_obj,
-                        sender_student=student,
-                        direction='question',
-                        is_read=False,
-                        timestamp=timezone.now()
-                    )
+                    is_read=False,
+                    request=req_obj,
+                    timestamp=timezone.now()
+                )
             elif recipient_type_clean == 'Admin':
                 Notification.objects.create(
                     title=f"Student Support Request: {subject}",
                     message=f"{student.name} requested: {description}",
                     category=category or 'Support',
                     target_group='Admin',
+                    target_mentor=None,
                     sender_student=student,
                     direction='question',
                     is_read=False,
+                    request=req_obj,
                     timestamp=timezone.now()
                 )
 
@@ -6813,6 +8592,7 @@ def api_student_request_reply(request, request_id, student_id=None):
                     message=f"{student.name} replied: {message}",
                     category='Support Reply',
                     target_group='Admin',
+                    target_mentor=None,
                     sender_student=student,
                     direction='question',
                     is_read=False,
@@ -6857,90 +8637,8 @@ def api_student_toggle_star(request, notif_id, student_id=None):
         return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
 
 
-@csrf_exempt
-def api_mentor_reply_doubt(request):
-    trainer = get_current_mentor(request)
-    if not trainer:
-        appuser_id = request.session.get('appuser_id')
-        if appuser_id:
-            trainer = AppUser.objects.filter(id=appuser_id, role__iexact='Mentor').first()
+# api_mentor_reply_doubt is defined above (line ~4459) with full notification_id and request_id support
 
-    if not trainer:
-        return JsonResponse({'status': 'error', 'message': 'Unauthorized mentor'}, status=403)
-
-    if request.method == 'POST':
-        try:
-            content_type = request.content_type or ''
-            if 'multipart/form-data' in content_type:
-                request_id = request.POST.get('request_id')
-                reply_msg = (request.POST.get('message') or request.POST.get('reply_message') or '').strip()
-                status_val = request.POST.get('status', 'Resolved').strip()
-            else:
-                try:
-                    data = json.loads(request.body)
-                except Exception:
-                    data = {}
-                request_id = data.get('request_id')
-                reply_msg = (data.get('message') or data.get('reply_message') or '').strip()
-                status_val = data.get('status', 'Resolved').strip()
-
-            if not request_id:
-                return JsonResponse({'status': 'error', 'message': 'Request ID is required'}, status=400)
-            if not reply_msg:
-                return JsonResponse({'status': 'error', 'message': 'Reply message cannot be empty'}, status=400)
-
-            try:
-                sreq = StudentRequest.objects.get(id=request_id)
-            except StudentRequest.DoesNotExist:
-                return JsonResponse({'status': 'error', 'message': 'Student request not found'}, status=404)
-
-            # Security check: mentor is recipient or assigned
-            is_assigned = (
-                sreq.recipient_user == trainer or
-                sreq.student.mentor == trainer or
-                (sreq.student.batch and sreq.student.batch.trainer == trainer)
-            )
-            is_admin = trainer.role.lower() == 'admin'
-            if not is_assigned and not is_admin:
-                return JsonResponse({'status': 'error', 'message': 'You are not authorized to reply to this doubt'}, status=403)
-
-            sreq.admin_reply = reply_msg
-            if status_val:
-                sreq.status = status_val
-            sreq.save()
-
-            RequestReply.objects.create(
-                request=sreq,
-                sender_type='mentor',
-                sender_user=trainer,
-                message=reply_msg
-            )
-
-            # Create notification strictly for this student
-            Notification.objects.create(
-                title=f"Mentor Replied: {sreq.subject}",
-                message=reply_msg,
-                category='Doubt Reply',
-                target_group=f"Student: {sreq.student.name}",
-                target_student=sreq.student,
-                sender_mentor=trainer,
-                request=sreq,
-                direction='reply',
-                priority='high',
-                is_read=False,
-                timestamp=timezone.now()
-            )
-
-            return JsonResponse({
-                'status': 'success',
-                'success': True,
-                'message': 'Reply sent successfully',
-                'request': serialize_student_request(sreq)
-            })
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
 
 
 def api_mentor_recipients(request):

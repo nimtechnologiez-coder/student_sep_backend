@@ -110,6 +110,72 @@
       font-size: 0.8125rem;
       margin-bottom: 14px;
     }
+
+    /* Razorpay Payment Status Badges */
+    .badge-payment-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      text-transform: capitalize;
+    }
+    .badge-payment-status::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    /* Success: Green badge when payment is successfully verified by the backend */
+    .badge-payment-success {
+      background-color: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+    }
+    .badge-payment-success::before {
+      background-color: #10b981;
+    }
+    /* Failed: Red badge when the payment fails */
+    .badge-payment-failed {
+      background-color: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+    .badge-payment-failed::before {
+      background-color: #ef4444;
+    }
+    /* Pending: Orange badge when payment is initiated but not yet completed */
+    .badge-payment-pending {
+      background-color: #fffbeb;
+      color: #d97706;
+      border: 1px solid #fde68a;
+    }
+    .badge-payment-pending::before {
+      background-color: #f59e0b;
+    }
+    /* Created: Grey badge when the Razorpay order is created but payment has not started */
+    .badge-payment-created {
+      background-color: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    .badge-payment-created::before {
+      background-color: #94a3b8;
+    }
+    /* Refunded: Purple badge when the payment has been refunded */
+    .badge-payment-refunded {
+      background-color: #faf5ff;
+      color: #7e22ce;
+      border: 1px solid #e9d5ff;
+    }
+    .badge-payment-refunded::before {
+      background-color: #a855f7;
+    }
   </style>
 </head>
 <body>
@@ -255,8 +321,12 @@
             </div>
             <select class="filter-select" id="statusFeeSelect">
               <option value="" {% if current_status == '' %}selected{% endif %}>Status: All</option>
-              <option value="Paid" {% if current_status == 'Paid' %}selected{% endif %}>Paid in Full Accounts</option>
+              <option value="Paid" {% if current_status == 'Paid' %}selected{% endif %}>Paid Accounts</option>
               <option value="Pending" {% if current_status == 'Pending' %}selected{% endif %}>Pending Dues</option>
+              <option value="Success" {% if current_status == 'Success' %}selected{% endif %}>Payment: Success</option>
+              <option value="Failed" {% if current_status == 'Failed' %}selected{% endif %}>Payment: Failed</option>
+              <option value="Created" {% if current_status == 'Created' %}selected{% endif %}>Payment: Created</option>
+              <option value="Refunded" {% if current_status == 'Refunded' %}selected{% endif %}>Payment: Refunded</option>
             </select>
             <button class="btn-filter-reset" onclick="resetFilters()">Reset</button>
           </div>
@@ -389,16 +459,17 @@
                 <th>Amount</th>
                 <th>Balance Due</th>
                 <th>Method</th>
-                <th>Transaction ID</th>
+                <th>Transaction & Order ID</th>
                 <th>Payment Date</th>
                 <th>Due Date</th>
-                <th>Status</th>
+                <th>Payment Status</th>
+                <th>Installment Status</th>
                 <th style="text-align: right; width: 100px;">Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for payment in payments %}
-              <tr data-status="{{ payment.status }}" id="payment-row-{{ payment.id }}">
+              <tr data-status="{{ payment.status }}" data-payment-status="{{ payment.clean_payment_status }}" id="payment-row-{{ payment.id }}">
                 <td>
                   <span class="badge-rec-id">REC-#{{ payment.id }}</span>
                   <div>
@@ -424,16 +495,34 @@
                   <span style="font-weight: 700; color: #d97706;">₹{{ payment.balance_due|default:"0.00" }}</span>
                 </td>
                 <td>
-                  <span style="color: var(--admin-text-muted);">{{ payment.payment_method|default:"-" }}</span>
+                  <span style="color: var(--admin-text-main); font-weight: 600;">{{ payment.payment_method|default:"-" }}</span>
                 </td>
                 <td>
                   <span class="font-mono-code" style="font-size: 0.75rem;">{{ payment.transaction_id|default:"-" }}</span>
+                  {% if payment.order_id %}
+                  <div class="font-mono-code" style="font-size: 0.68rem; color: #64748b; margin-top: 2px;" title="Razorpay Order ID">{{ payment.order_id }}</div>
+                  {% endif %}
                 </td>
                 <td>
                   <div style="font-size: 0.875rem; color: var(--admin-text-muted);">{{ payment.payment_date|date:"d M Y" }}</div>
                 </td>
                 <td>
                   <div style="font-size: 0.875rem; color: #d97706;">{{ payment.due_date|date:"d M Y"|default:"-" }}</div>
+                </td>
+                <td>
+                  {% if payment.clean_payment_status == 'Success' %}
+                  <span class="badge-payment-status badge-payment-success">Success</span>
+                  {% elif payment.clean_payment_status == 'Failed' %}
+                  <span class="badge-payment-status badge-payment-failed">Failed</span>
+                  {% elif payment.clean_payment_status == 'Pending' %}
+                  <span class="badge-payment-status badge-payment-pending">Pending</span>
+                  {% elif payment.clean_payment_status == 'Created' %}
+                  <span class="badge-payment-status badge-payment-created">Created</span>
+                  {% elif payment.clean_payment_status == 'Refunded' %}
+                  <span class="badge-payment-status badge-payment-refunded">Refunded</span>
+                  {% else %}
+                  <span class="badge-payment-status badge-payment-pending">{{ payment.clean_payment_status }}</span>
+                  {% endif %}
                 </td>
                 <td>
                   {% if payment.status == 'Paid' %}
@@ -445,7 +534,7 @@
                   {% endif %}
                 </td>
                 <td style="text-align: right;">
-                  <button class="btn-row-action" title="Edit this transaction" data-id="{{ payment.id }}" data-name="{{ payment.student.name }}" data-regid="{{ payment.student.student_id }}" data-amount="{{ payment.amount }}" data-method="{{ payment.payment_method }}" data-txnid="{{ payment.transaction_id|default:'' }}" data-milestone="{{ payment.installment_name|default:'1st Installment' }}" data-pdate="{{ payment.payment_date|date:'Y-m-d' }}" data-ddate="{{ payment.due_date|date:'Y-m-d'|default:'' }}" data-status="{{ payment.status }}" onclick="openEditPaymentFromBtn(this)">
+                  <button class="btn-row-action" title="Edit this transaction" data-id="{{ payment.id }}" data-name="{{ payment.student.name }}" data-regid="{{ payment.student.student_id }}" data-amount="{{ payment.amount }}" data-method="{{ payment.payment_method }}" data-txnid="{{ payment.transaction_id|default:'' }}" data-orderid="{{ payment.order_id|default:'' }}" data-milestone="{{ payment.installment_name|default:'1st Installment' }}" data-pdate="{{ payment.payment_date|date:'Y-m-d' }}" data-ddate="{{ payment.due_date|date:'Y-m-d'|default:'' }}" data-status="{{ payment.status }}" data-pstatus="{{ payment.clean_payment_status }}" onclick="openEditPaymentFromBtn(this)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button class="btn-row-action btn-delete" title="Delete this transaction only" data-id="{{ payment.id }}" data-name="{{ payment.student.name }}" data-milestone="{{ payment.installment_name|default:'Installment' }}" onclick="deletePaymentFromBtn(this)">
@@ -455,7 +544,7 @@
               </tr>
               {% empty %}
               <tr>
-                <td colspan="11" style="text-align: center; padding: 24px; color: #94a3b8;">No fee payments found matching criteria.</td>
+                <td colspan="12" style="text-align: center; padding: 24px; color: #94a3b8;">No fee payments found matching criteria.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -555,11 +644,29 @@
           </div>
 
           <div class="form-group-field">
-            <label class="form-label-title">Payment Status *</label>
+            <label class="form-label-title">Installment Status *</label>
             <select class="form-select-box" id="modalPaymentStatus" required>
               <option value="Paid">Paid (Verified Receipt)</option>
               <option value="Pending">Pending (Scheduled Due)</option>
             </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Razorpay Payment Status *</label>
+            <select class="form-select-box" id="modalRazorpayPaymentStatus" required>
+              <option value="Success">Success (Backend Verified)</option>
+              <option value="Pending">Pending (Payment in progress)</option>
+              <option value="Created">Created (Order Created)</option>
+              <option value="Failed">Failed (Payment Failed)</option>
+              <option value="Refunded">Refunded (Amount Refunded)</option>
+            </select>
+          </div>
+
+          <div class="form-group-field">
+            <label class="form-label-title">Razorpay Order ID (optional)</label>
+            <input type="text" class="form-input-text" id="modalOrderId" placeholder="e.g. order_O8x9dK20...">
           </div>
         </div>
 
@@ -646,12 +753,29 @@
             <input type="number" step="0.01" class="form-input-text" id="editAmount" required>
           </div>
           <div class="form-group-field">
-            <label class="form-label-title">Status *</label>
+            <label class="form-label-title">Installment Status *</label>
             <select class="form-select-box" id="editStatus" required>
               <option value="Paid">Paid</option>
               <option value="Pending">Pending</option>
               <option value="Failed">Failed</option>
             </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-group-field">
+            <label class="form-label-title">Razorpay Payment Status *</label>
+            <select class="form-select-box" id="editPaymentStatus" required>
+              <option value="Success">Success (Backend Verified)</option>
+              <option value="Pending">Pending (Payment in progress)</option>
+              <option value="Created">Created (Order Created)</option>
+              <option value="Failed">Failed (Payment Failed)</option>
+              <option value="Refunded">Refunded (Amount Refunded)</option>
+            </select>
+          </div>
+          <div class="form-group-field">
+            <label class="form-label-title">Razorpay Order ID</label>
+            <input type="text" class="form-input-text" id="editOrderId" placeholder="e.g. order_9934...">
           </div>
         </div>
 
@@ -778,9 +902,11 @@
       installment_name: document.getElementById('modalInstallmentName').value,
       payment_method: document.getElementById('modalPaymentMode').value,
       transaction_id: document.getElementById('modalTransactionId').value.trim(),
+      order_id: document.getElementById('modalOrderId') ? document.getElementById('modalOrderId').value.trim() : '',
       payment_date: document.getElementById('modalPaymentDate').value,
       due_date: document.getElementById('modalDueDate').value,
-      status: document.getElementById('modalPaymentStatus').value
+      status: document.getElementById('modalPaymentStatus').value,
+      payment_status: document.getElementById('modalRazorpayPaymentStatus').value
     };
 
     try {
@@ -812,10 +938,12 @@
     const amount = btn.getAttribute('data-amount');
     const method = btn.getAttribute('data-method');
     const txnId = btn.getAttribute('data-txnid');
+    const orderId = btn.getAttribute('data-orderid') || '';
     const installment = btn.getAttribute('data-milestone');
     const pDate = btn.getAttribute('data-pdate');
     const dDate = btn.getAttribute('data-ddate');
     const status = btn.getAttribute('data-status');
+    const pStatus = btn.getAttribute('data-pstatus') || 'Success';
 
     document.getElementById('editPaymentId').value = id;
     document.getElementById('editModalTitle').textContent = 'Edit Payment (REC-#' + id + ')';
@@ -823,10 +951,16 @@
     document.getElementById('editAmount').value = amount;
     document.getElementById('editPaymentMethod').value = method;
     document.getElementById('editTransactionId').value = txnId;
+    if (document.getElementById('editOrderId')) {
+      document.getElementById('editOrderId').value = orderId;
+    }
     document.getElementById('editInstallmentName').value = installment;
     document.getElementById('editPaymentDate').value = pDate;
     document.getElementById('editDueDate').value = dDate;
     document.getElementById('editStatus').value = status;
+    if (document.getElementById('editPaymentStatus')) {
+      document.getElementById('editPaymentStatus').value = pStatus;
+    }
     document.getElementById('editPaymentErrorAlert').style.display = 'none';
     document.getElementById('editPaymentModal').classList.add('active');
   }
@@ -844,9 +978,11 @@
       installment_name: document.getElementById('editInstallmentName').value.trim(),
       payment_method: document.getElementById('editPaymentMethod').value.trim(),
       transaction_id: document.getElementById('editTransactionId').value.trim(),
+      order_id: document.getElementById('editOrderId') ? document.getElementById('editOrderId').value.trim() : '',
       payment_date: document.getElementById('editPaymentDate').value,
       due_date: document.getElementById('editDueDate').value,
-      status: document.getElementById('editStatus').value
+      status: document.getElementById('editStatus').value,
+      payment_status: document.getElementById('editPaymentStatus') ? document.getElementById('editPaymentStatus').value : 'Success'
     };
 
     try {

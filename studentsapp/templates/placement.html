@@ -175,34 +175,36 @@
       </div>
 
       <!-- Filter Bar -->
-      <div class="filter-card-bar">
-        <div class="filter-search-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" id="placementTableFilter" placeholder="Filter by student, verified skill, or drive stage...">
-        </div>
+      <div class="filter-controls-card">
+        <div class="filter-controls-row">
+          <div class="filter-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" class="filter-search-input" id="placementTableFilter" placeholder="Filter by student, verified skill, or drive stage...">
+          </div>
 
-        <div class="filter-dropdown-group">
-          <select class="filter-dropdown" id="placementCohortSelect">
-            <option value="">All Cohorts (AI-09 &amp; AI-10)</option>
-            <option value="Batch AI-09">Batch AI-09</option>
-            <option value="Batch AI-10">Batch AI-10</option>
-          </select>
+          <div class="filter-dropdowns-group">
+            <select class="filter-select" id="placementCohortSelect">
+              <option value="">All Cohorts (AI-09 &amp; AI-10)</option>
+              <option value="Batch AI-09">Batch AI-09</option>
+              <option value="Batch AI-10">Batch AI-10</option>
+            </select>
 
-          <select class="filter-dropdown" id="placementStageSelect">
-            <option value="">All Placement Stages</option>
-            <option value="Offer Accepted">Offer Accepted</option>
-            <option value="In Interview Drive">In Interview Drive</option>
-            <option value="Placement Ready">Placement Ready</option>
-            <option value="Polish Needed">Polish Needed</option>
-          </select>
+            <select class="filter-select" id="placementStageSelect">
+              <option value="">All Placement Stages</option>
+              <option value="Offer Accepted">Offer Accepted</option>
+              <option value="In Interview Drive">In Interview Drive</option>
+              <option value="Placement Ready">Placement Ready</option>
+              <option value="Polish Needed">Polish Needed</option>
+            </select>
 
-          <select class="filter-dropdown" id="placementInterviewSelect">
-            <option value="">Mock Interview Status</option>
-            <option value="Cleared">Cleared (&gt;8.5/10)</option>
-            <option value="Pending">Pending Review</option>
-          </select>
+            <select class="filter-select" id="placementInterviewSelect">
+              <option value="">Mock Interview Status</option>
+              <option value="Cleared">Cleared (&gt;8.5/10)</option>
+              <option value="Pending">Pending Review</option>
+            </select>
 
-          <button class="filter-reset-link" onclick="document.getElementById('placementTableFilter').value=''; document.getElementById('placementCohortSelect').value=''; document.getElementById('placementStageSelect').value=''; filterPlacementTable();">Reset</button>
+            <button class="btn-filter-reset" onclick="document.getElementById('placementTableFilter').value=''; document.getElementById('placementCohortSelect').value=''; document.getElementById('placementStageSelect').value=''; filterPlacementTable();">Reset</button>
+          </div>
         </div>
       </div>
 
@@ -258,7 +260,7 @@
                       </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" style="text-align: center; padding: 20px; color: #94a3b8;">No placement offers found.</td></tr>
+                    <tr><td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">No placement offers found.</td></tr>
                     {% endfor %}
                   </tbody>
           </table>

@@ -3,11 +3,326 @@
      NIM ACADEMY - EXACT MATCH SIDEBAR
      Matches Screenshot: Dark Navy (#0f172a), White Text, Blue Active Pill
      ========================================================================= -->
-<style>
-  .erp-sidebar .brand-logo-icon svg { width: 32px !important; height: 32px !important; max-width: 32px !important; max-height: 32px !important; display: block !important; }
-  .erp-sidebar .nav-icon svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: block !important; }
-  .erp-sidebar .nav-arrow svg { width: 14px !important; height: 14px !important; max-width: 14px !important; max-height: 14px !important; display: block !important; }
-  .erp-sidebar svg { flex-shrink: 0; max-width: 100%; }
+<style id="erpSidebarDirectStyles">
+  :root {
+    --sidebar-bg: #0f172a;
+    --sidebar-width: 250px;
+    --sidebar-text: #94a3b8;
+    --sidebar-text-hover: #ffffff;
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+    --sidebar-active-bg: #2563eb;
+    --sidebar-active-text: #ffffff;
+    --sidebar-border: rgba(255, 255, 255, 0.07);
+  }
+
+  /* Fixed Root Sidebar Container */
+  .erp-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 1000 !important;
+    width: var(--sidebar-width) !important;
+    min-width: var(--sidebar-width) !important;
+    max-width: var(--sidebar-width) !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    background-color: var(--sidebar-bg) !important;
+    color: #ffffff !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+    border-right: 1px solid var(--sidebar-border) !important;
+    box-sizing: border-box !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  }
+
+  /* Header & Brand Logo */
+  .erp-sidebar .sidebar-header {
+    padding: 16px 14px 14px 14px !important;
+    flex-shrink: 0 !important;
+    border-bottom: 1px solid var(--sidebar-border) !important;
+    box-sizing: border-box !important;
+  }
+
+  .erp-sidebar .brand-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    text-decoration: none !important;
+    padding: 4px 10px !important;
+    border-radius: 8px !important;
+    transition: background 0.15s ease !important;
+  }
+
+  .erp-sidebar .brand-wrapper:hover {
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+
+  .erp-sidebar .brand-logo-icon {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #ffffff !important;
+    flex-shrink: 0 !important;
+  }
+
+  .erp-sidebar .brand-logo-icon svg {
+    width: 28px !important;
+    height: 28px !important;
+    display: block !important;
+    stroke-width: 2 !important;
+  }
+
+  .erp-sidebar .brand-text {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+  }
+
+  .erp-sidebar .brand-title {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  .erp-sidebar .brand-subline {
+    font-size: 0.67rem !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.02em !important;
+    margin-top: 2px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+  }
+
+  /* Navigation Scroll Area with min-height: 0 to prevent footer clipping on 765px screens */
+  .erp-sidebar .sidebar-menu-scroll {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .erp-sidebar .sidebar-menu-scroll::-webkit-scrollbar {
+    width: 4px !important;
+  }
+
+  .erp-sidebar .sidebar-menu-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-radius: 4px !important;
+  }
+
+  .erp-sidebar .sidebar-nav-list {
+    list-style: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .erp-sidebar .nav-item {
+    position: relative !important;
+    width: 100% !important;
+  }
+
+  .erp-sidebar .nav-link {
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    color: var(--sidebar-text) !important;
+    font-size: 0.835rem !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease !important;
+    user-select: none !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .erp-sidebar .nav-icon {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-right: 12px !important;
+    color: inherit !important;
+    flex-shrink: 0 !important;
+  }
+
+  .erp-sidebar .nav-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+    display: block !important;
+    stroke-width: 2 !important;
+  }
+
+  .erp-sidebar .nav-label {
+    flex: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+  }
+
+  .erp-sidebar .nav-arrow {
+    display: none !important;
+  }
+
+  .erp-sidebar .nav-link:hover {
+    background-color: var(--sidebar-hover-bg) !important;
+    color: var(--sidebar-text-hover) !important;
+  }
+
+  /* Active State (Pill) */
+  .erp-sidebar .nav-item.active .nav-link {
+    background-color: var(--sidebar-active-bg) !important;
+    color: var(--sidebar-active-text) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35) !important;
+  }
+
+  /* Red Notification Badge */
+  .erp-sidebar .nav-badge-red {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    border-radius: 9px !important;
+    padding: 0 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Fixed Footer Card (Always Fully Visible & Never Cut Off) */
+  .erp-sidebar .sidebar-footer {
+    padding: 10px 14px 14px 14px !important;
+    flex-shrink: 0 !important;
+    border-top: 1px solid var(--sidebar-border) !important;
+    box-sizing: border-box !important;
+  }
+
+  .erp-sidebar .footer-academy-card {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid var(--sidebar-border) !important;
+    border-radius: 10px !important;
+    padding: 10px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .erp-sidebar .footer-user-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .erp-sidebar .footer-icon-box {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .erp-sidebar .footer-meta {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .erp-sidebar .footer-brand {
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    color: #f8fafc !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .erp-sidebar .footer-desc {
+    font-size: 0.65rem !important;
+    color: #94a3b8 !important;
+    line-height: 1.2 !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .erp-sidebar .footer-card-divider {
+    height: 1px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    width: 100% !important;
+  }
+
+  .erp-sidebar .footer-signout-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    height: 30px !important;
+    padding: 0 10px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 6px !important;
+    color: #94a3b8 !important;
+    font-size: 0.73rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+  }
+
+  .erp-sidebar .footer-signout-btn:hover {
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #ef4444 !important;
+    border-color: rgba(239, 68, 68, 0.25) !important;
+  }
+
+  .erp-sidebar .footer-signout-btn svg {
+    width: 13px !important;
+    height: 13px !important;
+    flex-shrink: 0 !important;
+  }
 </style>
 <aside class="erp-sidebar" id="erpSidebar">
   
@@ -15,7 +330,7 @@
   <div class="sidebar-header">
     <a href="{% if role == 'mentor' or is_mentor %}{% url 'mentor_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="brand-wrapper" title="NIM Academy">
       <div class="brand-logo-icon">
-        <svg width="32" height="32" style="width:32px;height:32px;max-width:32px;max-height:32px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
           <path d="M6 12v5c3 3 9 3 12 0v-5"/>
         </svg>
@@ -209,33 +524,91 @@
   </div>
 
   <!-- Bottom Profile & Logout Card -->
-    <div class="sidebar-footer">
-      <div class="footer-academy-card" style="padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
-        
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div class="footer-icon-box" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: #ffffff; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            <span style="font-weight: 700; font-size: 0.9rem;">{% if role == 'mentor' or is_mentor %}M{% else %}A{% endif %}</span>
-          </div>
-          <div class="footer-meta" style="flex: 1; min-width: 0;">
-            <span class="footer-brand" style="font-size: 0.8125rem; font-weight: 600; color: #f8fafc; display: block; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{% if role == 'mentor' or is_mentor %}Faculty Mentor{% else %}System Admin{% endif %}</span>
-            <span class="footer-desc" style="font-size: 0.6875rem; color: #94a3b8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">NIM Academy Control</span>
-          </div>
+  <div class="sidebar-footer">
+    <div class="footer-academy-card">
+      
+      <div class="footer-user-row">
+        <div class="footer-icon-box">
+          <span>{% if role == 'mentor' or is_mentor %}M{% else %}A{% endif %}</span>
         </div>
-
-        <div style="height: 1px; background: rgba(255,255,255,0.06); width: 100%;"></div>
-
-        <a href="{% url 'logout' %}" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #94a3b8; font-size: 0.75rem; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.2s; box-sizing: border-box;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.2)';" onmouseout="this.style.background='rgba(255,255,255,0.02)'; this.style.color='#94a3b8'; this.style.borderColor='rgba(255,255,255,0.05)';">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Secure Sign Out
-        </a>
-
+        <div class="footer-meta">
+          <span class="footer-brand">{% if role == 'mentor' or is_mentor %}Faculty Mentor{% else %}System Admin{% endif %}</span>
+          <span class="footer-desc">NIM Academy Control</span>
+        </div>
       </div>
+
+      <div class="footer-card-divider"></div>
+
+      <a href="{% url 'logout' %}?role=admin" onclick="var urlParams = new URLSearchParams(window.location.search); var tId = sessionStorage.getItem('portal_tab_id') || urlParams.get('tab_id'); sessionStorage.removeItem('portal_tab_role'); sessionStorage.removeItem('portal_tab_id'); if (tId) { this.href += '&tab_id=' + encodeURIComponent(tId); }" class="footer-signout-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Secure Sign Out</span>
+      </a>
+
     </div>
+  </div>
   
   </aside>
 
   <script>
     (function() {
+      // Per-tab isolation: preserve tab_id on page refresh, links, and fetch calls
+      var urlParams = new URLSearchParams(window.location.search);
+      var currentTabId = urlParams.get('tab_id') || sessionStorage.getItem('portal_tab_id');
+      if (currentTabId) {
+        sessionStorage.setItem('portal_tab_id', currentTabId);
+        sessionStorage.setItem('portal_tab_role', 'admin');
+        if (!urlParams.get('tab_id')) {
+          try {
+            var newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('tab_id', currentTabId);
+            window.history.replaceState({}, '', newUrl.toString());
+          } catch(e) {}
+        }
+      }
+
+      // Propagate tab_id to internal links on click or DOM load
+      function appendTabToLinks() {
+        if (!currentTabId) return;
+        document.querySelectorAll('a[href]').forEach(function(anchor) {
+          var href = anchor.getAttribute('href');
+          if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.indexOf('logout') !== -1) return;
+          if (href.indexOf('tab_id=') === -1 && (href.startsWith('/') || href.startsWith(window.location.origin))) {
+            var sep = href.indexOf('?') === -1 ? '?' : '&';
+            anchor.setAttribute('href', href + sep + 'tab_id=' + encodeURIComponent(currentTabId));
+          }
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', appendTabToLinks);
+      } else {
+        appendTabToLinks();
+      }
+
+      // Auto-inject X-Tab-ID header into all outgoing fetch requests
+      if (currentTabId && window.fetch) {
+        var originalFetch = window.fetch;
+        window.fetch = function(input, init) {
+          init = init || {};
+          init.headers = init.headers || {};
+          if (init.headers instanceof Headers) {
+            if (!init.headers.has('X-Tab-ID')) {
+              init.headers.append('X-Tab-ID', currentTabId);
+            }
+          } else if (Array.isArray(init.headers)) {
+            var hasHeader = init.headers.some(function(pair) { return pair[0].toLowerCase() === 'x-tab-id'; });
+            if (!hasHeader) {
+              init.headers.push(['X-Tab-ID', currentTabId]);
+            }
+          } else {
+            if (!init.headers['X-Tab-ID']) {
+              init.headers['X-Tab-ID'] = currentTabId;
+            }
+          }
+          return originalFetch.call(this, input, init);
+        };
+      }
+
       function updateAllNotifBadges(count) {
         var cnt = parseInt(count, 10);
         if (isNaN(cnt) || cnt < 0) cnt = 0;
